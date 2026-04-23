@@ -506,7 +506,7 @@ async def myplan(client, message):
             '<b>❌ ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴀɴʏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ.\n\nᴘʟᴇᴀsᴇ ᴜsᴇ /plan ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ᴇxᴄʟᴜsɪᴠᴇ ꜰᴇᴀᴛᴜʀᴇs.</b>', 
             reply_markup=InlineKeyboardMarkup(btn)
         )
-   if mp.get('plan') == "" or mp.get('expire') == "":
+    if mp.get('plan') == "" or mp.get('expire') == "":
         return await message.reply('<b>🌟 ʏᴏᴜ ᴀʀᴇ ᴀ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ!</b>')
     
     expire_str = mp['expire'].strftime('%d %b %Y, %I:%M %p')
