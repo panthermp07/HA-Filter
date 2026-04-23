@@ -116,8 +116,8 @@ class Bot(Client):
             for admin in ADMINS:
                 await self.send_message(
                     admin, 
-                    "<b>๏[-ิ_•ิ]๏ sʏsᴛᴇᴍ ʀᴇsᴛᴀʀᴛᴇᴅ\n"
-                    "⌬ {me.mention} ɪs ʀᴇᴀᴅʏ ♻️"</b>",
+                    f"<b>๏[-ิ_•ิ]๏ sʏsᴛᴇᴍ ʀᴇsᴛᴀʀᴛᴇᴅ\n"
+                    f"⌬ {me.mention} ɪs ʀᴇᴀᴅʏ ♻️</b>",
                     disable_web_page_preview=True
                 )
         except Exception as e:
