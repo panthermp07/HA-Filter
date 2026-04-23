@@ -19,23 +19,10 @@ def is_enabled(type, value):
 def is_valid_ip(ip):
     ip_pattern = r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
     return re.match(ip_pattern, ip) is not None
-
 # Bot information
 API_ID = environ.get('API_ID', '')
-if len(API_ID) == 0:
-    logger.error('API_ID is missing, exiting now')
-    exit()
-else:
-    API_ID = int(API_ID)
 API_HASH = environ.get('API_HASH', '')
-if len(API_HASH) == 0:
-    logger.error('API_HASH is missing, exiting now')
-    exit()
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
-if len(BOT_TOKEN) == 0:
-    logger.error('BOT_TOKEN is missing, exiting now')
-    exit()
-BOT_ID = BOT_TOKEN.split(":")[0]
 PORT = int(environ.get('PORT', '80'))
 
 # Upload your images to "postimages.org" and get direct link
@@ -43,56 +30,29 @@ PICS = (environ.get('PICS', 'https://i.postimg.cc/8C15CQ5y/1.png https://i.posti
 
 # Bot Admins
 ADMINS = environ.get('ADMINS', '5493832202')
-if len(ADMINS) == 0:
-    logger.error('ADMINS is missing, exiting now')
-    exit()
-else:
-    ADMINS = [int(admins) for admins in ADMINS.split()]
 
 # Channels
 INDEX_CHANNELS = [int(index_channels) if index_channels.startswith("-") else index_channels for index_channels in environ.get('INDEX_CHANNELS', '').split()]
-if len(INDEX_CHANNELS) == 0:
-    logger.info('INDEX_CHANNELS is empty')
 LOG_CHANNEL = environ.get('LOG_CHANNEL', '')
-if len(LOG_CHANNEL) == 0:
-    logger.error('LOG_CHANNEL is missing, exiting now')
-    exit()
-else:
-    LOG_CHANNEL = int(LOG_CHANNEL)
-    
-# support group
 SUPPORT_GROUP = environ.get('SUPPORT_GROUP', '')
-if len(SUPPORT_GROUP) == 0:
-    logger.error('SUPPORT_GROUP is missing, exiting now')
-    exit()
-else:
-    SUPPORT_GROUP = int(SUPPORT_GROUP)
 
 # MongoDB information
 DATA_DATABASE_URL = environ.get('DATA_DATABASE_URL', "")
-if len(DATA_DATABASE_URL) == 0:
-    logger.error('DATA_DATABASE_URL is missing, exiting now')
-    exit()
 FILES_DATABASE_URL = environ.get('FILES_DATABASE_URL', "")
-if len(FILES_DATABASE_URL) == 0:
-    logger.error('FILES_DATABASE_URL is missing, exiting now')
-    exit()
 SECOND_FILES_DATABASE_URL = environ.get('SECOND_FILES_DATABASE_URL', "")
-if len(SECOND_FILES_DATABASE_URL) == 0:
-    logger.info('SECOND_FILES_DATABASE_URL is empty')
 DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0")
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Files')
 
 # Links
-SUPPORT_LINK = environ.get('SUPPORT_LINK', 'https://t.me/HA_Bots_Support')
-UPDATES_LINK = environ.get('UPDATES_LINK', 'https://t.me/HA_Bots')
-FILMS_LINK = environ.get('FILMS_LINK', 'https://t.me/HA_Films_World')
-TUTORIAL = environ.get("TUTORIAL", "https://t.me/HA_Bots")
-VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "https://t.me/HA_Bots")
+SUPPORT_LINK = environ.get('SUPPORT_LINK', '')
+UPDATES_LINK = environ.get('UPDATES_LINK', '')
+FILMS_LINK = environ.get('FILMS_LINK', '')
+TUTORIAL = environ.get("TUTORIAL", "")
+VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "")
 
 # Bot settings
-TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Colombo') # Replace your time zone
-DELETE_TIME = int(environ.get('DELETE_TIME', 3600)) # Add time in seconds
+TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Colombo')
+DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
 LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi english telugu tamil kannada malayalam marathi punjabi').split()]
@@ -101,7 +61,7 @@ IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
 SHORTLINK_URL = environ.get("SHORTLINK_URL", "mdiskshortner.link")
 SHORTLINK_API = environ.get("SHORTLINK_API", "36f1ae74ba1aa01e5bd73bdd0bc22aa915443501")
-VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400)) # Add time in seconds
+VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400))
 WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
 INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
 PM_FILE_DELETE_TIME = int(environ.get('PM_FILE_DELETE_TIME', '3600'))
@@ -121,28 +81,10 @@ SHORTLINK = is_enabled('SHORTLINK', False)
 # for stream
 IS_STREAM = is_enabled('IS_STREAM', True)
 BIN_CHANNEL = environ.get("BIN_CHANNEL", "")
-if len(BIN_CHANNEL) == 0:
-    logger.error('BIN_CHANNEL is missing, exiting now')
-    exit()
-else:
-    BIN_CHANNEL = int(BIN_CHANNEL)
 URL = environ.get("URL", "")
-if len(URL) == 0:
-    logger.error('URL is missing, exiting now')
-    exit()
-else:
-    if URL.startswith(('https://', 'http://')):
-        if not URL.endswith("/"):
-            URL += '/'
-    elif is_valid_ip(URL):
-        URL = f'http://{URL}/'
-    else:
-        logger.error('URL is not valid, exiting now')
-        exit()
 
 #start command reactions
-REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗 😍 👍 🎅 😐 🥰 🤩 😱 🤣 😘 👏 😛 😈 🎉 ⚡️ 🫡 🤓 😎 🏆 🔥 🤭 🌚 🆒 👻 😁').split()]  # Multiple reactions can be used separated by space
-
+REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗 😍 👍 🎅 😐 🥰 🤩 😱 🤣 😘 👏 😛 😈 🎉 ⚡️ 🫡 🤓 😎 🏆 🔥 🤭 🌚 🆒 👻 😁').split()]
 
 # for Premium 
 IS_PREMIUM = is_enabled('IS_PREMIUM', False)
@@ -156,8 +98,78 @@ SIX_MONTHS_STARS = int(environ.get("SIX_MONTHS_STARS", "220"))
 ONE_YEAR_STARS = int(environ.get("ONE_YEAR_STARS", "400"))
 
 # for TMDb
-TMDB_API_KEY = environ.get("TMDB_API_KEY", "")  # Get API key from here - https://www.themoviedb.org/settings/api
+TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
+
+
+# -------------------- VALIDATIONS (AT END) -------------------- #
+
+if len(API_ID) == 0:
+    logger.error('API_ID is missing, exiting now')
+    exit()
+else:
+    API_ID = int(API_ID)
+
+if len(API_HASH) == 0:
+    logger.error('API_HASH is missing, exiting now')
+    exit()
+
+if len(BOT_TOKEN) == 0:
+    logger.error('BOT_TOKEN is missing, exiting now')
+    exit()
+
+BOT_ID = BOT_TOKEN.split(":")[0]
+
+if len(ADMINS) == 0:
+    logger.error('ADMINS is missing, exiting now')
+    exit()
+else:
+    ADMINS = [int(admins) for admins in ADMINS.split()]
+
+if len(INDEX_CHANNELS) == 0:
+    logger.info('INDEX_CHANNELS is empty')
+
+if len(LOG_CHANNEL) == 0:
+    logger.error('LOG_CHANNEL is missing, exiting now')
+    exit()
+else:
+    LOG_CHANNEL = int(LOG_CHANNEL)
+
+if len(SUPPORT_GROUP) == 0:
+    logger.error('SUPPORT_GROUP is missing, exiting now')
+    exit()
+else:
+    SUPPORT_GROUP = int(SUPPORT_GROUP)
+
+if len(DATA_DATABASE_URL) == 0:
+    logger.error('DATA_DATABASE_URL is missing, exiting now')
+    exit()
+
+if len(FILES_DATABASE_URL) == 0:
+    logger.error('FILES_DATABASE_URL is missing, exiting now')
+    exit()
+
+if len(SECOND_FILES_DATABASE_URL) == 0:
+    logger.info('SECOND_FILES_DATABASE_URL is empty')
+
+if len(BIN_CHANNEL) == 0:
+    logger.error('BIN_CHANNEL is missing, exiting now')
+    exit()
+else:
+    BIN_CHANNEL = int(BIN_CHANNEL)
+
+if len(URL) == 0:
+    logger.error('URL is missing, exiting now')
+    exit()
+else:
+    if URL.startswith(('https://', 'http://')):
+        if not URL.endswith("/"):
+            URL += '/'
+    elif is_valid_ip(URL):
+        URL = f'http://{URL}/'
+    else:
+        logger.error('URL is not valid, exiting now')
+        exit()
+
 if len(TMDB_API_KEY) == 0:
     logger.error('TMDB_API_KEY is missing, exiting now')
     exit()
-    

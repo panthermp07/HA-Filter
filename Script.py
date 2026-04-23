@@ -2,47 +2,78 @@ class script(object):
 
     START_TXT = """<b>ʜᴇʏ {}, <i>{}</i>
     
-ɪ ᴀᴍ ᴘᴏᴡᴇʀғᴜʟ ᴀᴜᴛᴏ ғɪʟᴛᴇʀ ᴡɪᴛʜ ʟɪɴᴋ sʜᴏʀᴛᴇɴᴇʀ ʙᴏᴛ. ʏᴏᴜ ᴄᴀɴ ᴜꜱᴇ ᴀꜱ ᴀᴜᴛᴏ ғɪʟᴛᴇʀ ᴡɪᴛʜ ʟɪɴᴋ sʜᴏʀᴛᴇɴᴇʀ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ... ɪᴛ'ꜱ ᴇᴀꜱʏ ᴛᴏ ᴜꜱᴇ ᴊᴜsᴛ ᴀᴅᴅ ᴍᴇ ᴀꜱ ᴀᴅᴍɪɴ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ɪ ᴡɪʟʟ ᴘʀᴏᴠɪᴅᴇ ᴛʜᴇʀᴇ ᴍᴏᴠɪᴇꜱ ᴡɪᴛʜ ʏᴏᴜʀ ʟɪɴᴋ ꜱʜᴏʀᴛᴇɴᴇʀ... ♻️</b>"""
+ɪ ᴀᴍ ᴛʜᴇ ᴍᴏsᴛ ᴀᴅᴠᴀɴᴄᴇᴅ ᴀᴜᴛᴏ-ғɪʟᴛᴇʀ ᴇɴɢɪɴᴇ ᴡɪᴛʜ ᴘʀᴇᴍɪᴜᴍ sᴛʀᴇᴀᴍɪɴɢ ᴄᴀᴘᴀʙɪʟɪᴛɪᴇs. 🚀
 
-    MY_ABOUT_TXT = """★ Server: <a href=https://www.heroku.com>Heroku</a>
-★ Database: <a href=https://www.mongodb.com>MongoDB</a>
-★ Language: <a href=https://www.python.org>Python</a>
-★ Library: <a href=https://kurigram.icu/>Kurigram</a>"""
+⚡ ꜰᴇᴀᴛᴜʀᴇs:
+╰┈➤ ɪɴsᴛᴀɴᴛ ᴍᴏᴠɪᴇ sᴇᴀʀᴄʜ
+╰┈➤ ʜɪɢʜ-sᴘᴇᴇᴅ sᴛʀᴇᴀᴍɪɴɢ
+╰┈➤ ᴘʀᴇᴍɪᴜᴍ ᴀᴅ-ғʀᴇᴇ ᴍᴏᴅᴇ
+╰┈➤ ᴀᴜᴛᴏ-ᴅᴇʟᴇᴛᴇ (ᴄᴏᴘʏʀɪɢʜᴛ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ)
 
-    MY_OWNER_TXT = """★ Name: HA Bots
-★ Username: @HA_Bots
-★ Country: Sri Lanka 🇱🇰"""
+ᴊᴜsᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ ᴛᴏ sᴛᴀʀᴛ ᴛʜᴇ ᴍᴀɢɪᴄ! ✨</b>"""
 
-    STATUS_TXT = """👤 Total Users: <code>{}</code>
-😎 Premium Users: <code>{}</code>
-👥 Total Chats: <code>{}</code>
-🗳 Data database used: <code>{}</code>
+    MY_ABOUT_TXT = """<b>╭───────────━━━━━━━
+├🔸 ɴᴀᴍᴇ: <a href='https://t.me/{temp.U_NAME}'>{temp.B_NAME}</a>
+├🔸 ʟɪʙʀᴀʀʏ: <a href='https://kurigram.icu/'>ᴋᴜʀɪɢʀᴀᴍ</a>
+├🔸 ʟᴀɴɢᴜᴀɢᴇ: <a href='https://www.python.org'>ᴘʏᴛʜᴏɴ 3.11</a>
+├🔸 ᴅᴀᴛᴀʙᴀsᴇ: <a href='https://www.mongodb.com'>ᴍᴏɴɢᴏᴅʙ</a>
+├🔸 sᴇʀᴠᴇʀ: <a href='https://koyeb.com'>ᴋᴏʏᴇʙ ᴀᴅᴠᴀɴᴄᴇᴅ</a>
+╰───────────━━━━━━━</b>"""
 
-🗂 1st database Files: <code>{}</code>
-🗳 1st files database used: <code>{}</code>
+    MY_OWNER_TXT = """<b>🪪 ᴏᴡɴᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ
 
-🗂 2nd database Files: <code>{}</code>
-🗳 2nd files database used: <code>{}</code>
+◈ ɴᴀᴍᴇ ➜ ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ
+◈ ᴜsᴇʀɴᴀᴍᴇ ➜ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>
+◈ ᴄᴏɴᴛᴀᴄᴛ ➜ <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a>
 
-🚀 Bot Uptime: <code>{}</code>"""
+🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
 
-    NEW_GROUP_TXT = """#NewGroup
-Title - {}
-ID - <code>{}</code>
-Username - {}
-Total - <code>{}</code>"""
+    STATUS_TXT = """<b>🎬 ʙᴏᴛ ʟɪᴠᴇ sᴛᴀᴛɪsᴛɪᴄs
 
-    NEW_USER_TXT = """#NewUser
-★ Name: {}
-★ ID: <code>{}</code>"""
+╭───────────━━━━━━━
+├ 👤 ᴛᴏᴛᴀʟ ᴜsᴇʀs: <code>{}</code>
+├ 💎 ᴘʀᴇᴍɪᴜᴍ: <code>{}</code>
+├ 👥 ᴛᴏᴛᴀʟ ᴄʜᴀᴛs: <code>{}</code>
+├ 🚀 ᴜᴘᴛɪᴍᴇ: <code>{}</code>
+╰───────────━━━━━━━
 
-    NOT_FILE_TXT = """👋 Hello {},
+🗂 ᴅᴀᴛᴀʙᴀsᴇ ᴍᴇᴛʀɪᴄs:
+╭───────────━━━━━━━
+├ 📁 ᴘʀɪᴍᴀʀʏ ꜰɪʟᴇs: <code>{}</code>
+├ 📦 ᴘʀɪᴍᴀʀʏ sɪᴢᴇ: <code>{}</code>
+├ 📂 sᴇᴄᴏɴᴅᴀʀʏ ꜰɪʟᴇs: <code>{}</code>
+├ 📦 sᴇᴄᴏɴᴅᴀʀʏ sɪᴢᴇ: <code>{}</code>
+╰───────────━━━━━━━</b>"""
 
-I can't find the <b>{}</b> in my database! 🥲
+    NEW_GROUP_TXT = """
+<b>#ɴᴇᴡ ɢʀᴏᴜᴘ</b>
+━━━━━━━━━━━━━━
 
-👉 Google Search and check your spelling is correct.
-👉 Please read the Instructions to get better results.
-👉 Or not been released yet."""
+🏷 <b>ᴛɪᴛʟᴇ</b>      : {}
+🆔 <b>ɪᴅ</b>         : <code>{}</code>
+🔗 <b>ᴜsᴇʀɴᴀᴍᴇ</b>   : {}
+👥 <b>ᴛᴏᴛᴀʟ</b>      : <code>{}</code>
+"""
+
+    NEW_USER_TXT = """
+<b>#ɴᴇᴡ ᴜsᴇʀ</b>
+━━━━━━━━━━━━━━
+
+👤 <b>ɴᴀᴍᴇ</b>       : {}
+🆔 <b>ɪᴅ</b>         : <code>{}</code>
+"""
+
+    NOT_FILE_TXT = """<b>👋 ʜᴇʟʟᴏ {},
+
+🔍 ɴᴏ ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ ꜰᴏʀ: <code>{}</code>
+
+
+💡 ᴛʀʏ ᴛʜᴇsᴇ sᴛᴇᴘs:
+╰┈➤ ᴄʜᴇᴄᴋ ɪꜰ ʏᴏᴜʀ sᴘᴇʟʟɪɴɢ ɪs ᴄᴏʀʀᴇᴄᴛ.
+╰┈➤ ᴜsᴇ ᴍᴏᴠɪᴇ ɴᴀᴍᴇ + ʏᴇᴀʀ (ᴇ.ɢ. ᴀᴠᴀᴛᴀʀ 𝟸𝟶𝟶𝟿).
+╰┈➤ ᴛʜᴇ ᴍᴏᴠɪᴇ ᴍɪɢʜᴛ ɴᴏᴛ ʙᴇ ʀᴇʟᴇᴀsᴇᴅ ʏᴇᴛ.
+
+📢 ʀᴇᴘᴏʀᴛ ᴛᴏ ᴀᴅᴍɪɴ: <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a></b>"""
     
     IMDB_TEMPLATE = """✅ I Found: <code>{query}</code>
 
@@ -60,68 +91,111 @@ I can't find the <b>{}</b> in my database! 🥲
 
 🚫 ᴘʟᴇᴀsᴇ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴄʟᴏsᴇ ʙᴜᴛᴛᴏɴ ɪꜰ ʏᴏᴜ ʜᴀᴠᴇ sᴇᴇɴ ᴛʜᴇ ᴍᴏᴠɪᴇ 🚫"""
 
-    WELCOME_TEXT = """👋 Hello {mention}, Welcome to {title} group! 💞"""
+    WELCOME_TEXT = """<b>👋 ʜᴇʟʟᴏ {mention}, ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ʙᴏʟʟʏᴡᴏᴏᴅ ᴍᴏᴠɪᴇs! 💞
 
-    HELP_TXT = """👋 Hello {},
+ɪ ᴀᴍ ʜᴇʀᴇ ᴛᴏ ʜᴇʟᴘ ʏᴏᴜ ꜰɪɴᴅ ʏᴏᴜʀ ꜰᴀᴠᴏᴜʀɪᴛᴇ ᴍᴏᴠɪᴇs ᴀɴᴅ sᴇʀɪᴇs ɪɴsᴛᴀɴᴛʟʏ. 
+
+🚀 ǫᴜɪᴄᴋ sᴛᴀʀᴛ:
+╰┈➤ ᴊᴜsᴛ ᴛʏᴘᴇ ᴛʜᴇ ɴᴀᴍᴇ ᴏꜰ ᴛʜᴇ ᴍᴏᴠɪᴇ ʜᴇʀᴇ.
+╰┈➤ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs.
+╰┈➤ ᴘʟᴇᴀsᴇ sᴘᴇʟʟ ᴛʜᴇ ɴᴀᴍᴇ ᴄᴏʀʀᴇᴄᴛʟʏ.
+
+🌐 ᴘᴏᴡᴇʀᴇᴅ ʙʏ: <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
+
+    HELP_TXT = """<b>👋 ʜᴇʟʟᴏ {}, 
+
+ɪ ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴍᴀᴋᴇ ʏᴏᴜʀ ᴍᴇᴅɪᴀ sᴇᴀʀᴄʜ ᴇꜰꜰᴏʀᴛʟᴇss! 🍿
+
+🚀 ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ:
+╭───────────━━━━━━━
+├ 𝟷. ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀs ᴀᴅᴍɪɴ.
+├ 𝟸. ᴊᴜsᴛ ᴛʏᴘᴇ ᴛʜᴇ ᴍᴏᴠɪᴇ/sᴇʀɪᴇs ɴᴀᴍᴇ.
+├ 𝟹. ɢᴇᴛ ɪɴsᴛᴀɴᴛ ꜰɪʟᴛᴇʀ ʀᴇsᴜʟᴛs.
+╰───────────━━━━━━━
+
+🌟 ᴋᴇʏ ꜰᴇᴀᴛᴜʀᴇs:
+╭───────────━━━━━━━
+├ ⚡ sᴜᴘᴇʀꜰᴀsᴛ ᴀᴜᴛᴏ-ꜰɪʟᴛᴇʀ
+├ 🎬 ɪᴍᴅʙ ᴍᴇᴛᴀᴅᴀᴛᴀ & ᴘᴏsᴛᴇʀs
+├ 📥 ᴅɪʀᴇᴄᴛ ꜰɪʟᴇ sᴛʀᴇᴀᴍɪɴɢ
+├ 💎 ᴘʀᴇᴍɪᴜᴍ ᴀᴅ-ꜰʀᴇᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ
+╰───────────━━━━━━━
+
+ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴍʏ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ꜰᴇᴀᴛᴜʀᴇs! 👇</b>"""
+
+    ADMIN_COMMAND_TXT = """<b>🛠️ ᴀᴅᴍɪɴ ᴄᴏɴᴛʀᴏʟ ᴘᴀɴᴇʟ 👇
+
+📝 ɪɴᴅᴇxɪɴɢ & ꜰɪʟᴇs:
+╭───────────━━━━━━━
+├ /index - ɪɴᴅᴇx ᴀʟʟ ᴄʜᴀɴɴᴇʟ ꜰɪʟᴇs
+├ /index_channels - ʟɪsᴛ ᴀᴅᴅᴇᴅ ᴄʜᴀɴɴᴇʟs
+├ /delete - ʀᴇᴍᴏᴠᴇ ꜰɪʟᴇs ʙʏ ǫᴜᴇʀʏ
+├ /delete_all - ᴡɪᴘᴇ ᴇɴᴛɪʀᴇ ᴅᴀᴛᴀʙᴀsᴇ
+╰───────────━━━━━━━
+
+📢 ʙʀᴏᴀᴅᴄᴀsᴛ ᴛᴏᴏʟs:
+╭───────────━━━━━━━
+├ /broadcast - sᴇɴᴅ ᴍsɢ ᴛᴏ ᴜsᴇʀs
+├ /grp_broadcast - sᴇɴᴅ ᴍsɢ ᴛᴏ ɢʀᴏᴜᴘs
+├ /pin_broadcast - ʙʀᴏᴀᴅᴄᴀsᴛ & ᴘɪɴ (ᴜsᴇʀs)
+├ /pin_grp_broadcast - ʙʀᴏᴀᴅᴄᴀsᴛ & ᴘɪɴ (ɢʀᴏᴜᴘs)
+╰───────────━━━━━━━
+
+🛡️ sᴜʙsᴄʀɪᴘᴛɪᴏɴ & ꜰsᴜʙ:
+╭───────────━━━━━━━
+├ /add_prm - ɢʀᴀɴᴛ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss
+├ /rm_prm - ʀᴇᴠᴏᴋᴇ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss
+├ /set_fsub - ᴄᴏɴꜰɪɢ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ
+├ /set_req_fsub - sᴇᴛ ᴊᴏɪɴ-ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ
+├ /delreq - ᴄʟᴇᴀʀ ᴘᴇɴᴅɪɴɢ ʀᴇǫᴜᴇsᴛs
+╰───────────━━━━━━━
+
+⚙️ sʏsᴛᴇᴍ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ:
+╭───────────━━━━━━━
+├ /stats - ᴅᴇᴛᴀɪʟᴇᴅ ʙᴏᴛ ᴀɴᴀʟʏᴛɪᴄs
+├ /users - ᴅᴏᴡɴʟᴏᴀᴅ ᴜsᴇʀs ʟɪsᴛ
+├ /chats - ᴠɪᴇᴡ ᴀʟʟ ᴀᴄᴛɪᴠᴇ ɢʀᴏᴜᴘs
+├ /invite_link - ɢᴇɴᴇʀᴀᴛᴇ ʙᴏᴛ ɪɴᴠɪᴛᴇ
+├ /leave - ᴇxɪᴛ ᴀ sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
+├ /restart - ʜᴏᴛ-ʀᴇʙᴏᴏᴛ ᴛʜᴇ sʏsᴛᴇᴍ
+╰───────────━━━━━━━</b>"""
     
-I can filter movie and series you want
-Just type you want movie or series in my PM or adding me in to group
-And i have more feature for you
-Just try my commands"""
+    USER_COMMAND_TXT = """<b>⚡ ᴀᴠᴀɪʟᴀʙʟᴇ ᴜsᴇʀ ᴄᴏᴍᴍᴀɴᴅs 👇
 
-    ADMIN_COMMAND_TXT = """<b>Here is bot admin commands 👇
+╭───────────━━━━━━━
+├ /start - ᴄʜᴇᴄᴋ ɪꜰ ʙᴏᴛ ɪs ᴀʟɪᴠᴇ
+├ /myplan - ᴠɪᴇᴡ ʏᴏᴜʀ ᴀᴄᴛɪᴠᴇ sᴜʙsᴄʀɪᴘᴛɪᴏɴ
+├ /plan - ᴇxᴘʟᴏʀᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
+├ /img_2_link - ɢᴇɴᴇʀᴀᴛᴇ ᴘᴜʙʟɪᴄ ᴜʀʟ ꜰᴏʀ ɪᴍᴀɢᴇs
+├ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ɢʀᴏᴜᴘ ᴘʀᴇꜰᴇʀᴇɴᴄᴇs
+├ /connect - ʟɪɴᴋ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴛᴏ ʙᴏᴛ ᴘᴍ
+├ /id - ɢᴇᴛ ᴜsᴇʀ/ᴄʜᴀᴛ ᴜɴɪǫᴜᴇ ɪᴅ
+╰───────────━━━━━━━
 
+💡 ᴛɪᴘ: ᴜsᴇ ᴛʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅs ɪɴ ʙᴏᴛ ᴘᴍ ꜰᴏʀ ʙᴇᴛᴛᴇʀ ᴘʀɪᴠᴀᴄʏ!</b>"""
 
-/index_channels - to check how many index channel id added
-/stats - to get bot status
-/delete - to delete files using query
-/delete_all - to delete all indexed file
-/broadcast - to send message to all bot users
-/grp_broadcast - to send message to all groups
-/pin_broadcast - to send message as pin to all bot users.
-/pin_grp_broadcast - to send message as pin to all groups.
-/restart - to restart bot
-/leave - to leave your bot from particular group
-/users - to get all users details
-/chats - to get all groups
-/invite_link - to generate invite link
-/index - to index bot accessible channels
-/add_prm - to add new premium user
-/rm_prm - to add remove premium user
-/delreq - to delete join request in db (if change REQUEST_FORCE_SUB_CHANNELS using /set_req_fsub then must need use this command)
-/set_req_fsub - to set request force subscribe channel
-/set_fsub - to set force subscribe channels</b>"""
+    PLAN_TXT = """<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
+
+ᴀᴄᴛɪᴠᴀᴛᴇ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴀ ʟɪᴍɪᴛʟᴇss sᴛʀᴇᴀᴍɪɴɢ ᴇxᴘᴇʀɪᴇɴᴄᴇ ᴡɪᴛʜ ᴇxᴄʟᴜsɪᴠᴇ ᴘᴇʀᴋs.
+
+🌟 ᴘʀᴇᴍɪᴜᴍ ʙᴇɴᴇꜰɪᴛs:
+◈ ᴀᴅ-ꜰʀᴇᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ (ɴᴏ ᴀɴɴᴏʏɪɴɢ ᴀᴅs)
+◈ ɪɴsᴛᴀɴᴛ ᴡᴀᴛᴄʜ & ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋs
+◈ ɴᴏ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ʀᴇǫᴜɪʀᴇᴅ
+◈ ɴᴏ ᴅᴀɪʟʏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ
+◈ ɴᴏ sʜᴏʀᴛʟɪɴᴋs (ᴅɪʀᴇᴄᴛ ꜰɪʟᴇs)
+◈ ᴘʀɪᴏʀɪᴛʏ ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ
+
+📢 sᴜᴘᴘᴏʀᴛ ➜ <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a>
+🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
+
     
-    PLAN_TXT = """Activate any premium plan to get exclusive features.
+    SOURCE_TXT = """<b>📁 ʀᴇᴘᴏsɪᴛᴏʀʏ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ
 
-You can activate any premium plan and then you can get exclusive features.
+◈ ᴘʀᴏᴊᴇᴄᴛ ➜ ɪɴꜰɪɴɪᴛʏ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ᴠ𝟹
+◈ sᴛᴀᴛᴜs ➜ ᴏᴘᴇɴ sᴏᴜʀᴄᴇ (ʙᴇᴛᴀ)
+◈ sᴏᴜʀᴄᴇ ➜ <a href='https://github.com/ibhub0'>ɢɪᴛʜᴜʙ ʟɪɴᴋ</a>
+◈ ᴅᴇᴠᴇʟᴏᴘᴇʀ ➜ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>
 
-Basic premium features:
-Ad free experience
-Online watch and fast download
-No need joind channels
-No need verify
-No shortlink
-Admins support
-And more...
-
-Support: @{}"""
-
-    USER_COMMAND_TXT = """<b>Here is bot user commands 👇
-
-/start - to check bot alive or not
-/myplan - to check my activated premium plan
-/plan - to view premium plan details
-/img_2_link - upload image to uguu.se and get link
-/settings - to change group settings as your wish
-/connect - to connect group settings to PM
-/id - to check group or channel id</b>"""
-    
-    SOURCE_TXT = """<b>ʙᴏᴛ ɢɪᴛʜᴜʙ ʀᴇᴘᴏsɪᴛᴏʀʏ -
-
-- ᴛʜɪꜱ ʙᴏᴛ ɪꜱ ᴀɴ ᴏᴘᴇɴ ꜱᴏᴜʀᴄᴇ ᴘʀᴏᴊᴇᴄᴛ.
-
-- ꜱᴏᴜʀᴄᴇ - <a href=https://github.com/HA-Bots/Auto-Filter-Bot>ʜᴇʀᴇ</a>
-
-- ᴅᴇᴠʟᴏᴘᴇʀ - @HA_Bots"""
+🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
 

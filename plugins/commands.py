@@ -454,7 +454,7 @@ async def plan(client, message):
     ],[
         InlineKeyboardButton('Activate Plan', callback_data='activate_plan')
     ]]
-    await message.reply(script.PLAN_TXT.format(OWNER_USERNAME), reply_markup=InlineKeyboardMarkup(btn))
+    await message.reply(script.PLAN_TXT, reply_markup=InlineKeyboardMarkup(btn))
 
 
 @Client.on_message(filters.command('add_prm') & filters.user(ADMINS))
