@@ -29,7 +29,7 @@ PORT = int(environ.get('PORT', '80'))
 PICS = (environ.get('PICS', 'https://i.postimg.cc/8C15CQ5y/1.png https://i.postimg.cc/gcNtrv0m/2.png https://i.postimg.cc/cHD71BBz/3.png https://i.postimg.cc/F1XYhY8q/4.png https://i.postimg.cc/1tNwGVxC/5.png https://i.postimg.cc/dtW30QpL/6.png https://i.postimg.cc/139dvs3c/7.png https://i.postimg.cc/QtXVtB8K/8.png https://i.postimg.cc/y8j8G1XV/9.png https://i.postimg.cc/zDF6KyJX/10.png https://i.postimg.cc/fyycVqzd/11.png https://i.postimg.cc/26ZBtBZr/13.png https://i.postimg.cc/PJn8nrWZ/14.png https://i.postimg.cc/cC7txyhz/15.png https://i.postimg.cc/kX9tjGXP/16.png https://i.postimg.cc/zXjH4NVb/17.png https://i.postimg.cc/sggGrLhn/18.png https://i.postimg.cc/y8pgYTh7/19.png')).split()
 
 # Bot Admins
-ADMINS = environ.get('ADMINS', '5493832202')
+ADMINS = environ.get('ADMINS', '')
 
 # Channels
 INDEX_CHANNELS = [int(index_channels) if index_channels.startswith("-") else index_channels for index_channels in environ.get('INDEX_CHANNELS', '').split()]
@@ -44,14 +44,14 @@ DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0")
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Files')
 
 # Links
-SUPPORT_LINK = environ.get('SUPPORT_LINK', '')
-UPDATES_LINK = environ.get('UPDATES_LINK', '')
-FILMS_LINK = environ.get('FILMS_LINK', '')
-TUTORIAL = environ.get("TUTORIAL", "")
-VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "")
+SUPPORT_LINK = environ.get('SUPPORT_LINK', 'https://t.me/talk_mrs_bot')
+UPDATES_LINK = environ.get('UPDATES_LINK', 'https://t.me/infinity_botzz')
+FILMS_LINK = environ.get('FILMS_LINK', 'https://t.me/infinity_botzz')
+TUTORIAL = environ.get("TUTORIAL", "https://t.me/infinity_botzz")
+VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "https://t.me/infinity_botzz")
 
 # Bot settings
-TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Colombo')
+TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Kolkata')
 DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
@@ -59,8 +59,8 @@ LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi en
 QUALITY = [quality.lower() for quality in environ.get('QUALITY', '360p 480p 720p 1080p 2160p').split()]
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
-SHORTLINK_URL = environ.get("SHORTLINK_URL", "mdiskshortner.link")
-SHORTLINK_API = environ.get("SHORTLINK_API", "36f1ae74ba1aa01e5bd73bdd0bc22aa915443501")
+SHORTLINK_URL = environ.get("SHORTLINK_URL", "inshorturl.com")
+SHORTLINK_API = environ.get("SHORTLINK_API", "1ddfca1b6d97992d09b8d3953bc92adea15ba913")
 VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400))
 WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
 INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
@@ -68,13 +68,13 @@ PM_FILE_DELETE_TIME = int(environ.get('PM_FILE_DELETE_TIME', '3600'))
 
 # boolean settings
 USE_CAPTION_FILTER = is_enabled('USE_CAPTION_FILTER', False)
-IS_VERIFY = is_enabled('IS_VERIFY', False)
+IS_VERIFY = is_enabled('IS_VERIFY', True)
 AUTO_DELETE = is_enabled('AUTO_DELETE', False)
-WELCOME = is_enabled('WELCOME', False)
+WELCOME = is_enabled('WELCOME', True)
 PROTECT_CONTENT = is_enabled('PROTECT_CONTENT', False)
 LONG_IMDB_DESCRIPTION = is_enabled("LONG_IMDB_DESCRIPTION", False)
 LINK_MODE = is_enabled("LINK_MODE", True)
-IMDB = is_enabled('IMDB', True)
+IMDB = is_enabled('IMDB', False)
 SPELL_CHECK = is_enabled("SPELL_CHECK", True)
 SHORTLINK = is_enabled('SHORTLINK', False)
 
@@ -87,8 +87,8 @@ URL = environ.get("URL", "")
 REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗 😍 👍 🎅 😐 🥰 🤩 😱 🤣 😘 👏 😛 😈 🎉 ⚡️ 🫡 🤓 😎 🏆 🔥 🤭 🌚 🆒 👻 😁').split()]
 
 # for Premium 
-IS_PREMIUM = is_enabled('IS_PREMIUM', False)
-OWNER_USERNAME = environ.get("OWNER_USERNAME", "Hansaka_Anuhas")
+IS_PREMIUM = is_enabled('IS_PREMIUM', True)
+OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
 
 # Telegram Stars required to purchase Premium plans
 ONE_WEEK_STARS = int(environ.get("ONE_WEEK_STARS", "30"))

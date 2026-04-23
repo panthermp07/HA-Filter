@@ -107,6 +107,22 @@ class Bot(Client):
         except:
             logger.error("Make sure bot admin in LOG_CHANNEL, exiting now")
             exit()
+        #try:
+        #    await self.send_message(SUPPORT_GROUP, f"<b>{me.mention} ʀᴇsᴛᴀʀᴛᴇᴅ 🤖</b>")
+        #except:
+        #    logger.error("Make sure bot admin in SUPPORT_GROUP, exiting now")
+        #    exit()
+        try:
+            for admin in ADMINS:
+                await self.send_message(
+                    admin, 
+                    "<b>๏[-ิ_•ิ]๏ sʏsᴛᴇᴍ ʀᴇsᴛᴀʀᴛᴇᴅ\n"
+                    "⌬ {me.mention} ɪs ʀᴇᴀᴅʏ ♻️"</b>",
+                    disable_web_page_preview=True
+                )
+        except Exception as e:
+            logger.error(f"Failed to notify admins: {e}")
+
         logger.info(f"@{me.username} is started now ✓\nAnd webapp was started [{URL}]")
 
     async def stop(self, **kwargs):
