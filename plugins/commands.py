@@ -684,13 +684,18 @@ async def rm_prm(bot, message):
 async def prm_list(bot, message):
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
+    
     tx = await message.reply('<b>🔍 ꜰᴇᴛᴄʜɪɴɢ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ʟɪsᴛ...</b>')
+    
     premium_users = db.get_premium_users()
     pr = [i['id'] for i in premium_users if i.get('status', {}).get('premium')]
+    
     if not pr:
         return await tx.edit_text('<b>❌ ɴᴏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ.</b>')
+    
     t = '<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs\n\n'
-        for count, p in enumerate(pr, 1):
+    
+    for count, p in enumerate(pr, 1):
         try:
             u = await bot.get_users(p)
             t += f"{count}. 👤 {u.mention} ⠂<code>{p}</code>\n"
@@ -700,10 +705,10 @@ async def prm_list(bot, message):
     t += f"\n📊 ᴛᴏᴛᴀʟ ᴜsᴇʀs: {len(pr)}</b>"
 
     await tx.edit_text(
-        f"{t}\n\n🌍 <b>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
-        disable_web_page_preview=True
+        text=f"{t}\n\n🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
+        disable_web_page_preview=True,
+        message_effect_id=5104841245755180586  # 🔥 Fire Effect
     )
-
 
 @Client.on_message(filters.command('set_fsub') & filters.user(ADMINS))
 async def set_fsub(bot, message):
