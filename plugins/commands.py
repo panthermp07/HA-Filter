@@ -61,6 +61,7 @@ async def start(client, message):
         ],[
                 InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
         ]]
+        reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
             chat_id=message.chat.id,
             photo=random.choice(PICS),
