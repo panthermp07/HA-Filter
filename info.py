@@ -49,18 +49,19 @@ UPDATES_LINK = environ.get('UPDATES_LINK', 'https://t.me/infinity_botzz')
 FILMS_LINK = environ.get('FILMS_LINK', 'https://t.me/infinity_botzz')
 TUTORIAL = environ.get("TUTORIAL", "https://t.me/infinity_botzz")
 VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "https://t.me/infinity_botzz")
+VERIFICATION_NOTIFY_CHANNEL = environ.get('VERIFICATION_NOTIFY_CHANNEL', '')
 
 # Bot settings
 TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Kolkata')
 DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
-LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi english telugu tamil kannada malayalam marathi punjabi').split()]
-QUALITY = [quality.lower() for quality in environ.get('QUALITY', '360p 480p 720p 1080p 2160p').split()]
+LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'bengali hindi english telugu tamil kannada malayalam marathi punjabi gujrathi').split()]
+QUALITY = [quality.lower() for quality in environ.get('QUALITY', '240p 360p 480p 720p 1080p 2160p').split()]
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
-SHORTLINK_URL = environ.get("SHORTLINK_URL", "inshorturl.com")
-SHORTLINK_API = environ.get("SHORTLINK_API", "1ddfca1b6d97992d09b8d3953bc92adea15ba913")
+SHORTLINK_URL = environ.get("SHORTLINK_URL", "")
+SHORTLINK_API = environ.get("SHORTLINK_API", "")
 VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400))
 WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
 INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
@@ -76,7 +77,7 @@ LONG_IMDB_DESCRIPTION = is_enabled("LONG_IMDB_DESCRIPTION", False)
 LINK_MODE = is_enabled("LINK_MODE", True)
 IMDB = is_enabled('IMDB', False)
 SPELL_CHECK = is_enabled("SPELL_CHECK", True)
-SHORTLINK = is_enabled('SHORTLINK', False)
+SHORTLINK = is_enabled('SHORTLINK', True)
 
 # for stream
 IS_STREAM = is_enabled('IS_STREAM', True)
@@ -89,6 +90,7 @@ REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗
 # for Premium 
 IS_PREMIUM = is_enabled('IS_PREMIUM', True)
 OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
+PREMIUM_NOTIFY_CHANNEL = environ.get('PREMIUM_NOTIFY_CHANNEL', '')
 
 # Telegram Stars required to purchase Premium plans
 ONE_WEEK_STARS = int(environ.get("ONE_WEEK_STARS", "30"))
@@ -156,6 +158,12 @@ if len(BIN_CHANNEL) == 0:
     exit()
 else:
     BIN_CHANNEL = int(BIN_CHANNEL)
+
+if len(PREMIUM_NOTIFY_CHANNEL) == 0:
+    logger.error('PREMIUM_NOTIFY_CHANNEL is missing, exiting now')
+    exit()
+else:
+    PREMIUM_NOTIFY_CHANNEL = int(PREMIUM_NOTIFY_CHANNEL)
 
 if len(URL) == 0:
     logger.error('URL is missing, exiting now')

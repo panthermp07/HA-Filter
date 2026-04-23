@@ -13,7 +13,7 @@ class script(object):
 ᴊᴜsᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ ᴛᴏ sᴛᴀʀᴛ ᴛʜᴇ ᴍᴀɢɪᴄ! ✨</b>"""
 
     MY_ABOUT_TXT = """<b>╭───────────━━━━━━━
-├🔸 ɴᴀᴍᴇ: <a href='https://t.me/{temp.U_NAME}'>{temp.B_NAME}</a>
+├🔸 ɴᴀᴍᴇ: <a href='https://t.me/{}'>{}</a>
 ├🔸 ʟɪʙʀᴀʀʏ: <a href='https://kurigram.icu/'>ᴋᴜʀɪɢʀᴀᴍ</a>
 ├🔸 ʟᴀɴɢᴜᴀɢᴇ: <a href='https://www.python.org'>ᴘʏᴛʜᴏɴ 3.11</a>
 ├🔸 ᴅᴀᴛᴀʙᴀsᴇ: <a href='https://www.mongodb.com'>ᴍᴏɴɢᴏᴅʙ</a>
@@ -166,7 +166,7 @@ class script(object):
 ├ /start - ᴄʜᴇᴄᴋ ɪꜰ ʙᴏᴛ ɪs ᴀʟɪᴠᴇ
 ├ /myplan - ᴠɪᴇᴡ ʏᴏᴜʀ ᴀᴄᴛɪᴠᴇ sᴜʙsᴄʀɪᴘᴛɪᴏɴ
 ├ /plan - ᴇxᴘʟᴏʀᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
-├ /img_2_link - ɢᴇɴᴇʀᴀᴛᴇ ᴘᴜʙʟɪᴄ ᴜʀʟ ꜰᴏʀ ɪᴍᴀɢᴇs
+├ /img2link - ɢᴇɴᴇʀᴀᴛᴇ ᴘᴜʙʟɪᴄ ᴜʀʟ ꜰᴏʀ ɪᴍᴀɢᴇs
 ├ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ɢʀᴏᴜᴘ ᴘʀᴇꜰᴇʀᴇɴᴄᴇs
 ├ /connect - ʟɪɴᴋ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴛᴏ ʙᴏᴛ ᴘᴍ
 ├ /id - ɢᴇᴛ ᴜsᴇʀ/ᴄʜᴀᴛ ᴜɴɪǫᴜᴇ ɪᴅ

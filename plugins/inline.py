@@ -83,7 +83,7 @@ def get_reply_markup(s):
     buttons = [[
         InlineKeyboardButton('🔎 Search Again', switch_inline_query_current_chat=s or '')
     ],[
-        InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ⚡️', url=UPDATES_LINK),
+        InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ⚡️', url=UPDATES_LINK),
         InlineKeyboardButton('💡 Support Group 💡', url=SUPPORT_LINK)
     ]]
     return InlineKeyboardMarkup(buttons)

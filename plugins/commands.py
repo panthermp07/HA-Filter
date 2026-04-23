@@ -10,7 +10,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPrevi
 from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
 from database.users_chats_db import db
 from datetime import datetime, timedelta
-from info import OWNER_USERNAME, IS_PREMIUM, URL, BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, PM_FILE_DELETE_TIME
+from info import OWNER_USERNAME, IS_PREMIUM, URL, BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, PM_FILE_DELETE_TIME, PREMIUM_NOTIFY_CHANNEL, VERIFICATION_NOTIFY_CHANNEL
 from utils import is_premium, upload_image, get_settings, get_size, is_subscribed, is_check_admin, get_shortlink, get_verify_status, update_verify_status, save_group_settings, temp, get_readable_time, get_wish, get_seconds
 
 
@@ -25,10 +25,13 @@ async def start(client, message):
         wish = get_wish()
         user = message.from_user.mention if message.from_user else "Dear"
         btn = [[
-            InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ⚡️', url=UPDATES_LINK),
-            InlineKeyboardButton('💡 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ 💡', url=SUPPORT_LINK)
+            InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ', url=UPDATES_LINK, style=enums.ButtonStyle.PRIMARY),
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK, style=enums.ButtonStyle.PRIMARY)
         ]]
-        await message.reply(text=f"<b>ʜᴇʏ {user}, <i>{wish}</i>\nʜᴏᴡ ᴄᴀɴ ɪ ʜᴇʟᴘ ʏᴏᴜ??</b>", reply_markup=InlineKeyboardMarkup(btn))
+        
+        await message.reply(text=f"<b>ʜᴇʏ {user}, <i>{wish}</i>\n\nɪ ᴀᴍ ᴀʟɪᴠᴇ ᴀɴᴅ ʀᴇᴀᴅʏ ᴛᴏ ʜᴇʟᴘ ʏᴏᴜ. sᴇɴᴅ ᴍᴇ ᴀɴʏ ᴍᴏᴠɪᴇ ɴᴀᴍᴇ!</b>", 
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
         return 
         
     try:
@@ -43,25 +46,23 @@ async def start(client, message):
     verify_status = await get_verify_status(message.from_user.id)
     if verify_status['is_verified'] and datetime.now() > verify_status['expire_time']:
         await update_verify_status(message.from_user.id, is_verified=False)
-
-
     if (len(message.command) != 2) or (len(message.command) == 2 and message.command[1] == 'start'):
         buttons = [[
-            InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ +", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
+            InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀᴛ ➕", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
         ],[
-            InlineKeyboardButton('ℹ️ ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
-            InlineKeyboardButton('🧑‍💻 sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+            InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
-            InlineKeyboardButton('👨‍🚒 ʜᴇʟᴘ', callback_data='help'),
+            InlineKeyboardButton('👨‍🚒 ʜᴇʟᴘ ɢᴜɪᴅᴇ', callback_data='help'),
             #InlineKeyboardButton('🔎 sᴇᴀʀᴄʜ ɪɴʟɪɴᴇ', switch_inline_query_current_chat=''),
-            InlineKeyboardButton('📚 ᴀʙᴏᴜᴛ', callback_data='about')
+            InlineKeyboardButton('📚 ᴀʙᴏᴜᴛ ʙᴏᴛ', callback_data='about')
         ],[
-            InlineKeyboardButton('🤑 Buy Premium', url=f"https://t.me/{temp.U_NAME}?start=premium")
+            InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
         ],[
-            InlineKeyboardButton('🌐 Mini WebApp 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
+                InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
         ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
+            chat_id=message.chat.id,
             photo=random.choice(PICS),
             caption=script.START_TXT.format(message.from_user.mention, get_wish()),
             reply_markup=reply_markup,
@@ -77,10 +78,10 @@ async def start(client, message):
     if mc.startswith('settings'):
         _, group_id = message.command[1].split("_")
         if not await is_check_admin(client, (int(group_id)), message.from_user.id):
-            return await message.reply("You not admin in this group.")
+            return await message.reply("<b>❌ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.</b>")
         btn = await get_grp_stg(int(group_id))
         chat = await client.get_chat(int(group_id))
-        return await message.reply(f"Change your settings for <b>'{chat.title}'</b> as your wish. ⚙", reply_markup=InlineKeyboardMarkup(btn))
+        return await message.reply(f"<b>⚙️ ᴄʜᴀɴɢᴇ sᴇᴛᴛɪɴɢs ꜰᴏʀ: {chat.title}</b>", reply_markup=InlineKeyboardMarkup(btn))
 
 
     if mc.startswith('inline_fsub'):
@@ -97,46 +98,70 @@ async def start(client, message):
         _, token = mc.split("_", 1)
         verify_status = (await get_verify_status(message.from_user.id)).copy()
         if verify_status['verify_token'] != token:
-            return await message.reply("Your verify token is invalid.")
+            return await message.reply("<b>❌ ʏᴏᴜʀ ᴠᴇʀɪꜰʏ ᴛᴏᴋᴇɴ ɪs ɪɴᴠᴀʟɪᴅ!</b>")
         expiry_time = datetime.now() + timedelta(seconds=VERIFY_EXPIRE)
         await update_verify_status(message.from_user.id, is_verified=True, expire_time=expiry_time)
+        
+        if VERIFICATION_NOTIFY_CHANNEL:
+            try:
+                date_str = datetime.now().strftime('%d %B %Y')
+                await client.send_message(
+                    VERIFICATION_NOTIFY_CHANNEL,
+                    f"[♻️ ᴜsᴇʀ ᴠᴇʀɪꜰɪᴇᴅ ✓]</b>\n\n"
+                    f"👤 <b>ɴᴀᴍᴇ:</b> {message.from_user.first_name}\n"
+                    f"🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{message.from_user.id}</code>\n"
+                    f"📅 <b>ᴅᴀᴛᴇ:</b> {date_str}\n\n"
+                    f"<b>#ᴍᴏᴠɪᴇs_ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ_ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>"
+                )
+            except: 
+                pass
+
         if verify_status["link"] == "":
             reply_markup = None
         else:
-            btn = [[
-                InlineKeyboardButton("📌 Get File 📌", url=f'https://t.me/{temp.U_NAME}?start={verify_status["link"]}')
-            ]]
+            btn = [[InlineKeyboardButton("📌 ɢᴇᴛ ꜰɪʟᴇ ɴᴏᴡ 📌", url=f'https://t.me/{temp.U_NAME}?start={verify_status["link"]}', style=enums.ButtonStyle.PRIMARY)]]
             reply_markup = InlineKeyboardMarkup(btn)
-        await message.reply(f"✅ You successfully verified until: {get_readable_time(VERIFY_EXPIRE)}", reply_markup=reply_markup, protect_content=True)
+            
+        await message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴠᴇʀɪꜰɪᴇᴅ ᴜɴᴛɪʟ: {get_readable_time(VERIFY_EXPIRE)}</b>", reply_markup=reply_markup, protect_content=True)
         return
     
     verify_status = await get_verify_status(message.from_user.id)
+    
     if IS_VERIFY and not verify_status['is_verified'] and not await is_premium(message.from_user.id, client):
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         await update_verify_status(message.from_user.id, verify_token=token, link="" if mc == 'inline_verify' else mc)
         link = await get_shortlink(SHORTLINK_URL, SHORTLINK_API, f'https://t.me/{temp.U_NAME}?start=verify_{token}')
         btn = [[
-            InlineKeyboardButton("🧿 Verify 🧿", url=link)
+            InlineKeyboardButton("🧿 ᴠᴇʀɪꜰʏ ɴᴏᴡ 🧿", url=link, style=enums.ButtonStyle.PRIMARY)
         ],[
-            InlineKeyboardButton('🗳 Tutorial 🗳', url=VERIFY_TUTORIAL)
+            InlineKeyboardButton('🗳 ᴛᴜᴛᴏʀɪᴀʟ ɢᴜɪᴅᴇ 🗳', url=VERIFY_TUTORIAL)
         ]]
-        await message.reply("You not verified today! Kindly verify now. 🔐", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
+        
+        await message.reply(
+            text="<b>🔒 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!\n\nʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ ꜰᴏʀ ᴛᴏᴅᴀʏ. ᴋɪɴᴅʟʏ ᴠᴇʀɪꜰʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ᴀɴᴅ ᴜɴʟᴏᴄᴋ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ.</b>", 
+            reply_markup=InlineKeyboardMarkup(btn), 
+            protect_content=True,
+            message_effect_id=5104841245755180586 # 🔥 Fire Effect
+        )
         return
 
     btn = await is_subscribed(client, message)
     if btn:
         btn.append(
-            [InlineKeyboardButton("🔁 Try Again 🔁", callback_data=f"checksub#{mc}")]
+            [InlineKeyboardButton("🔁 ᴛʀʏ ᴀɢᴀɪɴ 🔁", callback_data=f"checksub#{mc}", style=enums.ButtonStyle.PRIMARY)]
         )
         reply_markup = InlineKeyboardMarkup(btn)
+        
         await message.reply_photo(
             photo=random.choice(PICS),
-            caption=f"👋 Hello {message.from_user.mention},\n\nPlease join my 'Updates Channel' and try again. 😇",
+            caption=(
+                f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\n"
+                f"ʏᴏᴜ ᴍᴜsᴛ ᴊᴏɪɴ ᴏᴜʀ ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴜsᴇ ᴛʜɪs ʙᴏᴛ. ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴀɴᴅ ᴛʜᴇɴ ᴄʟɪᴄᴋ ᴏɴ 'ᴛʀʏ ᴀɢᴀɪɴ' ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ. 😇</b>"
+            ),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-        return 
-        
+        return
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
         files = temp.FILES.get(key)
@@ -154,19 +179,19 @@ async def start(client, message):
             )      
             if IS_STREAM:
                 btn = [[
-                    InlineKeyboardButton("✛ ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file['_id']}")
+                    InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file['_id']}")
                 ],[
-                    InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
-                    InlineKeyboardButton('💡 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+                    InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+                    InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
                 ],[
-                    InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data')
+                    InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data', style=enums.ButtonStyle.DANGER)
                 ]]
             else:
                 btn = [[
-                    InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
-                    InlineKeyboardButton('💡 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+                    InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+                    InlineKeyboardButton(' 🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
                 ],[
-                    InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data')
+                    InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data', style=enums.ButtonStyle.DANGER)
                 ]]
 
             msg = await client.send_cached_media(
@@ -216,19 +241,19 @@ async def start(client, message):
     )
     if IS_STREAM:
         btn = [[
-            InlineKeyboardButton("✛ ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file_id}")
+            InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file_id}")
         ],[
-            InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
-            InlineKeyboardButton('💡 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+            InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
-            InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data')
+            InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data', style=enums.ButtonStyle.DANGER)
         ]]
     else:
         btn = [[
-            InlineKeyboardButton('⚡️ ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
-            InlineKeyboardButton('💡 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+            InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
-            InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data')
+            InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data', style=enums.ButtonStyle.DANGER)
         ]]
     vp = await client.send_cached_media(
         chat_id=message.from_user.id,
@@ -252,21 +277,35 @@ async def start(client, message):
 async def link(bot, message):
     msg = message.reply_to_message
     if not msg:
-        return await message.reply('Reply to media')
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀɴʏ ᴍᴇᴅɪᴀ ꜰɪʟᴇ.</b>')
+    
     try:
         media = getattr(msg, msg.media.value)
-        msg = await bot.send_cached_media(chat_id=BIN_CHANNEL, file_id=media.file_id)
-        watch = f"{URL}watch/{msg.id}"
-        download = f"{URL}download/{msg.id}"
-        btn=[[
-            InlineKeyboardButton("ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ", url=watch),
-            InlineKeyboardButton("ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=download)
-        ],[
-            InlineKeyboardButton('❌ ᴄʟᴏsᴇ ❌', callback_data='close_data')
-        ]]
-        await message.reply('Here is your link', reply_markup=InlineKeyboardMarkup(btn))
-    except:
-        await message.reply('Unsupported file')
+        file_name = getattr(media, 'file_name', 'Streaming File')
+        bin_msg = await bot.send_cached_media(chat_id=BIN_CHANNEL, file_id=media.file_id)
+        watch = f"{URL}watch/{bin_msg.id}"
+        download = f"{URL}download/{bin_msg.id}"
+
+        btn = [[
+                InlineKeyboardButton("🎬 ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ", url=watch, style=enums.ButtonStyle.PRIMARY),
+                InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=download, style=enums.ButtonStyle.PRIMARY)
+            ],[
+                InlineKeyboardButton('❌ ᴄʟᴏsᴇ ᴍᴇɴᴜ ❌', callback_data='close_data', style=enums.ButtonStyle.DANGER)
+            ]]
+        
+        caption_text = (
+            f"✅ <b>ʏᴏᴜʀ ʟɪɴᴋs ᴀʀᴇ ɢᴇɴᴇʀᴀᴛᴇᴅ!</b>\n\n"
+            f"📦 <b>ꜰɪʟᴇ:</b> <code>{file_name}</code>\n\n"
+            f"🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"
+        )
+        await message.reply_text(
+            text=caption_text,
+            reply_markup=InlineKeyboardMarkup(btn),
+            disable_web_page_preview=True,
+            message_effect_id=5104841245755180586
+        )
+    except Exception as e:
+        await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
 
 @Client.on_message(filters.command('index_channels'))
 async def channels_info(bot, message):
@@ -284,12 +323,13 @@ async def channels_info(bot, message):
     text += f'\n**Total:** {len(ids)}'
     await message.reply(text)
 
-@Client.on_message(filters.command('stats'))
+@Client.on_message(filters.command('stats') & filters.user(ADMINS))
 async def stats(bot, message):
     user_id = message.from_user.id
     if user_id not in ADMINS:
         await message.delete()
         return
+
     files = db_count_documents()
     users = await db.total_users_count()
     chats = await db.total_chat_count()
@@ -305,8 +345,7 @@ async def stats(bot, message):
         secnd_files = '-'
 
     uptime = get_readable_time(time_now() - temp.START_TIME)
-    await message.reply_text(script.STATUS_TXT.format(users, prm, chats, used_data_db_size, files, used_files_db_size, secnd_files, secnd_files_db_used_size, uptime))    
-    
+    await message.reply_text(script.STATUS_TXT.format(users, prm, chats, used_data_db_size, uptime, files, used_files_db_size, secnd_files, secnd_files_db_used_size))
 
 
 async def get_grp_stg(group_id):
@@ -388,38 +427,59 @@ async def delete_file(bot, message):
     if user_id not in ADMINS:
         await message.delete()
         return
+
     try:
         query = message.text.split(" ", 1)[1]
     except:
-        return await message.reply_text("Command Incomplete!\nUsage: /delete query")
-    btn = [[
-        InlineKeyboardButton("YES", callback_data=f"delete_{query}")
-    ],[
-        InlineKeyboardButton("CLOSE", callback_data="close_data")
-    ]]
-    await message.reply_text(f"Do you want to delete all: {query} ?", reply_markup=InlineKeyboardMarkup(btn))
- 
+        return await message.reply_text("<b>💡 ᴜsᴀɢᴇ: <code>/delete query</code></b>")
+
+    btn = [
+        [
+            InlineKeyboardButton("✅ ʏᴇs, ᴅᴇʟᴇᴛᴇ ᴀʟʟ", callback_data=f"delete_{query}", style=enums.ButtonStyle.DANGER)
+        ],
+        [
+            InlineKeyboardButton("❌ ᴄʟᴏsᴇ / ᴄᴀɴᴄᴇʟ", callback_data="close_data", style=enums.ButtonStyle.SUCCESS)
+        ]
+    ]
+
+    await message.reply_text(
+        f"<b>🗑 ᴅᴇʟᴇᴛɪᴏɴ ᴄᴏɴꜰɪʀᴍᴀᴛɪᴏɴ\n\n"
+        f"ᴅᴏ ʏᴏᴜ ʀᴇᴀʟʟʏ ᴡᴀɴᴛ ᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀʟʟ ꜰɪʟᴇs ᴍᴀᴛᴄʜɪɴɢ:\n"
+        f"🔍 ǫᴜᴇʀʏ ⠂<code>{query}</code>\n\n"
+        f"⚠️ ᴛʜɪs ᴀᴄᴛɪᴏɴ ᴄᴀɴɴᴏᴛ ʙᴇ ᴜɴᴅᴏɴᴇ!</b>",
+        reply_markup=InlineKeyboardMarkup(btn)
+    )
 
 
-@Client.on_message(filters.command('img_2_link'))
+@Client.on_message(filters.command('img2link'))
 async def img_2_link(bot, message):
     reply_to_message = message.reply_to_message
-    if not reply_to_message:
-        return await message.reply('Reply to any photo')
-    file = reply_to_message.photo
-    if file is None:
-        return await message.reply('Invalid media.')
-    text = await message.reply_text(text="ᴘʀᴏᴄᴇssɪɴɢ....")   
-    path = await reply_to_message.download()  
-    response = upload_image(path)
-    if not response:
-         await text.edit_text(text="Upload failed!")
-         return    
+    if not reply_to_message or not reply_to_message.photo:
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴘʜᴏᴛᴏ ᴛᴏ ɢᴇɴᴇʀᴀᴛᴇ ʟɪɴᴋ.</b>')
+    
+    # Elite processing message
+    text = await message.reply_text(text="<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ ʏᴏᴜʀ ɪᴍᴀɢᴇ....</b>")   
+    
     try:
-        os.remove(path)
-    except:
-        pass
-    await text.edit_text(f"<b>❤️ Your link ready 👇\n\n{response}</b>", link_preview_options=LinkPreviewOptions(is_disabled=True))
+        path = await reply_to_message.download()  
+        response = upload_image(path)
+        
+        if not response:
+            return await text.edit_text(text="<b>❌ ᴜᴘʟᴏᴀᴅ ꜰᴀɪʟᴇᴅ! ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>")
+
+        # Success Message in Elite Style
+        await text.edit_text(
+            f"<b>✅ ɪᴍᴀɢᴇ ᴜᴘʟᴏᴀᴅᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ\n\n"
+            f"🔗 ʟɪɴᴋ ⠂<code>{response}</code>\n\n"
+            f"✨ ᴘᴏᴡᴇʀᴇᴅ ʙʏ @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
+            disable_web_page_preview=True
+        )
+        
+        if os.path.exists(path):
+            os.remove(path)
+            
+    except Exception as e:
+        await text.edit_text(f"<b>❌ ᴇʀʀᴏʀ: {e}</b>")
 
 @Client.on_message(filters.command('ping'))
 async def ping(client, message):
@@ -432,91 +492,190 @@ async def ping(client, message):
 @Client.on_message(filters.command('myplan') & filters.private)
 async def myplan(client, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled by admin')
-    mp = db.get_plan(message.from_user.id)
-    if not await is_premium(message.from_user.id, client):
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>')
+    
+    user_id = message.from_user.id
+    mp = db.get_plan(user_id)
+    
+    if not await is_premium(user_id, client):
         btn = [[
-            InlineKeyboardButton('Activate Trial', callback_data='activate_trial'),
-            InlineKeyboardButton('Activate Plan', callback_data='activate_plan')
+            InlineKeyboardButton('🎁 ᴀᴄᴛɪᴠᴀᴛᴇ ᴛʀɪᴀʟ', callback_data='activate_trial'),
+            InlineKeyboardButton('💎 ᴀᴄᴛɪᴠᴀᴛᴇ ᴘʟᴀɴ', callback_data='activate_plan')
         ]]
-        return await message.reply('You dont have any premium plan, please use /plan to activate plan', reply_markup=InlineKeyboardMarkup(btn))
-    if mp['plan'] == "" or mp['expire'] == "":
-        return await message.reply("You are already a Premium user!")
-    await message.reply(f"You activated {mp['plan']} plan\nExpire: {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}")
-
+        return await message.reply(
+            '<b>❌ ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴀɴʏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ.\n\nᴘʟᴇᴀsᴇ ᴜsᴇ /plan ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ᴇxᴄʟᴜsɪᴠᴇ ꜰᴇᴀᴛᴜʀᴇs.</b>', 
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+   if mp.get('plan') == "" or mp.get('expire') == "":
+        return await message.reply('<b>🌟 ʏᴏᴜ ᴀʀᴇ ᴀ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ!</b>')
+    
+    expire_str = mp['expire'].strftime('%d %b %Y, %I:%M %p')
+    
+    await message.reply(
+        f"<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ sᴛᴀᴛᴜs\n\n"
+        f"🚀 sᴛᴀᴛᴜs: ᴀᴄᴛɪᴠᴇ\n"
+        f"⏳ ᴘʟᴀɴ: {mp['plan']}\n"
+        f"📅 ᴇxᴘɪʀʏ: <code>{expire_str}</code>\n\n"
+        f"✨ ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!\n"
+        f"🌍 @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
+        disable_web_page_preview=True
+    )
 
 @Client.on_message(filters.command('plan') & filters.private)
 async def plan(client, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled by admin')
+        return await message.reply(
+            '<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇs ᴀʀᴇ ᴄᴜʀʀᴇɴᴛʟʏ ᴅɪsᴀʙʟᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>',
+            disable_web_page_preview=True
+        )
     btn = [[
-        InlineKeyboardButton('Activate Trial', callback_data='activate_trial')
-    ],[
-        InlineKeyboardButton('Activate Plan', callback_data='activate_plan')
-    ]]
-    await message.reply(script.PLAN_TXT, reply_markup=InlineKeyboardMarkup(btn))
+            InlineKeyboardButton('🎁 ᴀᴄᴛɪᴠᴀᴛᴇ ꜰʀᴇᴇ ᴛʀɪᴀʟ', callback_data='activate_trial')
+        ],[
+            InlineKeyboardButton('💳 ᴄʜᴏᴏsᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ', callback_data='activate_plan')
+        ],[
+            InlineKeyboardButton('🧑‍💻 ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ', url='https://t.me/talk_mrs_bot', style=enums.ButtonStyle.PRIMARY)
+        ]]
+
+    await message.reply(
+        script.PLAN_TXT,
+        reply_markup=InlineKeyboardMarkup(btn),
+        disable_web_page_preview=True,
+        parse_mode=enums.ParseMode.HTML
+    )
 
 
 @Client.on_message(filters.command('add_prm') & filters.user(ADMINS))
 async def add_prm(bot, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled')
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
+    
     try:
         _, user_id, d = message.text.split(' ')
     except:
-        return await message.reply('Usage: /add_prm user_id 1d')
+        return await message.reply('<b>💡 ᴜsᴀɢᴇ: <code>/add_prm user_id 1d</code></b>')
+    
     try:
-        d = int(d[:-1])
+        duration_val = int(d[:-1])
     except:
-        return await message.reply('Not valid days, use: 1d, 7d, 30d, 365d, etc...')
+        return await message.reply('<b>❌ ɪɴᴠᴀʟɪᴅ ᴅᴀʏs. ᴜsᴇ: 1ᴅ, 7ᴅ, 30ᴅ...</b>')
+
     try:
         user = await bot.get_users(user_id)
     except Exception as e:
-        return await message.reply(f'Error: {e}')
+        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
+
     if user.id in ADMINS:
-        return await message.reply('ADMINS is already premium')
+        return await message.reply('<b>⚡ ᴀᴅᴍɪɴs ᴀʀᴇ ᴀʟʀᴇᴀᴅʏ ᴘʀᴇᴍɪᴜᴍ.</b>')
+    
     if not await is_premium(user.id, bot):
         mp = db.get_plan(user.id)
-        ex = datetime.now() + timedelta(days=d)
+        ex = datetime.now() + timedelta(days=duration_val)
         mp['expire'] = ex
-        mp['plan'] = f'{d} days'
+        mp['plan'] = f'{duration_val} ᴅᴀʏs'
         mp['premium'] = True
         db.update_plan(user.id, mp)
-        await message.reply(f"Given premium to {user.mention}\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
+
+        expire_str = ex.strftime('%d %b %Y, %I:%M %p')
+
+        channel_msg = (
+            f"✅ #ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ\n\n"
+            f"👤 ᴜsᴇʀ: {user.mention}\n"
+            f"🆔 ɪᴅ: <code>{user.id}</code>\n"
+            f"⏳ ᴅᴜʀᴀᴛɪᴏɴ: {duration_val} ᴅᴀʏs\n"
+            f"📅 ᴇxᴘɪʀʏ: {expire_str}\n"
+            f"👮 ᴀᴅᴅᴇᴅ ʙʏ: {message.from_user.mention}"
+        )
+
+        notify_msg = (
+            f"🎉 ʜᴇʏ {user.first_name} 👋\n\n"
+            f"ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ <b>ᴘʀᴇᴍɪᴜᴍ</b>!\n\n"
+            f"🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
+            f"⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> {duration_val} ᴅᴀʏs\n"
+            f"📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{expire_str}</code>\n\n"
+            f"✨ ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!\n"
+            f"🌍 <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>"
+        )
+        await message.reply(channel_msg, disable_web_page_preview=True)
         try:
-            await bot.send_message(user.id, f"Your now premium user\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
+            await bot.send_message(
+                chat_id=PREMIUM_NOTIFY_CHANNEL,
+                text=channel_msg,
+                disable_web_page_preview=True
+            )
+        except Exception as e:
+            logger.error(f"Channel Log Error: {e}")
+
+        try:
+            await bot.send_message(
+                user.id, 
+                notify_msg, 
+                disable_web_page_preview=True
+            )
         except:
             pass
     else:
-        await message.reply(f"{user.mention} is already premium user")
+        await message.reply(f"<b>💎 {user.mention} ɪs ᴀʟʀᴇᴀᴅʏ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ.</b>")
 
 
 
 @Client.on_message(filters.command('rm_prm') & filters.user(ADMINS))
 async def rm_prm(bot, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled')
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
+    
     try:
         _, user_id = message.text.split(' ')
     except:
-        return await message.reply('Usage: /rm_prm user_id')
+        return await message.reply('<b>💡 ᴜsᴀɢᴇ: <code>/rm_prm user_id</code></b>')
+    
     try:
         user = await bot.get_users(user_id)
     except Exception as e:
-        return await message.reply(f'Error: {e}')
+        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
+
     if user.id in ADMINS:
-        return await message.reply('ADMINS is already premium')
+        return await message.reply('<b>⚡ ᴀᴅᴍɪɴs ᴀʀᴇ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ.</b>')
+
     if not await is_premium(user.id, bot):
-        await message.reply(f"{user.mention} is not premium user")
+        await message.reply(f"<b>❌ {user.mention} ɪs ɴᴏᴛ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ.</b>")
     else:
         mp = db.get_plan(user.id)
         mp['expire'] = ''
         mp['plan'] = ''
         mp['premium'] = False
         db.update_plan(user.id, mp)
-        await message.reply(f"{user.mention} is no longer premium user")
+
+        remove_log = (
+            f"❌ #ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇᴅ\n\n"
+            f"👤 <b>ᴜsᴇʀ:</b> {user.mention}\n"
+            f"🆔 <b>ɪᴅ:</b> <code>{user.id}</code>\n"
+            f"👮 <b>ʀᴇᴍᴏᴠᴇᴅ ʙʏ:</b> {message.from_user.mention}\n"
+            f"📉 <b>sᴛᴀᴛᴜs:</b> ᴅᴏᴡɴɢʀᴀᴅᴇᴅ ᴛᴏ ꜰʀᴇᴇ"
+        )
+
+        user_alert = (
+            f"⚠️ <b>ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ ʀᴇᴍᴏᴠᴇᴅ</b>\n\n"
+            f"ʜᴇʏ {user.first_name}, ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ sᴜʙsᴄʀɪᴘᴛɪᴏɴ ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.\n\n"
+            f"🔓 <b>ᴀᴄᴄᴇss:</b> ꜰʀᴇᴇ ᴛɪᴇʀ\n"
+            f"🛠 <b>sᴜᴘᴘᴏʀᴛ:</b> <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a>"
+        )
+        await message.reply(remove_log, disable_web_page_preview=True)
+        
         try:
-            await bot.send_message(user.id, "Your premium plan was removed by admin")
+            await bot.send_message(
+                chat_id=PREMIUM_NOTIFY_CHANNEL,
+                text=remove_log,
+                disable_web_page_preview=True
+            )
+        except:
+            pass
+
+        try:
+            await bot.send_message(
+                user.id, 
+                user_alert, 
+                disable_web_page_preview=True
+            )
         except:
             pass
 
@@ -524,17 +683,26 @@ async def rm_prm(bot, message):
 @Client.on_message(filters.command('prm_list') & filters.user(ADMINS))
 async def prm_list(bot, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled')
-    tx = await message.reply('Getting list of premium users')
-    pr = [i['id'] for i in db.get_premium_users() if i['status']['premium']]
-    t = 'premium users saved in database are:\n\n'
-    for p in pr:
+        return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
+    tx = await message.reply('<b>🔍 ꜰᴇᴛᴄʜɪɴɢ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ʟɪsᴛ...</b>')
+    premium_users = db.get_premium_users()
+    pr = [i['id'] for i in premium_users if i.get('status', {}).get('premium')]
+    if not pr:
+        return await tx.edit_text('<b>❌ ɴᴏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ.</b>')
+    t = '<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs\n\n'
+        for count, p in enumerate(pr, 1):
         try:
             u = await bot.get_users(p)
-            t += f"{u.mention} : {p}\n"
+            t += f"{count}. 👤 {u.mention} ⠂<code>{p}</code>\n"
         except:
-            t += f"{p}\n"
-    await tx.edit_text(t)
+            t += f"{count}. 🆔 <code>{p}</code>\n"
+    
+    t += f"\n📊 ᴛᴏᴛᴀʟ ᴜsᴇʀs: {len(pr)}</b>"
+
+    await tx.edit_text(
+        f"{t}\n\n🌍 <b>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
+        disable_web_page_preview=True
+    )
 
 
 @Client.on_message(filters.command('set_fsub') & filters.user(ADMINS))
