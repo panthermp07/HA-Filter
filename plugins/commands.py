@@ -300,8 +300,7 @@ async def link(bot, message):
         await message.reply_text(
             text=caption_text,
             reply_markup=InlineKeyboardMarkup(btn),
-            disable_web_page_preview=True,
-            message_effect_id=5104841245755180586
+            disable_web_page_preview=True
         )
     except Exception as e:
         await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
@@ -705,8 +704,7 @@ async def prm_list(bot, message):
 
     await tx.edit_text(
         text=f"{t}\n\n🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
-        disable_web_page_preview=True,
-        message_effect_id=5104841245755180586  # 🔥 Fire Effect
+        disable_web_page_preview=True
     )
 
 @Client.on_message(filters.command('set_fsub') & filters.user(ADMINS))
