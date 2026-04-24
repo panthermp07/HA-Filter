@@ -113,8 +113,8 @@ async def start(client, message):
                     f"📅 <b>ᴅᴀᴛᴇ:</b> {date_str}\n\n"
                     f"<b>#ᴍᴏᴠɪᴇs_ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ_ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>"
                 )
-            except: 
-                pass
+            except Exception as e:
+                print(f"Verification Notify Error: {e}")
 
         if verify_status["link"] == "":
             reply_markup = None
@@ -134,7 +134,7 @@ async def start(client, message):
         btn = [[
             InlineKeyboardButton("🧿 ᴠᴇʀɪꜰʏ ɴᴏᴡ 🧿", url=link, style=enums.ButtonStyle.PRIMARY)
         ],[
-            InlineKeyboardButton('🗳 ᴛᴜᴛᴏʀɪᴀʟ ɢᴜɪᴅᴇ 🗳', url=VERIFY_TUTORIAL)
+            InlineKeyboardButton('🗳 ᴛᴜᴛᴏʀɪᴀʟ ɢᴜɪᴅᴇ 🗳', url=VERIFY_TUTORIAL, style=enums.ButtonStyle.PRIMARY)
         ]]
         
         await message.reply(
@@ -219,15 +219,15 @@ async def start(client, message):
     file_id = parts[-1]
     files_ = await get_file_details(file_id)
     if not files_:
-        return await message.reply('No Such File Exist!')
+        return await message.reply('ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!')
     files = files_
     settings = await get_settings(int(grp_id))
     if type_ != 'shortlink' and settings['shortlink'] and not await is_premium(message.from_user.id, client):
         link = await get_shortlink(settings['url'], settings['api'], f"https://t.me/{temp.U_NAME}?start=shortlink_{grp_id}_{file_id}")
         btn = [[
-            InlineKeyboardButton("♻️ Get File ♻️", url=link)
+            InlineKeyboardButton("💎 ɢᴇᴛ ꜰɪʟᴇ(s)", url=link, style=enums.ButtonStyle.SUCCESS)
         ],[
-            InlineKeyboardButton("📍 ʜᴏᴡ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ 📍", url=settings['tutorial'])
+            InlineKeyboardButton("🚀 ʜᴏᴡ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ 🚀", url=settings['tutorial'], style=enums.ButtonStyle.PRIMARY)
         ]]
         await message.reply(f"[{get_size(files['file_size'])}] {files['file_name']}\n\nYour file is ready, Please get using this link. 👍", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
         return
@@ -265,7 +265,7 @@ async def start(client, message):
     msg = await vp.reply(f"Nᴏᴛᴇ: Tʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇ ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
     await asyncio.sleep(PM_FILE_DELETE_TIME)
     btns = [[
-        InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇ ᴀɢᴀɪɴ', callback_data=f"get_del_file#{grp_id}#{file_id}")
+        InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇ ᴀɢᴀɪɴ', callback_data=f"get_del_file#{grp_id}#{file_id}", style=enums.ButtonStyle.SUCCESS)
     ]]
     await msg.delete()
     await vp.delete()

@@ -6,7 +6,7 @@ import random
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
 from datetime import datetime, timedelta
-from info import IS_PREMIUM, PICS, TUTORIAL, SHORTLINK_API, SHORTLINK_URL, OWNER_USERNAME, ONE_WEEK_STARS, ONE_MONTH_STARS, THREE_MONTHS_STARS, SIX_MONTHS_STARS, ONE_YEAR_STARS, SECOND_FILES_DATABASE_URL, ADMINS, URL, MAX_BTN, BIN_CHANNEL, IS_STREAM, DELETE_TIME, FILMS_LINK, LOG_CHANNEL, SUPPORT_GROUP, SUPPORT_LINK, UPDATES_LINK, LANGUAGES, QUALITY
+from info import IS_PREMIUM, PICS, TUTORIAL, SHORTLINK_API, SHORTLINK_URL, OWNER_USERNAME, ONE_WEEK_STARS, ONE_MONTH_STARS, THREE_MONTHS_STARS, SIX_MONTHS_STARS, ONE_YEAR_STARS, SECOND_FILES_DATABASE_URL, ADMINS, URL, MAX_BTN, BIN_CHANNEL, IS_STREAM, DELETE_TIME, FILMS_LINK, LOG_CHANNEL, SUPPORT_GROUP, SUPPORT_LINK, UPDATES_LINK, LANGUAGES, QUALITY, PREMIUM_NOTIFY_CHANNEL
 from pyrogram.types import WebAppInfo, PreCheckoutQuery, Message, LabeledPrice, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto, LinkPreviewOptions
 from pyrogram import Client, filters, enums
 from utils import is_premium, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_readable_time, get_poster, temp, get_settings, save_group_settings
@@ -43,17 +43,16 @@ async def payment_successful(client, message: Message):
     mp['plan'] = f'{days} days'
     mp['premium'] = True
     db.update_plan(user.id, mp)
-    await message.reply(f"Congratulations! Your Premium has been activated! 🎉\n⏳ Expires on: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
-    await message.reply(f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
+    await message.reply(f"ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ʜᴀs ʙᴇᴇɴ ᴀᴄᴛɪᴠᴀᴛᴇᴅ! 🎉\n ⏳ ᴇxᴘɪʀᴇs ᴏɴ: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
+    await message.reply(f"ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
     await client.send_message(
-        LOG_CHANNEL,
-        f"💎 Premium Purchased\n\n"
-        f"👤 User: {user.mention} - {user.id}\n"
-        f"📦 Plan: {f'{days} days'}\n"
-        f"⭐ Stars: <code>{message.successful_payment.total_amount}</code>\n"
-        f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
+        PREMIUM_NOTIFY_CHANNEL,
+        f"💎 ɴᴇᴡ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇ
+        👤 ᴜsᴇʀ: {user.mention} - {user.id}
+        📦 ᴘʟᴀɴ: {days} ᴅᴀʏs
+        ⭐ sᴛᴀʀs: <code>{message.successful_payment.total_amount}</code>
+        ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
     )
-
 
 
 @Client.on_message(filters.private & filters.text & filters.incoming)
@@ -71,9 +70,9 @@ async def pm_search(client, message):
     else:
         files, n_offset, total = await get_search_results(message.text)
         btn = [[
-            InlineKeyboardButton("🗂 ᴄʟɪᴄᴋ ʜᴇʀᴇ 🗂", url=FILMS_LINK)
+            InlineKeyboardButton("🗂 ᴄʟɪᴄᴋ ʜᴇʀᴇ 🗂", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)
         ],[
-            InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
+            InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium", style=enums.ButtonStyle.SUCCESS)
             ]]
         reply_markup=InlineKeyboardMarkup(btn)
         if int(total) != 0:
