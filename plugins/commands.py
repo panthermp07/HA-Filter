@@ -59,7 +59,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
         ],[
-                InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
+            InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
@@ -178,7 +178,7 @@ async def start(client, message):
             )      
             if IS_STREAM:
                 btn = [[
-                    InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file['_id']}")
+                    InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file['_id']}")
                 ],[
                     InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
                     InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
@@ -240,7 +240,7 @@ async def start(client, message):
     )
     if IS_STREAM:
         btn = [[
-            InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ✛", callback_data=f"stream#{file_id}")
+            InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file_id}")
         ],[
             InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
             InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
@@ -465,7 +465,6 @@ async def img_2_link(bot, message):
         if not response:
             return await text.edit_text(text="<b>❌ ᴜᴘʟᴏᴀᴅ ꜰᴀɪʟᴇᴅ! ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>")
 
-        # Success Message in Elite Style
         await text.edit_text(
             f"<b>✅ ɪᴍᴀɢᴇ ᴜᴘʟᴏᴀᴅᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ\n\n"
             f"🔗 ʟɪɴᴋ ⠂<code>{response}</code>\n\n"
