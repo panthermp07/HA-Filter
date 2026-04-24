@@ -140,8 +140,7 @@ async def start(client, message):
         await message.reply(
             text="<b>🔒 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!\n\nʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ ꜰᴏʀ ᴛᴏᴅᴀʏ. ᴋɪɴᴅʟʏ ᴠᴇʀɪꜰʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ᴀɴᴅ ᴜɴʟᴏᴄᴋ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ.</b>", 
             reply_markup=InlineKeyboardMarkup(btn), 
-            protect_content=True,
-            message_effect_id=5104841245755180586 # 🔥 Fire Effect
+            protect_content=True
         )
         return
 
