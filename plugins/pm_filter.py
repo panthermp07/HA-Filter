@@ -45,14 +45,14 @@ async def payment_successful(client, message: Message):
     db.update_plan(user.id, mp)
     await message.reply(f"ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ʜᴀs ʙᴇᴇɴ ᴀᴄᴛɪᴠᴀᴛᴇᴅ! 🎉\n ⏳ ᴇxᴘɪʀᴇs ᴏɴ: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
     await message.reply(f"ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
-    await client.send_message(
-        PREMIUM_NOTIFY_CHANNEL,
-        f"💎 ɴᴇᴡ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇ
-        👤 ᴜsᴇʀ: {user.mention} - {user.id}
-        📦 ᴘʟᴀɴ: {days} ᴅᴀʏs
-        ⭐ sᴛᴀʀs: <code>{message.successful_payment.total_amount}</code>
-        ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
+    text = (
+        f"💎 ɴᴇᴡ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇ\n"
+        f"👤 ᴜsᴇʀ: {user.mention} - {user.id}\n"
+        f"📦 ᴘʟᴀɴ: {days} ᴅᴀʏs\n"
+        f"⭐ sᴛᴀʀs: <code>{message.successful_payment.total_amount}</code>\n"
+        f"ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
     )
+    await client.send_message(PREMIUM_NOTIFY_CHANNEL, text)
 
 
 @Client.on_message(filters.private & filters.text & filters.incoming)
