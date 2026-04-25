@@ -1010,6 +1010,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.message.edit(f'Deleted {deleted} files in your database in your query {query_}')
      
     elif query.data.startswith("send_all"):
+        if not await is_premium(query.from_user.id, client):
+            return await query.answer("💎 ᴏɴʟʏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ᴄᴀɴ ᴜsᴇ 'sᴇɴᴅ ᴀʟʟ' ꜰᴇᴀᴛᴜʀᴇ!\n\n👉 ᴛʏᴘᴇ /plan ᴛᴏ ᴜᴘɢʀᴀᴅᴇ.", show_alert=True)
         ident, key, req = query.data.split("#")
         if int(req) != query.from_user.id:
             return await query.answer(f"Hello {query.from_user.first_name},\nDon't Click Other Results!", show_alert=True)        
