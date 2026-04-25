@@ -13,20 +13,26 @@ class script(object):
 ᴊᴜsᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ ᴛᴏ sᴛᴀʀᴛ ᴛʜᴇ ᴍᴀɢɪᴄ! ✨</b>"""
 
     MY_ABOUT_TXT = """<b>╭───────────━━━━━━━
-├🔸 ɴᴀᴍᴇ: <a href='https://t.me/{}'>{}</a>
-├🔸 ʟɪʙʀᴀʀʏ: <a href='https://kurigram.icu/'>ᴋᴜʀɪɢʀᴀᴍ</a>
-├🔸 ʟᴀɴɢᴜᴀɢᴇ: <a href='https://www.python.org'>ᴘʏᴛʜᴏɴ 3.11</a>
-├🔸 ᴅᴀᴛᴀʙᴀsᴇ: <a href='https://www.mongodb.com'>ᴍᴏɴɢᴏᴅʙ</a>
-├🔸 sᴇʀᴠᴇʀ: <a href='https://koyeb.com'>ᴋᴏʏᴇʙ ᴀᴅᴠᴀɴᴄᴇᴅ</a>
-╰───────────━━━━━━━</b>"""
+├ 💠 ɴᴀᴍᴇ: <a href='https://t.me/{}'>{}</a>
+├ 🚀 ᴠᴇʀsɪᴏɴ: <code>ᴠ-2.3.1</code>
+├ 📚 ʟɪʙʀᴀʀʏ: <a href='https://kurigram.icu/'>ᴋᴜʀɪɢʀᴀᴍ</a>
+├ 🐍 ʟᴀɴɢᴜᴀɢᴇ: <a href='https://www.python.org'>ᴘʏᴛʜᴏɴ 𝟹.𝟷𝟷</a>
+├ 🍃 ᴅᴀᴛᴀʙᴀsᴇ: <a href='https://www.mongodb.com'>ᴍᴏɴɢᴏᴅʙ</a>
+├ ☁️ sᴇʀᴠᴇʀ: <a href='https://koyeb.com'>ᴋᴏʏᴇʙ</a>
+╰───────────━━━━━━━
+
+🎬 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
 
     MY_OWNER_TXT = """<b>🪪 ᴏᴡɴᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ
 
-◈ ɴᴀᴍᴇ ➜ ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ
-◈ ᴜsᴇʀɴᴀᴍᴇ ➜ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>
-◈ ᴄᴏɴᴛᴀᴄᴛ ➜ <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a>
+╭───────────━━━━━━━
+├ 👤 ɴᴀᴍᴇ: ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ
+├ 🏷 ᴜsᴇʀɴᴀᴍᴇ: <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>
+├ 💬 ᴄᴏɴᴛᴀᴄᴛ: <a href='https://t.me/talk_mrs_bot'>ᴛᴀʟᴋ ᴛᴏ ᴀᴅᴍɪɴ</a>
+├ 📍 ʟᴏᴄᴀᴛɪᴏɴ: ɪɴᴅɪᴀ 🇮🇳
+╰───────────━━━━━━━
 
-🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
+🎬 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
 
     STATUS_TXT = """<b>🎬 ʙᴏᴛ ʟɪᴠᴇ sᴛᴀᴛɪsᴛɪᴄs
 
@@ -179,16 +185,27 @@ class script(object):
 
     PLAN_TXT = """<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
 
-Activate any premium plan to get exclusive features.
+╭───────────━━━━━━━
+├ 👑 ᴇʟᴇᴠᴀᴛᴇ ʏᴏᴜʀ ᴇxᴘᴇʀɪᴇɴᴄᴇ!
+├ ᴜɴʟᴏᴄᴋ ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ʙᴏᴛ ꜰᴇᴀᴛᴜʀᴇs.
+╰───────────━━━━━━━
 
-- INR {} for per day -
+💳 ᴘʀɪᴄɪɴɢ: ᴏɴʟʏ ₹{} / ᴅᴀʏ
 
-🌟 Features:
-╰┈➤ Ad free experience
-╰┈➤ Fast download & Streaming
-╰┈➤ No shortlinks & No Verify
+🌟 ᴇxᴄʟᴜsɪᴠᴇ ꜰᴇᴀᴛᴜʀᴇs:
+╭───────────━━━━━━━
+├ 🚫 100% ᴀᴅ-ꜰʀᴇᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ
+├ ⚡ ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ & sᴛʀᴇᴀᴍɪɴɢ
+├ 🔓 ᴅɪʀᴇᴄᴛ ꜰɪʟᴇs (ɴᴏ sʜᴏʀᴛʟɪɴᴋs)
+├ 🎯 ɴᴏ ᴛᴏᴋᴇɴ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʀᴇǫᴜɪʀᴇᴅ
+├ ♾️ ᴜɴʟɪᴍɪᴛᴇᴅ sᴇᴀʀᴄʜᴇs & ǫᴜᴇʀɪᴇs
+├ 🛡️ ᴘʀɪᴏʀɪᴛʏ ʙᴏᴛ ʀᴇsᴘᴏɴsᴇ ᴛɪᴍᴇ
+╰───────────━━━━━━━
 
-📢 Support: {}</b>"""
+📝 ʜᴏᴡ ᴛᴏ ᴜᴘɢʀᴀᴅᴇ?
+ᴍᴀᴋᴇ ᴛʜᴇ ᴘᴀʏᴍᴇɴᴛ ᴀɴᴅ sᴇɴᴅ ᴛʜᴇ sᴄʀᴇᴇɴsʜᴏᴛ ᴛᴏ ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴀᴅᴍɪɴ ᴛᴏ ᴀᴄᴛɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴘʟᴀɴ.
+
+📞 ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ: {}</b>"""
 
     PREMIUM_TXT = """<b><i><u>- ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʟᴀɴs - </u>
 
@@ -214,10 +231,19 @@ Activate any premium plan to get exclusive features.
 
     SOURCE_TXT = """<b>📁 ʀᴇᴘᴏsɪᴛᴏʀʏ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ
 
-◈ ᴘʀᴏᴊᴇᴄᴛ ➜ ɪɴꜰɪɴɪᴛʏ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ᴠ𝟹
-◈ sᴛᴀᴛᴜs ➜ ᴏᴘᴇɴ sᴏᴜʀᴄᴇ (ʙᴇᴛᴀ)
-◈ sᴏᴜʀᴄᴇ ➜ <a href='https://github.com/ibhub0'>ɢɪᴛʜᴜʙ ʟɪɴᴋ</a>
-◈ ᴅᴇᴠᴇʟᴏᴘᴇʀ ➜ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>
+╭───────────━━━━━━━
+├ ᴘʀᴏᴊᴇᴄᴛ: ɪɴꜰɪɴɪᴛʏ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ᴠ𝟹
+├ ᴠᴇʀsɪᴏɴ: 𝟹.𝟶.𝟶-ʙᴇᴛᴀ 🚀
+├ ʟɪᴄᴇɴsᴇ: ᴏᴘᴇɴ sᴏᴜʀᴄᴇ
+├ ʟᴀɴɢᴜᴀɢᴇ: ᴘʏᴛʜᴏɴ (ᴘʏʀᴏɢʀᴀᴍ)
+╰───────────━━━━━━━
 
-🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"""
+🔗 ᴏꜰꜰɪᴄɪᴀʟ ʟɪɴᴋs:
+╭───────────━━━━━━━
+├ 📂 sᴏᴜʀᴄᴇ: <a href='https://github.com/ibhub0'>ɢɪᴛʜᴜʙ ʀᴇᴘᴏsɪᴛᴏʀʏ</a>
+├ 👤 ᴏᴡɴᴇʀ: <a href='https://t.me/infinity_botzz'>ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢᴢ</a>
+├ 💬 ɢʀᴏᴜᴘ: <a href='https://t.me/infinity_botzz'>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a>
+├ 📢 ᴄʜᴀɴɴᴇʟ: <a href='https://t.me/infinity_botzz'>ᴜᴘᴅᴀᴛᴇs ʜᴜʙ</a>
+╰───────────━━━━━━━
 
+🌍 ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢᴢ</a></b>"""
