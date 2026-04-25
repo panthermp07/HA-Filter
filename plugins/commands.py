@@ -296,7 +296,7 @@ async def link(bot, message):
                 InlineKeyboardButton("🎬 ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ", url=watch, style=enums.ButtonStyle.PRIMARY),
                 InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=download, style=enums.ButtonStyle.PRIMARY)
             ],[
-                InlineKeyboardButton('❌ ᴄʟᴏsᴇ ᴍᴇɴᴜ ❌', callback_data='close_data', style=enums.ButtonStyle.DANGER)
+                InlineKeyboardButton('🚫 ᴄʟᴏsᴇ ᴍᴇɴᴜ 🚫', callback_data='close_data', style=enums.ButtonStyle.DANGER)
             ]]
         
         caption_text = (
