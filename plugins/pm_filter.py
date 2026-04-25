@@ -18,66 +18,41 @@ BUTTONS = {}
 CAP = {}
 
 
-## payment handle
-#@Client.on_pre_checkout_query()
-#async def pre_checkout(client, query: PreCheckoutQuery):
-#    await query.answer(ok=True)
-#
-## payment confirmation
-#@Client.on_message(filters.successful_payment)
-#async def payment_successful(client, message: Message):
-#    user = message.from_user
-#    payload = message.successful_payment.invoice_payload 
-#
-#    plans = {
-#        "plan_week": 7,
-#        "plan_month": 30,
-#        "plan_3months": 90,
-#        "plan_6months": 180,
-#        "plan_year": 365
-#    }
-#    days = plans.get(payload)
-#    mp = db.get_plan(user.id)
-#    ex = datetime.now() + timedelta(days=days)
-#    mp['expire'] = ex
-#    mp['plan'] = f'{days} days'
-#    mp['premium'] = True
-#    db.update_plan(user.id, mp)
-#    await message.reply(f"ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ʜᴀs ʙᴇᴇɴ ᴀᴄᴛɪᴠᴀᴛᴇᴅ! 🎉\n ⏳ ᴇxᴘɪʀᴇs ᴏɴ: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
-#    await message.reply(f"ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
-#    text = (
-#        f"💎 ɴᴇᴡ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇ\n"
-#        f"👤 ᴜsᴇʀ: {user.mention} - {user.id}\n"
-#        f"📦 ᴘʟᴀɴ: {days} ᴅᴀʏs\n"
-#        f"⭐ sᴛᴀʀs: <code>{message.successful_payment.total_amount}</code>\n"
-#        f"ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
-#    )
-#    await client.send_message(PREMIUM_NOTIFY_CHANNEL, text)
-#
-
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_search(client, message):
     if message.text.startswith("/"):
         return
+    try:
+        await message.react(emoji=random.choice(REACTIONS), big=True)
+    except:
+        pass
+        
     stg = db.get_bot_sttgs()
-    if not stg.get('PM_SEARCH'):
-        return await message.reply_text('PM search was disabled!')
     if await is_premium(message.from_user.id, client):
-        if not stg.get('AUTO_FILTER'):
-            return await message.reply_text('Auto filter was disabled!')
-        s = await message.reply(f"<b><i>🔎 `{message.text}` searching...</i></b>", quote=True)
+        s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
         await auto_filter(client, message, s)
-    else:
-        files, n_offset, total = await get_search_results(message.text)
-        btn = [[
-            InlineKeyboardButton("🗂 ᴄʟɪᴄᴋ ʜᴇʀᴇ 🗂", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)
-        ],[
-            InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium", style=enums.ButtonStyle.SUCCESS)
-            ]]
-        reply_markup=InlineKeyboardMarkup(btn)
-        if int(total) != 0:
-            await message.reply_text(f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇꜱᴜʟᴛꜱ ꜰᴏᴜɴᴅ ɪɴ ᴛʜɪꜱ ɢʀᴏᴜᴘ 👇</i></b>\n\nor buy premium subscription', reply_markup=reply_markup)
 
+    else:
+        if stg.get('PM_SEARCH'):
+            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
+            await auto_filter(client, message, s)
+            
+        else:
+            files, n_offset, total = await get_search_results(message.text)
+            
+            if int(total) != 0:
+                btn = [[
+                    InlineKeyboardButton("🗂 ᴄʟɪᴄᴋ ʜᴇʀᴇ 🗂", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)
+                ],[
+                    InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium", style=enums.ButtonStyle.SUCCESS)
+                ]]
+                reply_markup = InlineKeyboardMarkup(btn)
+                
+                await message.reply_text(
+                    f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n'
+                    f'<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
+                    reply_markup=reply_markup
+                )
             
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
