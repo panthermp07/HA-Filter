@@ -1,4 +1,19 @@
+import os
+import time
+import asyncio
 import logging
+from aiohttp import web
+from web import web_app
+from typing import Union, Optional, AsyncGenerator
+from pymongo.server_api import ServerApi
+from pymongo.mongo_client import MongoClient
+from pyrogram.errors import FloodWait
+from pyrogram.handlers import MessageHandler
+from pyrogram import types, Client, StopPropagation
+from database.users_chats_db import db
+from utils import temp, get_readable_time, check_premium
+from info import URL, INDEX_CHANNELS, SUPPORT_GROUP, LOG_CHANNEL, API_ID, DATA_DATABASE_URL, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL, ADMINS, SECOND_FILES_DATABASE_URL, FILES_DATABASE_URL
+
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -7,28 +22,12 @@ logging.basicConfig(
 logging.getLogger('pyrogram').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
-import os
-import time
-import asyncio
 try:
     import uvloop
     ul = True
 except ImportError:
     ul = False
     pass
-
-from pyrogram import types, Client, StopPropagation
-from pyrogram.handlers import MessageHandler
-from pyrogram.errors import FloodWait
-from aiohttp import web
-from typing import Union, Optional, AsyncGenerator
-
-from web import web_app
-from info import URL, INDEX_CHANNELS, SUPPORT_GROUP, LOG_CHANNEL, API_ID, DATA_DATABASE_URL, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL, ADMINS, SECOND_FILES_DATABASE_URL, FILES_DATABASE_URL
-from utils import temp, get_readable_time, check_premium
-from database.users_chats_db import db
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 if ul:
     uvloop.install()

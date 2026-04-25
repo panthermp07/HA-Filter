@@ -1,9 +1,8 @@
-import re
-from os import environ
 import os
-from Script import script
+import re
 import logging
-
+from os import environ
+from Script import script
 logger = logging.getLogger(__name__)
 
 def is_enabled(type, value):
@@ -162,6 +161,12 @@ if len(PREMIUM_NOTIFY_CHANNEL) == 0:
     exit()
 else:
     PREMIUM_NOTIFY_CHANNEL = int(PREMIUM_NOTIFY_CHANNEL)
+
+if len(VERIFICATION_NOTIFY_CHANNEL) == 0:
+    logger.error('VERIFICATION_NOTIFY_CHANNEL is missing, exiting now')
+    exit()
+else:
+    VERIFICATION_NOTIFY_CHANNEL = int(VERIFICATION_NOTIFY_CHANNEL)
 
 if len(URL) == 0:
     logger.error('URL is missing, exiting now')

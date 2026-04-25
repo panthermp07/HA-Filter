@@ -1,11 +1,11 @@
-from info import ADMINS
-from speedtest import Speedtest, ConfigRetrievalError, SpeedtestBestServerFailure
-from pyrogram import Client, filters, enums
-from pyrogram.errors import UserNotParticipant
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import os
 from utils import get_size
 from datetime import datetime
-import os
+from info import ADMINS
+from pyrogram.errors import UserNotParticipant
+from pyrogram import Client, filters, enums
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from speedtest import Speedtest, ConfigRetrievalError, SpeedtestBestServerFailure
 
 
 @Client.on_message(filters.command('id'))

@@ -1,10 +1,10 @@
-from pyrogram import Client, filters
-from pyrogram.errors import MessageTooLong
-import sys
 import os
+import sys
+from pyrogram import Client, filters
+from info import ADMINS
+from pyrogram.errors import MessageTooLong
 import traceback
 from io import StringIO
-from info import ADMINS
 
 @Client.on_message(filters.command("eval") & filters.user(ADMINS))
 async def executor(client, message):
