@@ -149,7 +149,7 @@ async def next_page(bot, query):
         return
     temp.FILES[key] = files
     settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     files_link = ''
 
     if settings['links']:
@@ -252,7 +252,7 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
         return
     temp.FILES[key] = files
     settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     files_link = ''
 
     if settings['links']:
@@ -296,7 +296,7 @@ async def lang_next_page(bot, query):
     search = BUTTONS.get(key)
     cap = CAP.get(key)
     settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     if not search:
         await query.answer(f"Hello {query.from_user.first_name},\nSend New Request Again!", show_alert=True)
         return
@@ -370,7 +370,7 @@ async def quality_search(client: Client, query: CallbackQuery):
         return
     temp.FILES[key] = files
     settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     files_link = ''
     if settings['links']:
         btn = []
@@ -410,7 +410,7 @@ async def quality_next_page(bot, query):
     search = BUTTONS.get(key)
     cap = CAP.get(key)
     settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     if not search:
         await query.answer(f"Hello {query.from_user.first_name},\nSend New Request Again!", show_alert=True)
         return
@@ -1194,7 +1194,7 @@ async def auto_filter(client, msg, s, spoll=False):
     else:
         cap = f"<b>💭 ʜᴇʏ {message.from_user.mention},\n♻️ ʜᴇʀᴇ ɪ ꜰᴏᴜɴᴅ ꜰᴏʀ ʏᴏᴜʀ sᴇᴀʀᴄʜ {search}...</b>"
     CAP[key] = cap
-    del_msg = f"\n\n<b>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</b>" if settings["auto_delete"] else ''
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     if imdb and imdb.get('poster'):
         await s.delete()
         try:
@@ -1240,8 +1240,8 @@ async def advantage_spell_chok(message, s):
     search = message.text
     google_search = search.replace(" ", "+")
     btn = [[
-        InlineKeyboardButton("⚠️ Instructions ⚠️", callback_data='instructions'),
-        InlineKeyboardButton("🔎 Search Google 🔍", url=f"https://www.google.com/search?q={google_search}")
+        InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs ⚠️", callback_data='instructions'),
+        InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ 🔍", url=f"https://www.google.com/search?q={google_search}")
     ]]
     try:
         movies = await get_poster(search, bulk=True)
@@ -1263,9 +1263,8 @@ async def advantage_spell_chok(message, s):
         n = await s.edit_text(
             text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
             reply_markup=InlineKeyboardMarkup(btn),
-            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
         )
-        # Background task for logging (Fast speed)
         asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {message.from_user.mention}\nContent: {search}"))
         
         await asyncio.sleep(60)
@@ -1283,12 +1282,17 @@ async def advantage_spell_chok(message, s):
         for movie in movies
     ]
     buttons.append(
-        [InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data")]
+        [InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)]
     )
     s = await s.edit_text(
-        text=f"👋 Hello {message.from_user.mention},\n\nI couldn't find the <b>'{search}'</b> you requested.\nSelect if you meant one of these? 👇", 
+        text = (
+            f"👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\n"
+            f"I couldn't find the <b>'{search}'</b> you requested.\n"
+            f"Select if you meant one of these? 👇"
+        ),
+
         reply_markup=InlineKeyboardMarkup(buttons),
-        link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+        link_preview_options=LinkPreviewOptions(is_disabled=True)  # Preview OFF
     )
     await asyncio.sleep(300)
     await s.delete()
