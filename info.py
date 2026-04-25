@@ -92,12 +92,10 @@ IS_PREMIUM = is_enabled('IS_PREMIUM', True)
 OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
 PREMIUM_NOTIFY_CHANNEL = environ.get('PREMIUM_NOTIFY_CHANNEL', '')
 
-# Telegram Stars required to purchase Premium plans
-ONE_WEEK_STARS = int(environ.get("ONE_WEEK_STARS", "30"))
-ONE_MONTH_STARS = int(environ.get("ONE_MONTH_STARS", "55"))
-THREE_MONTHS_STARS = int(environ.get("THREE_MONTHS_STARS", "120"))
-SIX_MONTHS_STARS = int(environ.get("SIX_MONTHS_STARS", "220"))
-ONE_YEAR_STARS = int(environ.get("ONE_YEAR_STARS", "400"))
+PRE_DAY_AMOUNT = int(environ.get('PRE_DAY_AMOUNT', '10')) 
+UPI_ID = environ.get("UPI_ID", "")
+UPI_NAME = environ.get("UPI_NAME", "")
+RECEIPT_SEND_USERNAME = environ.get("RECEIPT_SEND_USERNAME", "@talk_mrs_bot")
 
 # for TMDb
 TMDB_API_KEY = environ.get("TMDB_API_KEY", "")

@@ -10,7 +10,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPrevi
 from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
 from database.users_chats_db import db
 from datetime import datetime, timedelta
-from info import OWNER_USERNAME, IS_PREMIUM, URL, BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, PM_FILE_DELETE_TIME, PREMIUM_NOTIFY_CHANNEL, VERIFICATION_NOTIFY_CHANNEL
+from info import OWNER_USERNAME, IS_PREMIUM, PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME, URL, BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, PM_FILE_DELETE_TIME, PREMIUM_NOTIFY_CHANNEL, VERIFICATION_NOTIFY_CHANNEL
 from utils import is_premium, upload_image, get_settings, get_size, is_subscribed, is_check_admin, get_shortlink, get_verify_status, update_verify_status, save_group_settings, temp, get_readable_time, get_wish, get_seconds
 
 
@@ -503,8 +503,8 @@ async def myplan(client, message):
             '<b>❌ ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴀɴʏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ.\n\nᴘʟᴇᴀsᴇ ᴜsᴇ /plan ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ᴇxᴄʟᴜsɪᴠᴇ ꜰᴇᴀᴛᴜʀᴇs.</b>', 
             reply_markup=InlineKeyboardMarkup(btn)
         )
-    if mp.get('plan') == "" or mp.get('expire') == "":
-        return await message.reply('<b>🌟 ʏᴏᴜ ᴀʀᴇ ᴀ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ!</b>')
+    #if mp.get('plan') == "" or mp.get('expire') == "":
+    #    return await message.reply('<b>🌟 ʏᴏᴜ ᴀʀᴇ ᴀ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ!</b>')
     
     expire_str = mp['expire'].strftime('%d %b %Y, %I:%M %p')
     
@@ -534,7 +534,7 @@ async def plan(client, message):
         ]]
 
     await message.reply(
-        script.PLAN_TXT,
+        script.PLAN_TXT.format(PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME),
         reply_markup=InlineKeyboardMarkup(btn),
         disable_web_page_preview=True,
         parse_mode=enums.ParseMode.HTML
