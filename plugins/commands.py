@@ -83,7 +83,6 @@ async def start(client, message):
         chat = await client.get_chat(int(group_id))
         return await message.reply(f"<b>⚙️ ᴄʜᴀɴɢᴇ sᴇᴛᴛɪɴɢs ꜰᴏʀ: {chat.title}</b>", reply_markup=InlineKeyboardMarkup(btn))
 
-
     if mc.startswith('inline_fsub'):
         btn = await is_subscribed(client, message)
         if btn:
@@ -161,6 +160,7 @@ async def start(client, message):
             parse_mode=enums.ParseMode.HTML
         )
         return
+        
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
         files = temp.FILES.get(key)
@@ -202,8 +202,8 @@ async def start(client, message):
             )
             file_ids.append(msg.id)
 
-        time = get_readable_time(PM_FILE_DELETE_TIME)
-        vp = await message.reply(f"Nᴏᴛᴇ: Tʜɪs ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇs ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
+        time_str = get_readable_time(PM_FILE_DELETE_TIME)
+        vp = await message.reply(f"Nᴏᴛᴇ: Tʜɪs ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time_str} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇs ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
         await asyncio.sleep(PM_FILE_DELETE_TIME)
         buttons = [[InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇs ᴀɢᴀɪɴ', callback_data=f"get_del_send_all_files#{grp_id}#{key}")]] 
         await client.delete_messages(
@@ -261,8 +261,8 @@ async def start(client, message):
         protect_content=False,
         reply_markup=InlineKeyboardMarkup(btn)
     )
-    time = get_readable_time(PM_FILE_DELETE_TIME)
-    msg = await vp.reply(f"Nᴏᴛᴇ: Tʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇ ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
+    time_str = get_readable_time(PM_FILE_DELETE_TIME)
+    msg = await vp.reply(f"Nᴏᴛᴇ: Tʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time_str} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇ ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
     await asyncio.sleep(PM_FILE_DELETE_TIME)
     btns = [[
         InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇ ᴀɢᴀɪɴ', callback_data=f"get_del_file#{grp_id}#{file_id}", style=enums.ButtonStyle.SUCCESS)
@@ -455,7 +455,6 @@ async def img_2_link(bot, message):
     if not reply_to_message or not reply_to_message.photo:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴘʜᴏᴛᴏ ᴛᴏ ɢᴇɴᴇʀᴀᴛᴇ ʟɪɴᴋ.</b>')
     
-    # Elite processing message
     text = await message.reply_text(text="<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ ʏᴏᴜʀ ɪᴍᴀɢᴇ....</b>")   
     
     try:
@@ -503,8 +502,6 @@ async def myplan(client, message):
             '<b>❌ ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴀɴʏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ.\n\nᴘʟᴇᴀsᴇ ᴜsᴇ /plan ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ᴇxᴄʟᴜsɪᴠᴇ ꜰᴇᴀᴛᴜʀᴇs.</b>', 
             reply_markup=InlineKeyboardMarkup(btn)
         )
-    #if mp.get('plan') == "" or mp.get('expire') == "":
-    #    return await message.reply('<b>🌟 ʏᴏᴜ ᴀʀᴇ ᴀ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ!</b>')
     
     expire_str = mp['expire'].strftime('%d %b %Y, %I:%M %p')
     
@@ -546,72 +543,64 @@ async def add_prm(bot, message):
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
     
-    try:
-        _, user_id, d = message.text.split(' ')
-    except:
-        return await message.reply('<b>💡 ᴜsᴀɢᴇ: <code>/add_prm user_id 1d</code></b>')
-    
-    try:
-        duration_val = int(d[:-1])
-    except:
-        return await message.reply('<b>❌ ɪɴᴠᴀʟɪᴅ ᴅᴀʏs. ᴜsᴇ: 1ᴅ, 7ᴅ, 30ᴅ...</b>')
-
-    try:
-        user = await bot.get_users(user_id)
-    except Exception as e:
-        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
-
-    if user.id in ADMINS:
-        return await message.reply('<b>⚡ ᴀᴅᴍɪɴs ᴀʀᴇ ᴀʟʀᴇᴀᴅʏ ᴘʀᴇᴍɪᴜᴍ.</b>')
-    
-    if not await is_premium(user.id, bot):
-        mp = db.get_plan(user.id)
-        ex = datetime.now() + timedelta(days=duration_val)
-        mp['expire'] = ex
-        mp['plan'] = f'{duration_val} ᴅᴀʏs'
-        mp['premium'] = True
-        db.update_plan(user.id, mp)
-
-        expire_str = ex.strftime('%d %b %Y, %I:%M %p')
-
-        channel_msg = (
-            f"✅ #ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ\n\n"
-            f"👤 ᴜsᴇʀ: {user.mention}\n"
-            f"🆔 ɪᴅ: <code>{user.id}</code>\n"
-            f"⏳ ᴅᴜʀᴀᴛɪᴏɴ: {duration_val} ᴅᴀʏs\n"
-            f"📅 ᴇxᴘɪʀʏ: {expire_str}\n"
-            f"👮 ᴀᴅᴅᴇᴅ ʙʏ: {message.from_user.mention}"
-        )
-
-        notify_msg = (
-            f"🎉 ʜᴇʏ {user.first_name} 👋\n\n"
-            f"ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ <b>ᴘʀᴇᴍɪᴜᴍ</b>!\n\n"
-            f"🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
-            f"⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> {duration_val} ᴅᴀʏs\n"
-            f"📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{expire_str}</code>\n\n"
-            f"✨ ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!\n"
-            f"🌍 <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a>"
-        )
-        await message.reply(channel_msg, disable_web_page_preview=True)
+    if len(message.command) == 3:
         try:
-            await bot.send_message(
-                chat_id=PREMIUM_NOTIFY_CHANNEL,
-                text=channel_msg,
-                disable_web_page_preview=True
-            )
+            user_id = int(message.command[1])
+            duration = message.command[2]        
+            seconds = await get_seconds(duration)
+            
+            if seconds > 0:
+                expiry_time = datetime.now() + timedelta(seconds=seconds)
+                
+                # Using our PyMongo db structure
+                status = {
+                    'expire': expiry_time,
+                    'plan': duration,
+                    'premium': True,
+                    'trial': True
+                }
+                db.update_plan(user_id, status)
+                
+                try:
+                    user = await bot.get_users(user_id)
+                    user_mention = user.mention
+                except:
+                    user_mention = "ᴜsᴇʀ"
+
+                admin_msg = (
+                    "✅ <b>#ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ</b>\n\n"
+                    f"👤 <b>ɴᴀᴍᴇ:</b> {user_mention}\n"
+                    f"🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
+                    f"⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{duration}</code>\n"
+                    f"📅 <b>ᴇxᴘɪʀʏ:</b> <code>{expiry_time.strftime('%d %b %Y, %I:%M %p')}</code>\n\n"
+                    "✨ <b><i>ᴛʜᴇ ᴜsᴇʀ ʜᴀs ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ.</i></b>"
+                )
+                await message.reply_text(admin_msg)
+                
+                user_msg = (
+                    "🎉 <b>ʜᴇʏ {},\n\n"
+                    "ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ!</b>\n\n"
+                    "🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
+                    "⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{}</code>\n"
+                    "📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{}</code>\n\n"
+                    "✨ <b>ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!</b>"
+                ).format(user_mention, duration, expiry_time.strftime('%d %b %Y, %I:%M %p'))
+                
+                try:
+                    await bot.send_message(chat_id=user_id, text=user_msg)
+                except: pass
+
+                if PREMIUM_NOTIFY_CHANNEL:
+                    try:
+                        log_text = f"✅ <b>#ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ</b>\n\n👤 <b>ᴜsᴇʀ:</b> {user_mention}\n🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{duration}</code>\n📅 <b>ᴇxᴘɪʀʏ:</b> <code>{expiry_time.strftime('%d %b %Y, %I:%M %p')}</code>\n👮 <b>ᴀᴅᴅᴇᴅ ʙʏ:</b> {message.from_user.mention}"
+                        await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_text)
+                    except: pass
+            else:
+                await message.reply_text("❌ <b>ɪɴᴠᴀʟɪᴅ ᴛɪᴍᴇ ꜰᴏʀᴍᴀᴛ.</b>")
         except Exception as e:
-            logger.error(f"Channel Log Error: {e}")
-
-        try:
-            await bot.send_message(
-                user.id, 
-                notify_msg, 
-                disable_web_page_preview=True
-            )
-        except:
-            pass
+            await message.reply_text(f"❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>")
     else:
-        await message.reply(f"<b>💎 {user.mention} ɪs ᴀʟʀᴇᴀᴅʏ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ.</b>")
+        await message.reply_text("📋 <b>ᴜsᴀɢᴇ:</b> <code>/add_prm user_id 7day/5min</code>")
 
 
 
@@ -620,61 +609,26 @@ async def rm_prm(bot, message):
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
     
-    try:
-        _, user_id = message.text.split(' ')
-    except:
-        return await message.reply('<b>💡 ᴜsᴀɢᴇ: <code>/rm_prm user_id</code></b>')
-    
-    try:
-        user = await bot.get_users(user_id)
-    except Exception as e:
-        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
-
-    if user.id in ADMINS:
-        return await message.reply('<b>⚡ ᴀᴅᴍɪɴs ᴀʀᴇ ʟɪꜰᴇᴛɪᴍᴇ ᴘʀᴇᴍɪᴜᴍ.</b>')
-
-    if not await is_premium(user.id, bot):
-        await message.reply(f"<b>❌ {user.mention} ɪs ɴᴏᴛ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ.</b>")
+    if len(message.command) == 2:
+        try:
+            user_id = int(message.command[1])
+            status = {'expire': '', 'plan': '', 'premium': False, 'trial': True}
+            db.update_plan(user_id, status)
+            await message.reply_text("✅ <b>ᴘʀᴇᴍɪᴜᴍ ʀᴇᴍᴏᴠᴇᴅ!</b>")
+            
+            if PREMIUM_NOTIFY_CHANNEL:
+                try:
+                    log_text = f"🚫 <b>#ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇᴅ</b>\n\n🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n👮 <b>ʙʏ:</b> {message.from_user.mention}"
+                    await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_text)
+                except: pass
+            
+            try:
+                await bot.send_message(user_id, "<b>⚠️ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>")
+            except: pass
+        except Exception as e:
+            await message.reply_text(f"❌ <b>ɪɴᴠᴀʟɪᴅ ᴜsᴇʀ ɪᴅ ᴏʀ ᴇʀʀᴏʀ: {e}</b>")
     else:
-        mp = db.get_plan(user.id)
-        mp['expire'] = ''
-        mp['plan'] = ''
-        mp['premium'] = False
-        db.update_plan(user.id, mp)
-
-        remove_log = (
-            f"❌ #ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇᴅ\n\n"
-            f"👤 <b>ᴜsᴇʀ:</b> {user.mention}\n"
-            f"🆔 <b>ɪᴅ:</b> <code>{user.id}</code>\n"
-            f"👮 <b>ʀᴇᴍᴏᴠᴇᴅ ʙʏ:</b> {message.from_user.mention}\n"
-            f"📉 <b>sᴛᴀᴛᴜs:</b> ᴅᴏᴡɴɢʀᴀᴅᴇᴅ ᴛᴏ ꜰʀᴇᴇ"
-        )
-
-        user_alert = (
-            f"⚠️ <b>ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ ʀᴇᴍᴏᴠᴇᴅ</b>\n\n"
-            f"ʜᴇʏ {user.first_name}, ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ sᴜʙsᴄʀɪᴘᴛɪᴏɴ ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.\n\n"
-            f"🔓 <b>ᴀᴄᴄᴇss:</b> ꜰʀᴇᴇ ᴛɪᴇʀ\n"
-            f"🛠 <b>sᴜᴘᴘᴏʀᴛ:</b> <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a>"
-        )
-        await message.reply(remove_log, disable_web_page_preview=True)
-        
-        try:
-            await bot.send_message(
-                chat_id=PREMIUM_NOTIFY_CHANNEL,
-                text=remove_log,
-                disable_web_page_preview=True
-            )
-        except:
-            pass
-
-        try:
-            await bot.send_message(
-                user.id, 
-                user_alert, 
-                disable_web_page_preview=True
-            )
-        except:
-            pass
+        await message.reply_text("📋 <b>ᴜsᴀɢᴇ:</b> <code>/rm_prm user_id</code>")
 
 
 @Client.on_message(filters.command('prm_list') & filters.user(ADMINS))

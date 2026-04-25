@@ -10,8 +10,8 @@ data_db_client = MongoClient(DATA_DATABASE_URL)
 data_db = data_db_client[DATABASE_NAME]
 
 if SECOND_FILES_DATABASE_URL:
-     second_files_db_client = MongoClient(SECOND_FILES_DATABASE_URL)
-     second_files_db = second_files_db_client[DATABASE_NAME]
+    second_files_db_client = MongoClient(SECOND_FILES_DATABASE_URL)
+    second_files_db = second_files_db_client[DATABASE_NAME]
 
 class Database:
     default_setgs = {
@@ -214,6 +214,46 @@ class Database:
         if not self.prm.find_one({'id': id}):
             self.prm.insert_one({'id': id, 'status': data})
         self.prm.update_one({'id': id}, {'$set': {'status': data}})
+
+    def has_premium_access(self, user_id):
+        user_data = self.prm.find_one({'id': user_id})
+        if user_data and user_data.get('status'):
+            expiry_time = user_data['status'].get("expire")
+            if expiry_time == '' or expiry_time is None:
+                return False
+            elif isinstance(expiry_time, datetime) and datetime.now() <= expiry_time:
+                return True
+            else:
+                user_data['status']['premium'] = False
+                user_data['status']['expire'] = ""
+                self.update_plan(user_id, user_data['status'])
+        return False
+    
+    def check_remaining_usage(self, user_id):
+        user_data = self.prm.find_one({'id': user_id})
+        if user_data and user_data.get('status'):
+            expiry_time = user_data['status'].get("expire")
+            if isinstance(expiry_time, datetime):
+                return expiry_time - datetime.now()
+        return timedelta(seconds=0)
+    
+    def get_free_trial_status(self, user_id):
+        user_data = self.prm.find_one({'id': user_id})
+        if user_data and user_data.get('status'):
+            return user_data['status'].get("trial", False)
+        return False
+
+    def give_free_trail(self, user_id):        
+        seconds = 5 * 60         
+        expiry_time = datetime.now() + timedelta(seconds=seconds)
+        status = {
+            'expire': expiry_time,
+            'plan': '5 Mins Trial',
+            'premium': True,
+            'trial': True
+        }
+        self.update_plan(user_id, status)
+    # -----------------------------------------------
 
     def get_premium_count(self):
         return self.prm.count_documents({'status.premium': True})
