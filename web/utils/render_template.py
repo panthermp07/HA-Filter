@@ -4,69 +4,76 @@ from web.utils.custom_dl import TGCustomYield
 import urllib.parse
 import aiofiles, html
 
-
 webapp_template = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Media Search</title>
+    <title>Infinity Search</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #141414;
-            --accent: #E50914;
-            --accent-hover: #C11119;
-            --text-main: #FFFFFF;
-            --text-muted: #B3B3B3;
-            --input-bg: #333333;
-            --card-bg: #222222;
-            --card-hover: #2F2F2F;
+            --bg-dark: #08090d;
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --card-bg: #11131a;
+            --card-border: #1f222c;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --input-focus: #1a1d27;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: var(--bg-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 24px 16px;
-            padding-bottom: 90px;
+            padding: 24px 16px 100px 16px;
             -webkit-font-smoothing: antialiased;
         }
 
         .header {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             text-align: left;
-            animation: fadeInDown 0.5s ease;
         }
 
         .greeting {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
         }
 
-        .greeting-name { color: var(--accent); }
-        .subtitle { font-size: 15px; color: var(--text-muted); font-weight: 400; }
+        .greeting-name { 
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .subtitle { 
+            font-size: 14px; 
+            color: var(--text-dim); 
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
 
         .search-container {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             position: sticky;
-            top: 10px;
-            z-index: 10;
-            margin-bottom: 20px;
-            background: var(--bg-main);
-            padding: 10px 0;
-            animation: fadeInUp 0.5s ease 0.1s both;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 24px;
+            background: var(--bg-dark);
+            padding: 12px 0;
         }
 
         .input-wrapper {
@@ -78,62 +85,60 @@ webapp_template = """
 
         input[type="text"] {
             width: 100%;
-            padding: 16px 45px 16px 20px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            background: var(--input-bg);
+            padding: 14px 45px 14px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
             color: var(--text-main);
             font-size: 16px;
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        input[type="text"]:focus { background: #404040; border-color: #555; }
-        input[type="text"]::placeholder { color: #8C8C8C; }
+        input[type="text"]:focus { 
+            background: var(--input-focus);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
 
         .clear-icon {
             position: absolute;
-            right: 14px;
-            width: 20px;
-            height: 20px;
-            color: #8C8C8C;
+            right: 16px;
+            width: 18px;
+            height: 18px;
+            color: var(--text-dim);
             cursor: pointer;
             display: none;
-            transition: color 0.2s;
         }
-
-        .clear-icon:hover { color: #FFFFFF; }
 
         .search-btn {
             background: var(--accent);
             color: #ffffff;
             border: none;
-            border-radius: 4px;
-            padding: 0 24px;
-            font-weight: 600;
-            font-size: 16px;
+            border-radius: 14px;
+            padding: 0 20px;
+            font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            transition: 0.2s;
         }
 
-        .search-btn:hover { background: var(--accent-hover); }
-        .search-btn:active { transform: scale(0.98); }
+        .search-btn:active { transform: scale(0.95); opacity: 0.8; }
 
         .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text-main);
-            animation: fadeInDown 0.4s ease;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            color: var(--text-dim);
         }
 
         .results-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
         .file-card {
@@ -141,66 +146,55 @@ webapp_template = """
             justify-content: space-between;
             align-items: center;
             background: var(--card-bg);
-            border-radius: 4px;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
             padding: 16px 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            animation: fadeInUp 0.4s ease;
-            border-left: 4px solid transparent;
+            transition: 0.2s;
         }
 
         .file-card:hover {
-            background: var(--card-hover);
-            border-left: 4px solid var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
         }
 
-        .file-card:active { background: #404040; }
-
         .file-info {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            padding-right: 15px;
+            flex: 1;
+            padding-right: 12px;
         }
 
         .file-name {
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 1.4;
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            margin-bottom: 6px;
-            color: var(--text-main);
+            margin-bottom: 4px;
+            color: #ffffff;
         }
 
-        .file-size { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+        .file-size { 
+            font-size: 12px; 
+            font-weight: 700; 
+            color: var(--accent); 
+            text-transform: uppercase;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
 
         .get-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background: transparent;
-            border: 2px solid var(--text-muted);
-            color: var(--text-muted);
-            border-radius: 50%;
             font-size: 18px;
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        
-        .file-card:hover .get-icon {
-            border-color: var(--text-main);
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+            opacity: 0.8;
         }
 
         .pagination {
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 32px);
@@ -208,90 +202,74 @@ webapp_template = """
             display: none;
             justify-content: space-between;
             align-items: center;
-            background: rgba(20, 20, 20, 0.95);
+            background: rgba(17, 19, 26, 0.8);
+            backdrop-filter: blur(12px);
             padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
-            z-index: 20;
+            border-radius: 18px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 200;
         }
 
         .page-btn {
-            background: var(--card-bg);
-            color: var(--text-main);
-            border: 1px solid #404040;
-            padding: 10px 20px;
-            border-radius: 4px;
-            font-weight: 500;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
         }
 
-        .page-btn:hover:not(:disabled) {
-            background: var(--card-hover);
-            border-color: var(--text-muted);
-        }
-
-        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .page-indicator { font-weight: 500; font-size: 15px; color: var(--text-main); }
+        .page-btn:disabled { background: #334155; opacity: 0.5; }
+        .page-indicator { font-weight: 600; font-size: 13px; color: var(--text-dim); }
 
         .loader {
             text-align: center;
-            padding: 40px 20px;
+            padding: 40px;
             color: var(--accent);
-            font-weight: 500;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.1em;
             display: none;
-            animation: pulse 1.5s infinite;
+            text-transform: uppercase;
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 class="greeting">Welcome, <span id="userName" class="greeting-name">Loading...</span></h1>
-        <p class="subtitle">Find your favorite movies and series.</p>
+        <h1 class="greeting">ʜᴇʏ, <span id="userName" class="greeting-name">Loading...</span></h1>
+        <p class="subtitle">ɪɴꜰɪɴɪᴛʏ ᴡᴀᴛᴄʜ ɴᴇᴛᴡᴏʀᴋ</p>
     </div>
 
     <div class="search-container">
         <div class="input-wrapper">
-            <input type="text" id="searchInput" placeholder="Titles, people, genres" onkeypress="handleEnter(event)" oninput="toggleClearIcon()">
-            <svg id="clearIcon" class="clear-icon" onclick="clearSearch()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <input type="text" id="searchInput" placeholder="Search movies, series..." onkeypress="handleEnter(event)" oninput="toggleClearIcon()">
+            <svg id="clearIcon" class="clear-icon" onclick="clearSearch()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
         </div>
-        <button class="search-btn" onclick="performSearch(0)">Search</button>
+        <button class="search-btn" onclick="performSearch(0)">🔍</button>
     </div>
 
-    <h2 id="sectionTitle" class="section-title">Recently Added</h2>
-    <div id="loader" class="loader">Loading files...</div>
+    <h2 id="sectionTitle" class="section-title">ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ</h2>
+    <div id="loader" class="loader">Fetching files...</div>
     <div id="results" class="results-container"></div>
 
     <div id="pagination" class="pagination">
-        <button id="backBtn" class="page-btn" onclick="changePage('back')">Back</button>
-        <div id="pageIndicator" class="page-indicator">1/1</div>
-        <button id="nextBtn" class="page-btn" onclick="changePage('next')">Next</button>
+        <button id="backBtn" class="page-btn" onclick="changePage('back')">ᴘʀᴇᴠ</button>
+        <div id="pageIndicator" class="page-indicator">1 / 1</div>
+        <button id="nextBtn" class="page-btn" onclick="changePage('next')">ɴᴇxᴛ</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.setBackgroundColor('#141414');
-        tg.setHeaderColor('#141414');
+        tg.setBackgroundColor('#08090d');
+        tg.setHeaderColor('#08090d');
 
         const user = tg.initDataUnsafe?.user;
         const userNameElement = document.getElementById('userName');
@@ -308,7 +286,7 @@ webapp_template = """
         let currentOffset = 0;
         let nextOffset = null;
         let botUsername = '';
-        let maxResultsPerPage = 10; // Default, will update from API
+        let maxResultsPerPage = 10; 
 
         function handleEnter(e) {
             if (e.key === 'Enter') performSearch(0);
@@ -337,11 +315,7 @@ webapp_template = """
             const query = document.getElementById('searchInput').value.trim();
             const sectionTitle = document.getElementById('sectionTitle');
             
-            if (query.length > 0) {
-                sectionTitle.innerText = "Search Results";
-            } else {
-                sectionTitle.innerText = "Recently Added";
-            }
+            sectionTitle.innerText = query.length > 0 ? "sᴇᴀʀᴄʜ ʀᴇsᴜʟᴛs" : "ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ";
 
             currentQuery = query;
             currentOffset = offset;
@@ -363,7 +337,7 @@ webapp_template = """
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (error) {
-                document.getElementById('loader').innerText = 'Connection error. Please try again.';
+                document.getElementById('loader').innerText = 'Connection Error';
             }
         }
 
@@ -372,10 +346,9 @@ webapp_template = """
             
             if (!data.files || data.files.length === 0) {
                 resultsDiv.innerHTML = `
-                    <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                        <h3 style="color: white; margin-bottom: 8px;">No matching results</h3>
-                        <p>Explore more by checking your spelling or trying a different search term.</p>
+                    <div style="text-align:center; padding:60px 20px;">
+                        <h3 style="color: white; margin-bottom: 8px;">No Results Found</h3>
+                        <p style="color: var(--text-dim); font-size: 14px;">Try a different keyword.</p>
                     </div>`;
                 return;
             }
@@ -383,12 +356,10 @@ webapp_template = """
             data.files.forEach((file, index) => {
                 const card = document.createElement('div');
                 card.className = 'file-card';
-                card.style.animationDelay = `${index * 0.05}s`;
-                
                 card.innerHTML = `
                     <div class="file-info">
                         <span class="file-name">${file.name}</span>
-                        <span class="file-size">${file.size} HD</span>
+                        <span class="file-size">${file.size}</span>
                     </div>
                     <div class="get-icon">▶</div>
                 `;
@@ -396,7 +367,6 @@ webapp_template = """
                 card.onclick = () => {
                     const payload = `file_${file.id}`;
                     const link = `https://t.me/${botUsername}?start=${payload}`;
-                    
                     if (userId === 'unknown') {
                         window.open(link, '_blank');
                     } else {
@@ -404,7 +374,6 @@ webapp_template = """
                         setTimeout(() => { tg.close(); }, 100);
                     }
                 };
-
                 resultsDiv.appendChild(card);
             });
         }
@@ -419,27 +388,17 @@ webapp_template = """
             }
 
             pagDiv.style.display = 'flex';
-
             const totalPages = Math.ceil(data.total_results / data.max_btn);
             const currentPage = Math.ceil(data.current_offset / data.max_btn) + 1;
-
-            document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
 
             const backBtn = document.getElementById('backBtn');
-            if (data.current_offset > 0) {
-                backBtn.style.visibility = 'visible';
-                backBtn.disabled = false;
-            } else {
-                backBtn.style.visibility = 'hidden';
-            }
+            backBtn.style.visibility = data.current_offset > 0 ? 'visible' : 'hidden';
+            backBtn.disabled = data.current_offset === 0;
 
             const nextBtn = document.getElementById('nextBtn');
-            if (nextOffset !== null) {
-                nextBtn.style.visibility = 'visible';
-                nextBtn.disabled = false;
-            } else {
-                nextBtn.style.visibility = 'hidden';
-            }
+            nextBtn.style.visibility = nextOffset !== null ? 'visible' : 'hidden';
+            nextBtn.disabled = nextOffset === null;
         }
 
         function changePage(direction) {
@@ -452,7 +411,6 @@ webapp_template = """
             }
         }
 
-        // Trigger initial search on load
         window.onload = () => {
             performSearch(0);
         };
@@ -460,6 +418,7 @@ webapp_template = """
 </body>
 </html>
 """
+
 # ─────────────────────────────────────────────────────────────────────────────
 # WATCH PAGE TEMPLATE  (route: /watch/{id})
 # ─────────────────────────────────────────────────────────────────────────────
@@ -698,7 +657,7 @@ watch_tmplt = """<!DOCTYPE html>
 <body>
 
 <header>
-    <span class="header-logo">HA Bots</span>
+    <span class="header-logo">Infinity Botz</span>
     <div id="file-name">{file_name}</div>
 </header>
 
@@ -760,7 +719,7 @@ watch_tmplt = """<!DOCTYPE html>
 </div>
 
 <footer>
-    <p>Powered by <a href="https://t.me/HA_Bots" class="ha-link" target="_blank" rel="noopener">HA Bots</a></p>
+    <p>Powered by <a href="https://t.me/HA_Bots" class="ha-link" target="_blank" rel="noopener">Infinity Botz</a></p>
 </footer>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
@@ -823,41 +782,41 @@ error_tmplt = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error — HA Bots</title>
+    <title>Error — ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
     <style>
         :root {
-            --p:#818cf8; --p2:#6366f1; --sec:#a78bfa; --acc:#38bdf8;
-            --txt:#f1f5f9; --txt2:#94a3b8;
-            --bg:#020617; --glass:rgba(10,18,38,.8); --gb:rgba(129,140,248,.13);
-            --err:#f43f5e; --err2:rgba(244,63,94,.15);
+            --p:#8b5cf6; --p2:#7c3aed; --sec:#a78bfa; --acc:#c4b5fd;
+            --txt:#f8fafc; --txt2:#94a3b8;
+            --bg:#08090d; --glass:rgba(17, 19, 26, 0.85); --gb:rgba(139, 92, 246, 0.15);
+            --err:#f43f5e; --err2:rgba(244, 63, 94, 0.1);
         }
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family:'Inter',sans-serif;
+            font-family:'Plus Jakarta Sans',sans-serif;
             background:var(--bg);
             color:var(--txt);
             min-height:100vh;
-            display:flex; flex-direction:column;
+            display:flex;
+            flex-direction:column;
             overflow-x:hidden;
         }
         body::before {
             content:''; position:fixed; inset:0; z-index:-1;
             background:
-                radial-gradient(ellipse 65% 45% at 50% 40%, rgba(244,63,94,.07) 0%, transparent 62%),
-                radial-gradient(ellipse 75% 50% at 10% 20%, rgba(99,102,241,.10) 0%, transparent 58%),
-                linear-gradient(160deg, #020617 0%, #070c1b 45%, #0f172a 100%);
+                radial-gradient(ellipse 65% 45% at 50% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 65%),
+                radial-gradient(ellipse 75% 50% at 10% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 60%),
+                linear-gradient(160deg, #08090d 0%, #0c0d14 45%, #11131a 100%);
         }
 
         /* Header */
         header {
-            padding:.8rem 1.5rem;
-            backdrop-filter:blur(24px) saturate(180%);
-            -webkit-backdrop-filter:blur(24px) saturate(180%);
+            padding:1.2rem 1.5rem;
+            backdrop-filter:blur(24px);
+            -webkit-backdrop-filter:blur(24px);
             background:var(--glass);
             border-bottom:1px solid var(--gb);
-            box-shadow:0 1px 32px rgba(0,0,0,.45);
             display:flex; justify-content:center; align-items:center;
             animation:fadeDown .45s ease both;
         }
@@ -866,9 +825,10 @@ error_tmplt = """<!DOCTYPE html>
             to   { opacity:1; transform:translateY(0); }
         }
         .header-logo {
-            font-size:1rem; font-weight:800; letter-spacing:-.01em;
-            background:linear-gradient(90deg,#e2e8f0 0%,var(--p) 50%,var(--acc) 100%);
+            font-size:1.1rem; font-weight:800; letter-spacing:0.05em;
+            background:linear-gradient(90deg,#f8fafc 0%,var(--p) 50%,var(--acc) 100%);
             -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            text-transform: uppercase;
         }
 
         /* Error layout */
@@ -878,112 +838,115 @@ error_tmplt = """<!DOCTYPE html>
         }
         .error-card {
             background:var(--glass);
-            border:1px solid rgba(244,63,94,.22);
-            border-radius:20px;
-            padding:2.5rem 2rem;
+            border:1px solid rgba(139, 92, 246, 0.2);
+            border-radius:24px;
+            padding:3rem 2rem;
             text-align:center;
-            max-width:440px; width:100%;
+            max-width:420px; width:100%;
             box-shadow:
-                0 0 0 1px rgba(255,255,255,.04),
-                0 12px 48px rgba(0,0,0,.5),
-                0 0 45px rgba(244,63,94,.09);
-            backdrop-filter:blur(20px);
-            animation:cardIn .5s ease both;
+                0 0 0 1px rgba(255,255,255,.03),
+                0 20px 50px rgba(0,0,0,0.6),
+                0 0 40px rgba(139, 92, 246, 0.05);
+            backdrop-filter:blur(25px);
+            animation:cardIn .6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         @keyframes cardIn {
-            from { opacity:0; transform:translateY(22px) scale(.97); }
+            from { opacity:0; transform:translateY(30px) scale(.95); }
             to   { opacity:1; transform:translateY(0) scale(1); }
         }
 
         /* Error icon */
         .err-icon {
-            width:66px; height:66px; border-radius:50%;
-            margin:0 auto 1.4rem;
+            width:72px; height:72px; border-radius:50%;
+            margin:0 auto 1.5rem;
             background:var(--err2);
-            border:1px solid rgba(244,63,94,.28);
+            border:1px solid rgba(244, 63, 94, 0.25);
             display:flex; align-items:center; justify-content:center;
-            box-shadow:0 0 28px rgba(244,63,94,.18);
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.15);
         }
         .err-icon svg { color:var(--err); }
 
         .err-label {
-            font-size:.65rem; font-weight:700; letter-spacing:.1em;
-            text-transform:uppercase; color:var(--err); margin-bottom:.55rem;
+            font-size:0.7rem; font-weight:800; letter-spacing:0.15em;
+            text-transform:uppercase; color:var(--err); margin-bottom:0.7rem;
         }
         .error-card h2 {
-            font-size:1.6rem; font-weight:800; letter-spacing:-.02em;
-            margin-bottom:.65rem;
+            font-size:1.7rem; font-weight:800; letter-spacing:-0.03em;
+            margin-bottom:0.75rem; color: #fff;
         }
         .error-card p {
-            font-size:.88rem; color:var(--txt2); line-height:1.7;
-            margin-bottom:1.75rem;
+            font-size:0.9rem; color:var(--txt2); line-height:1.6;
+            margin-bottom:2rem; font-weight: 500;
         }
 
         /* Buttons */
-        .err-btns { display:flex; flex-direction:column; gap:.75rem; width:100%; align-items:center; }
+        .err-btns { display:flex; flex-direction:column; gap:0.8rem; width:100%; align-items:center; }
         .ebtn {
-            display:flex; align-items:center; justify-content:center; gap:.5rem;
-            width:100%; max-width:280px;
-            padding:.85rem 1.5rem; border-radius:12px;
-            font-family:'Inter',sans-serif; font-size:.9rem; font-weight:700;
+            display:flex; align-items:center; justify-content:center; gap:0.6rem;
+            width:100%; max-width:300px;
+            padding:1rem 1.5rem; border-radius:14px;
+            font-family:inherit; font-size:0.85rem; font-weight:700;
             cursor:pointer; text-decoration:none; color:#fff; border:none;
-            transition:transform .2s, box-shadow .2s, filter .2s;
-            background:linear-gradient(135deg,var(--p2),var(--p),var(--sec));
-            box-shadow:0 4px 20px rgba(99,102,241,.45);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, var(--p2), var(--p));
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .ebtn:hover {
-            transform:scale(1.02);
-            box-shadow:0 6px 24px rgba(99,102,241,.55);
-            filter:brightness(1.08);
+            transform:translateY(-3px);
+            box-shadow: 0 12px 25px rgba(124, 58, 237, 0.4);
+            filter:brightness(1.1);
         }
-        .ebtn:active { transform:scale(.98); }
+        .ebtn:active { transform:scale(.97); }
 
         /* Footer */
         footer {
-            padding:.85rem 1.5rem; text-align:center;
-            color:var(--txt2); font-size:.73rem;
+            padding:1.5rem; text-align:center;
+            color:var(--txt2); font-size:0.7rem;
+            letter-spacing: 0.02em;
         }
         footer::before {
             content:''; display:block;
-            width:90px; height:1px;
-            background:linear-gradient(90deg,transparent,rgba(129,140,248,.25),transparent);
-            margin:0 auto .7rem;
+            width:60px; height:1px;
+            background:linear-gradient(90deg,transparent,rgba(139, 92, 246, 0.3),transparent);
+            margin:0 auto 1rem;
         }
         .ha-link {
-            color:var(--p); text-decoration:none; font-weight:600;
+            color:var(--p); text-decoration:none; font-weight:700;
             transition:opacity .2s;
         }
-        .ha-link:hover { opacity:.7; }
+        .ha-link:hover { opacity:.8; text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <header>
-    <span class="header-logo">HA Bots</span>
+    <span class="header-logo">ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ</span>
 </header>
 
 <main>
   <div class="error-card">
 
     <div class="err-icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="8" x2="12" y2="12"/>
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
     </div>
 
-    <div class="err-label">Error</div>
+    <div class="err-label">sʏsᴛᴇᴍ ᴇʀʀᴏʀ</div>
     <h2>Something went wrong</h2>
-    <p>We couldn't load this file. It may have expired or there was a temporary issue.</p>
+    <p>We couldn't load this file. It may have expired, been removed, or there's a temporary database issue.</p>
 
     <div class="err-btns">
       <button class="ebtn" onclick="location.reload()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
         Try Again
       </button>
-      <a href="https://t.me/HA_Bots_Support" class="ebtn" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <a href="https://t.me/Infinity_Botzz" class="ebtn" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         Support Group
       </a>
     </div>
@@ -992,7 +955,7 @@ error_tmplt = """<!DOCTYPE html>
 </main>
 
 <footer>
-  <p>Powered by <a href="https://t.me/HA_Bots" class="ha-link" target="_blank" rel="noopener">HA Bots</a></p>
+  <p>ᴘᴏᴡᴇʀᴇᴅ ʙʏ <a href="https://t.me/Infinity_Botzz" class="ha-link" target="_blank" rel="noopener">ɪɴꜰɪɴɪᴛʏ ʙᴏᴛᴢ</a></p>
 </footer>
 </body>
 </html>
