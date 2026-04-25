@@ -1,7 +1,12 @@
 import time
 from datetime import datetime, timedelta
 from pymongo import MongoClient
-from info import BOT_ID, ADMINS, DATABASE_NAME, DATA_DATABASE_URL, FILES_DATABASE_URL, SECOND_FILES_DATABASE_URL, IMDB_TEMPLATE, WELCOME_TEXT, LINK_MODE, TUTORIAL, SHORTLINK_URL, SHORTLINK_API, SHORTLINK, FILE_CAPTION, IMDB, WELCOME, SPELL_CHECK, PROTECT_CONTENT, AUTO_DELETE, IS_STREAM, VERIFY_EXPIRE
+from info import (
+    BOT_ID, ADMINS, DATABASE_NAME, DATA_DATABASE_URL, FILES_DATABASE_URL, 
+    SECOND_FILES_DATABASE_URL, IMDB_TEMPLATE, WELCOME_TEXT, LINK_MODE, 
+    TUTORIAL, SHORTLINK_URL, SHORTLINK_API, SHORTLINK, FILE_CAPTION, 
+    IMDB, WELCOME, SPELL_CHECK, PROTECT_CONTENT, AUTO_DELETE, IS_STREAM, VERIFY_EXPIRE
+)
 
 files_db_client = MongoClient(FILES_DATABASE_URL)
 files_db = files_db_client[DATABASE_NAME]
@@ -52,6 +57,7 @@ class Database:
         self.req = data_db.Requests
         self.con = data_db.Connections
         self.stg = data_db.Settings
+        self.sudo = data_db.Sudoers
 
     def new_user(self, id, name):
         return dict(
@@ -120,6 +126,30 @@ class Database:
     async def delete_chat(self, grp_id):
         self.grp.delete_many({'id': int(grp_id)})
 
+    # --- SUDO MANAGEMENT (PRO IMPLEMENTATION) ---
+    def add_sudo(self, user_id):
+        """Adds a user to sudo list if not already present."""
+        if not self.sudo.find_one({'id': int(user_id)}):
+            self.sudo.insert_one({'id': int(user_id), 'added_at': datetime.now()})
+            return True
+        return False
+
+    def remove_sudo(self, user_id):
+        """Removes a user from sudo list."""
+        res = self.sudo.delete_one({'id': int(user_id)})
+        return res.deleted_count > 0
+
+    def get_sudo_list(self):
+        """Returns a list of all sudo user IDs."""
+        return [user['id'] for user in self.sudo.find({})]
+
+    def is_sudo(self, user_id):
+        """Checks if a user is a sudo user or a bot admin."""
+        if user_id in ADMINS: # Admins are super-sudo by default
+            return True
+        return bool(self.sudo.find_one({'id': int(user_id)}))
+
+    # --- MISC LOGIC ---
     def find_join_req(self, id):
         return bool(self.req.find_one({'id': id}))
 
@@ -213,7 +243,8 @@ class Database:
     def update_plan(self, id, data):
         if not self.prm.find_one({'id': id}):
             self.prm.insert_one({'id': id, 'status': data})
-        self.prm.update_one({'id': id}, {'$set': {'status': data}})
+        else:
+            self.prm.update_one({'id': id}, {'$set': {'status': data}})
 
     def has_premium_access(self, user_id):
         user_data = self.prm.find_one({'id': user_id})

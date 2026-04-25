@@ -564,8 +564,10 @@ async def plan(client, message):
     )
 
 
-@Client.on_message(filters.command('add_prm') & filters.user(ADMINS))
+@Client.on_message(filters.command('add_prm'))
 async def add_prm(bot, message):
+    if not db.is_sudo(message.from_user.id):
+        return
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
     
@@ -577,8 +579,6 @@ async def add_prm(bot, message):
             
             if seconds > 0:
                 expiry_time = datetime.now() + timedelta(seconds=seconds)
-                
-                # Using our PyMongo db structure
                 status = {
                     'expire': expiry_time,
                     'plan': duration,
@@ -588,39 +588,64 @@ async def add_prm(bot, message):
                 db.update_plan(user_id, status)
                 
                 try:
-                    user = await bot.get_users(user_id)
-                    user_mention = user.mention
+                    target_user = await bot.get_users(user_id)
+                    target_mention = target_user.mention
                 except:
-                    user_mention = "ᴜsᴇʀ"
+                    target_mention = f"<code>{user_id}</code>"
 
-                admin_msg = (
-                    "✅ <b>#ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ</b>\n\n"
-                    f"👤 <b>ɴᴀᴍᴇ:</b> {user_mention}\n"
-                    f"🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
-                    f"⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{duration}</code>\n"
-                    f"📅 <b>ᴇxᴘɪʀʏ:</b> <code>{expiry_time.strftime('%d %b %Y, %I:%M %p')}</code>\n\n"
-                    "✨ <b><i>ᴛʜᴇ ᴜsᴇʀ ʜᴀs ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ.</i></b>"
-                )
-                await message.reply_text(admin_msg)
+                adder = message.from_user
+                is_owner = adder.id in ADMINS
+                role = "ʙᴏᴛ ᴀᴅᴍɪɴ" if is_owner else "sᴜᴅᴏ ᴀᴅᴍɪɴ"
                 
-                user_msg = (
-                    "🎉 <b>ʜᴇʏ {},\n\n"
-                    "ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ!</b>\n\n"
-                    "🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
-                    "⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{}</code>\n"
-                    "📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{}</code>\n\n"
-                    "✨ <b>ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!</b>"
-                ).format(user_mention, duration, expiry_time.strftime('%d %b %Y, %I:%M %p'))
-                
+                if is_owner:
+                    user_msg = (
+                        "🎉 <b>ʜᴇʏ {},\n\n"
+                        "ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ!</b>\n\n"
+                        "🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
+                        "⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{}</code>\n"
+                        "📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{}</code>\n\n"
+                        "✨ <b>ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!</b>"
+                    ).format(target_mention, duration, expiry_time.strftime('%d %b %Y, %I:%M %p'))
+                else:
+                    user_msg = (
+                        "🎉 <b>ʜᴇʏ {},\n\n"
+                        "ʏᴏᴜ ʜᴀᴠᴇ ʙᴇᴇɴ ɢɪᴠᴇɴ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʙʏ {}!</b>\n\n"
+                        "🚀 <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴛɪᴠᴇ\n"
+                        "⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{}</code>\n"
+                        "📅 <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ:</b> <code>{}</code>\n\n"
+                        "✨ <b>ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!</b>"
+                    ).format(target_mention, adder.mention, duration, expiry_time.strftime('%d %b %Y, %I:%M %p'))
+
                 try:
                     await bot.send_message(chat_id=user_id, text=user_msg)
-                except: pass
+                except:
+                    pass
+
+                reply_text = (
+                    "✅ <b>#ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ_sᴜᴄᴄᴇssꜰᴜʟʟʏ</b>\n\n"
+                    f"👤 <b>ᴜsᴇʀ:</b> {target_mention}\n"
+                    f"🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n"
+                    f"⏳ <b>ᴘʟᴀɴ:</b> <code>{duration}</code>\n"
+                    f"👮 <b>ᴀᴅᴅᴇᴅ ʙʏ:</b> {adder.mention}\n"
+                    f"🆔 <b>ᴀᴅᴅᴇʀ ɪᴅ:</b> <code>{adder.id}</code>\n"
+                    f"🎖️ <b>ʀᴏʟᴇ:</b> <code>{role}</code>\n\n"
+                    f"✨ <b>ᴍᴇssᴀɢᴇ sᴇɴᴛ ᴛᴏ ᴜsᴇʀ!</b>"
+                )
+                sent_reply = await message.reply_text(reply_text)
 
                 if PREMIUM_NOTIFY_CHANNEL:
                     try:
-                        log_text = f"✅ <b>#ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅᴇᴅ</b>\n\n👤 <b>ᴜsᴇʀ:</b> {user_mention}\n🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n⏳ <b>ᴅᴜʀᴀᴛɪᴏɴ:</b> <code>{duration}</code>\n📅 <b>ᴇxᴘɪʀʏ:</b> <code>{expiry_time.strftime('%d %b %Y, %I:%M %p')}</code>\n👮 <b>ᴀᴅᴅᴇᴅ ʙʏ:</b> {message.from_user.mention}"
-                        await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_text)
-                    except: pass
+                        await bot.send_message(PREMIUM_NOTIFY_CHANNEL, reply_text)
+                    except:
+                        pass
+
+                if not is_owner:
+                    for admin_id in ADMINS:
+                        try:
+                            await bot.send_message(admin_id, f"⚠️ <b>sᴜᴅᴏ ᴀᴄᴛɪᴠɪᴛʏ ᴀʟᴇʀᴛ!</b>\n\n{reply_text}")
+                        except:
+                            pass
+                
             else:
                 await message.reply_text("❌ <b>ɪɴᴠᴀʟɪᴅ ᴛɪᴍᴇ ꜰᴏʀᴍᴀᴛ.</b>")
         except Exception as e:
@@ -630,32 +655,65 @@ async def add_prm(bot, message):
 
 
 
-@Client.on_message(filters.command('rm_prm') & filters.user(ADMINS))
+@Client.on_message(filters.command('rm_prm'))
 async def rm_prm(bot, message):
+    if not db.is_sudo(message.from_user.id):
+        return
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
     
     if len(message.command) == 2:
         try:
             user_id = int(message.command[1])
+            try:
+                target_user = await bot.get_users(user_id)
+                target_mention = target_user.mention
+            except:
+                target_mention = f"<code>{user_id}</code>"
+
+            adder = message.from_user
+            is_owner = adder.id in ADMINS
+            role = "ʙᴏᴛ ᴀᴅᴍɪɴ" if is_owner else "sᴜᴅᴏ ᴀᴅᴍɪɴ"
             status = {'expire': '', 'plan': '', 'premium': False, 'trial': True}
             db.update_plan(user_id, status)
-            await message.reply_text("✅ <b>ᴘʀᴇᴍɪᴜᴍ ʀᴇᴍᴏᴠᴇᴅ!</b>")
-            
+
+            if is_owner:
+                user_msg = "<b>⚠️ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>"
+            else:
+                user_msg = f"<b>⚠️ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ {adder.mention}.</b>"
+
+            try:
+                await bot.send_message(user_id, user_msg)
+            except:
+                pass
+
+            report_text = (
+                "🚫 <b>#ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇᴅ</b>\n\n"
+                f"👤 <b>ᴜsᴇʀ:</b> {target_mention}\n"
+                f"🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n"
+                f"👮 <b>ʀᴇᴍᴏᴠᴇᴅ ʙʏ:</b> {adder.mention}\n"
+                f"🆔 <b>ᴀᴅᴅᴇʀ ɪᴅ:</b> <code>{adder.id}</code>\n"
+                f"🎖️ <b>ʀᴏʟᴇ:</b> <code>{role}</code>\n\n"
+                f"✨ <b>sᴛᴀᴛᴜs:</b> ᴀᴄᴄᴇss ʀᴇᴠᴏᴋᴇᴅ"
+            )
+            await message.reply_text(report_text)
+
             if PREMIUM_NOTIFY_CHANNEL:
                 try:
-                    log_text = f"🚫 <b>#ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇᴅ</b>\n\n🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n👮 <b>ʙʏ:</b> {message.from_user.mention}"
-                    await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_text)
-                except: pass
-            
-            try:
-                await bot.send_message(user_id, "<b>⚠️ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>")
-            except: pass
+                    await bot.send_message(PREMIUM_NOTIFY_CHANNEL, report_text)
+                except:
+                    pass
+
+            if not is_owner:
+                for admin_id in ADMINS:
+                    try:
+                        await bot.send_message(admin_id, f"⚠️ <b>sᴜᴅᴏ ʀᴇᴍᴏᴠᴀʟ ᴀʟᴇʀᴛ!</b>\n\n{report_text}")
+                    except: pass
+
         except Exception as e:
-            await message.reply_text(f"❌ <b>ɪɴᴠᴀʟɪᴅ ᴜsᴇʀ ɪᴅ ᴏʀ ᴇʀʀᴏʀ: {e}</b>")
+            await message.reply_text(f"❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>")
     else:
         await message.reply_text("📋 <b>ᴜsᴀɢᴇ:</b> <code>/rm_prm user_id</code>")
-
 
 @Client.on_message(filters.command('prm_list') & filters.user(ADMINS))
 async def prm_list(bot, message):
@@ -754,3 +812,91 @@ async def off_pm_search(bot, message):
 async def on_pm_search(bot, message):
     db.update_bot_sttgs('PM_SEARCH', True)
     await message.reply('Successfully turned on pm search for all users')
+
+#------------------------------------------------------------------------
+@Client.on_message(filters.command("addsudo") & filters.user(ADMINS))
+async def add_sudo_cmd(bot, message):
+    if len(message.command) < 2:
+        return await message.reply_text("<b>💡 ᴜsᴀɢᴇ: <code>/addsudo user_id</code></b>")
+    
+    try:
+        user_id = int(message.command[1])
+        if db.add_sudo(user_id):
+            try:
+                user = await bot.get_users(user_id)
+                name = user.first_name
+                mention = user.mention
+            except:
+                name = "Unknown"
+                mention = f"<code>{user_id}</code>"
+            
+            await message.reply_text(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ {mention} ᴛᴏ sᴜᴅᴏ ʟɪsᴛ.</b>")
+
+            if PREMIUM_NOTIFY_CHANNEL:
+                log_msg = (
+                    "➕ <b>#sᴜᴅᴏ_ᴀᴅᴅᴇᴅ</b>\n\n"
+                    f"👤 <b>ᴜsᴇʀ:</b> {mention}\n"
+                    f"🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n"
+                    f"👮 <b>ᴀᴅᴅᴇᴅ ʙʏ:</b> {message.from_user.mention}\n"
+                    f"🎖️ <b>ʀᴏʟᴇ:</b> <code>ʙᴏᴛ ᴀᴅᴍɪɴ</code>"
+                )
+                try:
+                    await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_msg)
+                except: pass
+        else:
+            await message.reply_text("<b>⚠️ ᴜsᴇʀ ɪs ᴀʟʀᴇᴀᴅʏ ɪɴ sᴜᴅᴏ ʟɪsᴛ.</b>")
+    except ValueError:
+        await message.reply_text("<b>❌ ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ɴᴜᴍᴇʀɪᴄ ᴜsᴇʀ ɪᴅ.</b>")
+
+@Client.on_message(filters.command("rmsudo") & filters.user(ADMINS))
+async def rm_sudo_cmd(bot, message):
+    if len(message.command) < 2:
+        return await message.reply_text("<b>💡 ᴜsᴀɢᴇ: <code>/rmsudo user_id</code></b>")
+    
+    try:
+        user_id = int(message.command[1])
+        if user_id in ADMINS:
+            return await message.reply_text("<b>❌ ᴄᴀɴɴᴏᴛ ʀᴇᴍᴏᴠᴇ ᴍᴀɪɴ ᴀᴅᴍɪɴs ꜰʀᴏᴍ sᴜᴅᴏ!</b>")
+            
+        try:
+            user = await bot.get_users(user_id)
+            mention = user.mention
+        except:
+            mention = f"<code>{user_id}</code>"
+
+        if db.remove_sudo(user_id):
+            await message.reply_text(f"<b>✅ ᴜsᴇʀ {mention} ʀᴇᴍᴏᴠᴇᴅ ꜰʀᴏᴍ sᴜᴅᴏ.</b>")
+
+            if PREMIUM_NOTIFY_CHANNEL:
+                log_msg = (
+                    "➖ <b>#sᴜᴅᴏ_ʀᴇᴍᴏᴠᴇᴅ</b>\n\n"
+                    f"👤 <b>ᴜsᴇʀ:</b> {mention}\n"
+                    f"🆔 <b>ɪᴅ:</b> <code>{user_id}</code>\n"
+                    f"👮 <b>ʀᴇᴍᴏᴠᴇᴅ ʙʏ:</b> {message.from_user.mention}\n"
+                    f"🎖️ <b>ʀᴏʟᴇ:</b> <code>ʙᴏᴛ ᴀᴅᴍɪɴ</code>"
+                )
+                try:
+                    await bot.send_message(PREMIUM_NOTIFY_CHANNEL, log_msg)
+                except: pass
+        else:
+            await message.reply_text("<b>⚠️ ᴜsᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ ɪɴ sᴜᴅᴏ ʟɪsᴛ.</b>")
+    except ValueError:
+        await message.reply_text("<b>❌ ᴠᴀʟɪᴅ ᴜsᴇʀ ɪᴅ ʀᴇǫᴜɪʀᴇᴅ.</b>")
+
+@Client.on_message(filters.command("sudolist") & filters.user(ADMINS))
+async def sudo_list_cmd(bot, message):
+    sudoers = db.get_sudo_list()
+    if not sudoers:
+        return await message.reply_text("<b>❌ ɴᴏ sᴜᴅᴏ ᴜsᴇʀs ꜰᴏᴜɴᴅ.</b>")
+    
+    out = "<b>✨ ɪɴꜰɪɴɪᴛʏ sᴜᴅᴏ ᴜsᴇʀs ʟɪsᴛ\n\n"
+    for i, user_id in enumerate(sudoers, 1):
+        try:
+            user = await bot.get_users(user_id)
+            name = user.first_name
+            out += f"{i}. 👤 <a href='tg://user?id={user_id}'>{name}</a> ⠂<code>{user_id}</code>\n"
+        except:
+            out += f"{i}. 🆔 <code>{user_id}</code>\n"
+            
+    out += f"\n📊 ᴛᴏᴛᴀʟ sᴜᴅᴏᴇʀs: {len(sudoers)}</b>"
+    await message.reply_text(out, disable_web_page_preview=True)
