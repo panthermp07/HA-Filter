@@ -698,6 +698,19 @@ async def set_req_fsub(bot, message):
     db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
     await message.reply(f'added request force subscribe channel: {chat.title}')
 
+@Client.on_message(filters.command('resetallgroups') & filters.user(ADMINS))
+async def reset_all_groups_cmd(client, message):
+    msg = await message.reply("<b>⏳ ʀᴇsᴇᴛᴛɪɴɢ ᴀʟʟ ɢʀᴏᴜᴘs sᴇᴛᴛɪɴɢs ᴛᴏ ᴅᴇꜰᴀᴜʟᴛ...</b>")
+    
+    try:
+        modified_count = db.reset_all_groups_settings()
+        
+        await msg.edit(
+            f"<b>✅ sᴜᴄᴄᴇss!</b>\n\n"
+            f"<b>sᴇᴛᴛɪɴɢs ꜰᴏʀ <code>{modified_count}</code> ɢʀᴏᴜᴘs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇsᴇᴛ ᴛᴏ ᴅᴇꜰᴀᴜʟᴛ.</b>"
+        )
+    except Exception as e:
+        await msg.edit(f"<b>❌ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ:</b> <code>{e}</code>")
 
 @Client.on_message(filters.command('off_auto_filter') & filters.user(ADMINS))
 async def off_auto_filter(bot, message):

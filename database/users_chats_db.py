@@ -283,6 +283,11 @@ class Database:
 
     def get_bot_sttgs(self):
         return self.stg.find_one({'id': BOT_ID})
+    
+    def reset_all_groups_settings(self):
+        """Resets settings of all groups to default using a single DB call."""
+        result = self.grp.update_many({}, {'$set': {'settings': self.default_setgs}})
+        return result.modified_count
 
 
 db = Database()
