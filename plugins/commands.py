@@ -201,16 +201,19 @@ async def start(client, message):
                 reply_markup=InlineKeyboardMarkup(btn)
             )
             file_ids.append(msg.id)
+            await asyncio.sleep(0.5)
+        await asyncio.sleep(1.5)
 
         time_str = get_readable_time(PM_FILE_DELETE_TIME)
-        vp = await message.reply(f"Nᴏᴛᴇ: Tʜɪs ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time_str} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇs ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
+        vp = await message.reply(f"<b>⚠️ ɴᴏᴛᴇ:</b> ᴛʜᴇsᴇ ꜰɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b>{time_str}</b> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. ᴘʟᴇᴀsᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ.")
+        
         await asyncio.sleep(PM_FILE_DELETE_TIME)
-        buttons = [[InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇs ᴀɢᴀɪɴ', callback_data=f"get_del_send_all_files#{grp_id}#{key}")]] 
+        buttons = [[InlineKeyboardButton('ɢᴇᴛ ꜰɪʟᴇs ᴀɢᴀɪɴ', callback_data=f"get_del_send_all_files#{grp_id}#{key}")]] 
         await client.delete_messages(
             chat_id=message.chat.id,
             message_ids=file_ids + [total_files.id]
         )
-        await vp.edit("Tʜᴇ ғɪʟᴇ ʜᴀs ʙᴇᴇɴ ɢᴏɴᴇ ! Cʟɪᴄᴋ ɢɪᴠᴇɴ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(buttons))
+        await vp.edit("<b>❌ ᴛʜᴇ ꜰɪʟᴇs ʜᴀᴠᴇ ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ!</b>\nᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ɢᴇᴛ ᴛʜᴇᴍ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(buttons))
         return
 
     parts = mc.split("_", 2)
@@ -254,6 +257,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton('⁉️ ᴄʟᴏsᴇ ⁉️', callback_data='close_data', style=enums.ButtonStyle.DANGER)
         ]]
+        
     vp = await client.send_cached_media(
         chat_id=message.from_user.id,
         file_id=file_id,
@@ -261,15 +265,18 @@ async def start(client, message):
         protect_content=False,
         reply_markup=InlineKeyboardMarkup(btn)
     )
+    await asyncio.sleep(1.0)
+    
     time_str = get_readable_time(PM_FILE_DELETE_TIME)
-    msg = await vp.reply(f"Nᴏᴛᴇ: Tʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇ ɪɴ {time_str} ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. Sᴀᴠᴇ ᴛʜᴇ ғɪʟᴇ ᴛᴏ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ")
+    msg = await vp.reply(f"<b>⚠️ ɴᴏᴛᴇ:</b> ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b>{time_str}</b> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛs. ᴘʟᴇᴀsᴇ ꜰᴏʀᴡᴀʀᴅ ɪᴛ sᴏᴍᴇᴡʜᴇʀᴇ ᴇʟsᴇ.")
+    
     await asyncio.sleep(PM_FILE_DELETE_TIME)
     btns = [[
-        InlineKeyboardButton('ɢᴇᴛ ғɪʟᴇ ᴀɢᴀɪɴ', callback_data=f"get_del_file#{grp_id}#{file_id}", style=enums.ButtonStyle.SUCCESS)
+        InlineKeyboardButton('ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ', callback_data=f"get_del_file#{grp_id}#{file_id}", style=enums.ButtonStyle.SUCCESS)
     ]]
     await msg.delete()
     await vp.delete()
-    await vp.reply("Tʜᴇ ғɪʟᴇ ʜᴀs ʙᴇᴇɴ ɢᴏɴᴇ ! Cʟɪᴄᴋ ɢɪᴠᴇɴ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(btns))
+    await vp.reply("<b>❌ ᴛʜᴇ ꜰɪʟᴇ ʜᴀs ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ!</b>\nᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(btns))
 
 
 @Client.on_message(filters.command('link'))

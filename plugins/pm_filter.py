@@ -26,7 +26,7 @@ async def pm_search(client, message):
         await message.react(emoji=random.choice(REACTIONS), big=True)
     except:
         pass
-        
+
     stg = db.get_bot_sttgs()
     if await is_premium(message.from_user.id, client):
         s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
@@ -471,17 +471,23 @@ async def advantage_spoll_choker(bot, query):
     _, id, user = query.data.split('#')
     if int(user) != 0 and query.from_user.id != int(user):
         return await query.answer(f"Hello {query.from_user.first_name},\nDon't Click Other Results!", show_alert=True)
+        
     movie = await get_poster(id, id=True)
     search = movie.get('title')
     s = await query.message.edit_text(f"<b><i><code>{search}</code> Check In My Database...</i></b>")
     await query.answer('')
+    
     files, offset, total_results = await get_search_results(search)
     if files:
         k = (search, files, offset, total_results)
         await auto_filter(bot, query, s, k)
     else:
-        k = await query.message.edit(f"👋 Hello {query.from_user.mention},\n\nI don't find <b>'{search}'</b> in my database. 😔")
-        await bot.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {query.from_user.mention}\nContent: {search}")
+        k = await query.message.edit(
+            text=f"👋 Hello {query.from_user.mention},\n\nI don't find <b>'{search}'</b> in my database. 😔",
+            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+        )
+        asyncio.create_task(bot.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {query.from_user.mention}\nContent: {search}"))
+        
         await asyncio.sleep(60)
         await k.delete()
         try:
@@ -1240,7 +1246,11 @@ async def advantage_spell_chok(message, s):
     try:
         movies = await get_poster(search, bulk=True)
     except:
-        n = await s.edit_text(text=script.NOT_FILE_TXT.format(message.from_user.mention, search), reply_markup=InlineKeyboardMarkup(btn))
+        n = await s.edit_text(
+            text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
+            reply_markup=InlineKeyboardMarkup(btn),
+            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+        )
         await asyncio.sleep(60)
         await n.delete()
         try:
@@ -1248,9 +1258,16 @@ async def advantage_spell_chok(message, s):
         except:
             pass
         return
+        
     if not movies:
-        n = await s.edit_text(text=script.NOT_FILE_TXT.format(message.from_user.mention, search), reply_markup=InlineKeyboardMarkup(btn))
-        await temp.BOT.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {message.from_user.mention}\nContent: {search}")
+        n = await s.edit_text(
+            text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
+            reply_markup=InlineKeyboardMarkup(btn),
+            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+        )
+        # Background task for logging (Fast speed)
+        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {message.from_user.mention}\nContent: {search}"))
+        
         await asyncio.sleep(60)
         await n.delete()
         try:
@@ -1268,11 +1285,14 @@ async def advantage_spell_chok(message, s):
     buttons.append(
         [InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data")]
     )
-    s = await s.edit_text(text=f"👋 Hello {message.from_user.mention},\n\nI couldn't find the <b>'{search}'</b> you requested.\nSelect if you meant one of these? 👇", reply_markup=InlineKeyboardMarkup(buttons))
+    s = await s.edit_text(
+        text=f"👋 Hello {message.from_user.mention},\n\nI couldn't find the <b>'{search}'</b> you requested.\nSelect if you meant one of these? 👇", 
+        reply_markup=InlineKeyboardMarkup(buttons),
+        link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
+    )
     await asyncio.sleep(300)
     await s.delete()
     try:
         await message.delete()
     except:
         pass
-
