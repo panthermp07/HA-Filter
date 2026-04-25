@@ -1,7 +1,6 @@
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters, enums, StopPropagation
 from utils import temp
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
-from pyrogram.errors import StopPropagation
 from database.users_chats_db import db
 from info import SUPPORT_LINK
 
