@@ -178,7 +178,7 @@ async def start(client, message):
             )      
             if IS_STREAM:
                 btn = [[
-                    InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file['_id']}")
+                    InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file['_id']}", style=enums.ButtonStyle.PRIMARY)
                 ],[
                     InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
                     InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
@@ -243,7 +243,7 @@ async def start(client, message):
     )
     if IS_STREAM:
         btn = [[
-            InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file_id}")
+            InlineKeyboardButton("⚡ᴡᴀᴛᴄʜ & ᴅᴏᴡɴʟᴏᴀᴅ ⚡", callback_data=f"stream#{file_id}", style=enums.ButtonStyle.PRIMARY)
         ],[
             InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
             InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
