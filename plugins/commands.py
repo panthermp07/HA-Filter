@@ -340,7 +340,7 @@ async def stats(bot, message):
     chats = await db.total_chat_count()
     prm = db.get_premium_count()
     used_files_db_size = get_size(await db.get_files_db_size())
-    used_data_db_size = get_size(await db.get_data_db_size())
+    used_data_db_size = get_size(await db.get_data_db_size())  # Added this back!
 
     if SECOND_FILES_DATABASE_URL:
         secnd_files_db_used_size = get_size(await db.get_second_files_db_size())
@@ -350,33 +350,44 @@ async def stats(bot, message):
         secnd_files = '-'
 
     uptime = get_readable_time(time_now() - temp.START_TIME)
-    await message.reply_text(script.STATUS_TXT.format(users, prm, chats, used_data_db_size, uptime, files, used_files_db_size, secnd_files, secnd_files_db_used_size))
-
+    await message.reply_text(
+        script.STATUS_TXT.format(
+            users, 
+            prm, 
+            chats, 
+            used_data_db_size, 
+            files, 
+            used_files_db_size, 
+            secnd_files, 
+            secnd_files_db_used_size, 
+            uptime
+        )
+    )
 
 async def get_grp_stg(group_id):
     settings = await get_settings(group_id)
     btn = [[
-        InlineKeyboardButton('Edit IMDb template', callback_data=f'imdb_setgs#{group_id}')
+        InlineKeyboardButton('ᴇᴅɪᴛ ɪᴍᴅʙ ᴛᴇᴍᴘʟᴀᴛᴇ', callback_data=f'imdb_setgs#{group_id}')
     ],[
-        InlineKeyboardButton('Edit Shortlink', callback_data=f'shortlink_setgs#{group_id}')
+        InlineKeyboardButton('ᴇᴅɪᴛ sʜᴏʀᴛʟɪɴᴋ', callback_data=f'shortlink_setgs#{group_id}')
     ],[
-        InlineKeyboardButton('Edit File Caption', callback_data=f'caption_setgs#{group_id}')
+        InlineKeyboardButton('ᴇᴅɪᴛ ꜰɪʟᴇ ᴄᴀᴘᴛɪᴏɴ', callback_data=f'caption_setgs#{group_id}')
     ],[
-        InlineKeyboardButton('Edit Welcome', callback_data=f'welcome_setgs#{group_id}')
+        InlineKeyboardButton('ᴇᴅɪᴛ ᴡᴇʟᴄᴏᴍᴇ', callback_data=f'welcome_setgs#{group_id}')
     ],[
-        InlineKeyboardButton('Edit tutorial link', callback_data=f'tutorial_setgs#{group_id}')
+        InlineKeyboardButton('ᴇᴅɪᴛ ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ', callback_data=f'tutorial_setgs#{group_id}')
     ],[
-        InlineKeyboardButton(f'IMDb Poster {"✅" if settings["imdb"] else "❌"}', callback_data=f'bool_setgs#imdb#{settings["imdb"]}#{group_id}')
+        InlineKeyboardButton(f'ɪᴍᴅʙ ᴘᴏsᴛᴇʀ {"✅" if settings["imdb"] else "❌"}', callback_data=f'bool_setgs#imdb#{settings["imdb"]}#{group_id}')
     ],[
-        InlineKeyboardButton(f'Spelling Check {"✅" if settings["spell_check"] else "❌"}', callback_data=f'bool_setgs#spell_check#{settings["spell_check"]}#{group_id}')
+        InlineKeyboardButton(f'sᴘᴇʟʟɪɴɢ ᴄʜᴇᴄᴋ {"✅" if settings["spell_check"] else "❌"}', callback_data=f'bool_setgs#spell_check#{settings["spell_check"]}#{group_id}')
     ],[
-        InlineKeyboardButton(f"Auto Delete - {get_readable_time(DELETE_TIME)}" if settings["auto_delete"] else "Auto Delete ❌", callback_data=f'bool_setgs#auto_delete#{settings["auto_delete"]}#{group_id}')
+        InlineKeyboardButton(f"ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ - {get_readable_time(DELETE_TIME)}" if settings["auto_delete"] else "ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ❌", callback_data=f'bool_setgs#auto_delete#{settings["auto_delete"]}#{group_id}')
     ],[
-        InlineKeyboardButton(f'Welcome {"✅" if settings["welcome"] else "❌"}', callback_data=f'bool_setgs#welcome#{settings["welcome"]}#{group_id}')
+        InlineKeyboardButton(f'ᴡᴇʟᴄᴏᴍᴇ {"✅" if settings["welcome"] else "❌"}', callback_data=f'bool_setgs#welcome#{settings["welcome"]}#{group_id}')
     ],[
-        InlineKeyboardButton(f'Shortlink {"✅" if settings["shortlink"] else "❌"}', callback_data=f'bool_setgs#shortlink#{settings["shortlink"]}#{group_id}')
+        InlineKeyboardButton(f'sʜᴏʀᴛʟɪɴᴋ {"✅" if settings["shortlink"] else "❌"}', callback_data=f'bool_setgs#shortlink#{settings["shortlink"]}#{group_id}')
     ],[
-        InlineKeyboardButton(f"Result Page - Link" if settings["links"] else "Result Page - Button", callback_data=f'bool_setgs#links#{settings["links"]}#{group_id}')
+        InlineKeyboardButton(f"ʀᴇsᴜʟᴛ ᴘᴀɢᴇ - ʟɪɴᴋ" if settings["links"] else "ʀᴇsᴜʟᴛ ᴘᴀɢᴇ - ʙᴜᴛᴛᴏɴ", callback_data=f'bool_setgs#links#{settings["links"]}#{group_id}')
     ]]
     return btn
     
@@ -385,17 +396,20 @@ async def settings(client, message):
     group_id = message.chat.id
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         if not await is_check_admin(client, group_id, message.from_user.id):
-            return await message.reply_text('You not admin in this group.')
+            return await message.reply_text('⚠️ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.')
+        
         btn = [[
-            InlineKeyboardButton("Open Here", callback_data='open_group_settings')
+            InlineKeyboardButton("ᴏᴘᴇɴ ʜᴇʀᴇ 🔽", callback_data='open_group_settings')
         ],[
-            InlineKeyboardButton("Open In PM", callback_data='open_pm_settings')
+            InlineKeyboardButton("ᴏᴘᴇɴ ɪɴ ᴘᴍ 👤", callback_data='open_pm_settings')
         ]]
-        await message.reply_text('Where do you want to open the settings menu?', reply_markup=InlineKeyboardMarkup(btn))
+        await message.reply_text('⚙️ ᴡʜᴇʀᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴏᴘᴇɴ ᴛʜᴇ sᴇᴛᴛɪɴɢs ᴍᴇɴᴜ?', reply_markup=InlineKeyboardMarkup(btn))
+        
     elif message.chat.type == enums.ChatType.PRIVATE:
         cons = db.get_connections(message.from_user.id)
         if not cons:
-            return await message.reply_text("No groups found! Use this command group and open in PM")
+            return await message.reply_text("❌ ɴᴏ ɢʀᴏᴜᴘs ꜰᴏᴜɴᴅ! ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ <b>'ᴏᴘᴇɴ ɪɴ ᴘᴍ'</b>.")
+            
         buttons = []
         for con in cons:
             try:
@@ -405,8 +419,12 @@ async def settings(client, message):
                 )
             except:
                 pass
-        await message.reply_text('Select the group whose settings you want to change.\n\nIf your group not showing here? Use this command in your group and open in PM or send <code>/connect</code> command in your group.', reply_markup=InlineKeyboardMarkup(buttons))
-
+                
+        await message.reply_text(
+            '⚙️ sᴇʟᴇᴄᴛ ᴛʜᴇ ɢʀᴏᴜᴘ ᴡʜᴏsᴇ sᴇᴛᴛɪɴɢs ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴄʜᴀɴɢᴇ.\n\n'
+            '💡 <i>ɪꜰ ʏᴏᴜʀ ɢʀᴏᴜᴘ ɪs ɴᴏᴛ sʜᴏᴡɪɴɢ ʜᴇʀᴇ:</i> ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ <b>'ᴏᴘᴇɴ ɪɴ ᴘᴍ'</b>, ᴏʀ sᴇɴᴅ <code>/connect</code> ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.', 
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
 
 @Client.on_message(filters.command('connect'))
 async def connect(client, message):
