@@ -30,7 +30,7 @@ async def is_subscribed(bot, query):
     btn = []
     if await is_premium(query.from_user.id, bot):
         return btn
-    stg = db.get_bot_sttgs()
+    stg = await db.get_bot_sttgs()
     if not stg or not stg.get('FORCE_SUB_CHANNELS'):
         return btn
     for id in stg.get('FORCE_SUB_CHANNELS').split(' '):
@@ -41,7 +41,7 @@ async def is_subscribed(bot, query):
             btn.append(
                 [InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)]
             )
-    if stg and stg.get('REQUEST_FORCE_SUB_CHANNELS') and not db.find_join_req(query.from_user.id):
+    if stg and stg.get('REQUEST_FORCE_SUB_CHANNELS') and not await db.find_join_req(query.from_user.id):
         id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
         chat = await bot.get_chat(int(id))
         try:
@@ -232,14 +232,14 @@ async def is_premium(user_id, bot):
         return True
     if user_id in ADMINS:
         return True
-    mp = db.get_plan(user_id)
+    mp = await db.get_plan(user_id)
     if mp['premium']:
         if mp['expire'] < datetime.now():
             await bot.send_message(user_id, f"Your premium {mp['plan']} plan is expired in {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate new plan again")
             mp['expire'] = ''
             mp['plan'] = ''
             mp['premium'] = False
-            db.update_plan(user_id, mp)
+            await db.update_plan(user_id, mp)
             return False
         return True
     else:

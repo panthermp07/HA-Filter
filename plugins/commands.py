@@ -8,7 +8,7 @@ from time import time as time_now
 from Script import script
 from database.users_chats_db import db
 from pyrogram import Client, filters, enums
-from utils import is_premium, upload_image, get_settings, get_size, is_subscribed, is_check_admin, get_shortlink, get_verify_status, update_verify_status, save_group_settings, temp, get_readable_time, get_wish, get_seconds
+from utils import is_premium, upload_image, get_settings, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_verify_status, update_verify_status, save_group_settings, temp, get_readable_time, get_seconds
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, WebAppInfo
 from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong
@@ -23,7 +23,7 @@ async def start(client, message):
             await client.send_message(LOG_CHANNEL, script.NEW_GROUP_TXT.format(message.chat.title, message.chat.id, username, total))       
             await db.add_chat(message.chat.id, message.chat.title)
         wish = get_wish()
-        user = message.from_user.mention if message.from_user else "Dear"
+        user = message.from_user.mention if message.from_user else "ᴅᴇᴀʀ"
         btn = [[
             InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ', url=UPDATES_LINK, style=enums.ButtonStyle.PRIMARY),
             InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK, style=enums.ButtonStyle.PRIMARY)
@@ -87,7 +87,7 @@ async def start(client, message):
         btn = await is_subscribed(client, message)
         if btn:
             reply_markup = InlineKeyboardMarkup(btn)
-            await message.reply(f"Please join my 'Updates Channel' and use inline search. 👍",
+            await message.reply(f"ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴍʏ 'ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ' ᴀɴᴅ ᴜsᴇ ɪɴʟɪɴᴇ sᴇᴀʀᴄʜ. 👍",
                 reply_markup=reply_markup,
                 parse_mode=enums.ParseMode.HTML
             )
@@ -165,10 +165,10 @@ async def start(client, message):
         _, grp_id, key = mc.split("_", 2)
         files = temp.FILES.get(key)
         if not files:
-            return await message.reply('No Such All Files Exist!')
+            return await message.reply('❌ ɴᴏ sᴜᴄʜ ᴀʟʟ ꜰɪʟᴇs ᴇxɪsᴛ!')
         settings = await get_settings(int(grp_id))
         file_ids = []
-        total_files = await message.reply(f"<b><i>🗂 Total files - <code>{len(files)}</code></i></b>")
+        total_files = await message.reply(f"<b><i>🗂 ᴛᴏᴛᴀʟ ꜰɪʟᴇs - <code>{len(files)}</code></i></b>")
         for file in files:
             CAPTION = settings['caption']
             f_caption = CAPTION.format(
@@ -222,7 +222,7 @@ async def start(client, message):
     file_id = parts[-1]
     files_ = await get_file_details(file_id)
     if not files_:
-        return await message.reply('ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!')
+        return await message.reply('❌ ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!')
     files = files_
     settings = await get_settings(int(grp_id))
     if type_ != 'shortlink' and settings['shortlink'] and not await is_premium(message.from_user.id, client):
@@ -232,7 +232,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton("🚀 ʜᴏᴡ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ 🚀", url=settings['tutorial'], style=enums.ButtonStyle.PRIMARY)
         ]]
-        await message.reply(f"[{get_size(files['file_size'])}] {files['file_name']}\n\nYour file is ready, Please get using this link. 👍", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
+        await message.reply(f"[{get_size(files['file_size'])}] {files['file_name']}\n\nʏᴏᴜʀ ꜰɪʟᴇ ɪs ʀᴇᴀᴅʏ, ᴘʟᴇᴀsᴇ ɢᴇᴛ ᴜsɪɴɢ ᴛʜɪs ʟɪɴᴋ. 👍", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
         return
             
     CAPTION = settings['caption']
@@ -320,12 +320,12 @@ async def channels_info(bot, message):
         return
     ids = INDEX_CHANNELS
     if not ids:
-        return await message.reply("Not set INDEX_CHANNELS")
-    text = '**Indexed Channels:**\n\n'
+        return await message.reply("❌ ɴᴏᴛ sᴇᴛ ɪɴᴅᴇx_ᴄʜᴀɴɴᴇʟs")
+    text = '<b>🔍 ɪɴᴅᴇxᴇᴅ ᴄʜᴀɴɴᴇʟs:</b>\n\n'
     for id in ids:
         chat = await bot.get_chat(id)
-        text += f'{chat.title}\n'
-    text += f'\n**Total:** {len(ids)}'
+        text += f'⠂{chat.title}\n'
+    text += f'\n<b>📊 ᴛᴏᴛᴀʟ: {len(ids)}</b>'
     await message.reply(text)
 
 @Client.on_message(filters.command('stats') & filters.user(ADMINS))
@@ -338,9 +338,9 @@ async def stats(bot, message):
     files = db_count_documents()
     users = await db.total_users_count()
     chats = await db.total_chat_count()
-    prm = db.get_premium_count()
+    prm = await db.get_premium_count()
     used_files_db_size = get_size(await db.get_files_db_size())
-    used_data_db_size = get_size(await db.get_data_db_size())  # Added this back!
+    used_data_db_size = get_size(await db.get_data_db_size())
 
     if SECOND_FILES_DATABASE_URL:
         secnd_files_db_used_size = get_size(await db.get_second_files_db_size())
@@ -406,7 +406,7 @@ async def settings(client, message):
         await message.reply_text('⚙️ ᴡʜᴇʀᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴏᴘᴇɴ ᴛʜᴇ sᴇᴛᴛɪɴɢs ᴍᴇɴᴜ?', reply_markup=InlineKeyboardMarkup(btn))
         
     elif message.chat.type == enums.ChatType.PRIVATE:
-        cons = db.get_connections(message.from_user.id)
+        cons = await db.get_connections(message.from_user.id)
         if not cons:
             return await message.reply_text("❌ ɴᴏ ɢʀᴏᴜᴘs ꜰᴏᴜɴᴅ! ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ <b>'ᴏᴘᴇɴ ɪɴ ᴘᴍ'</b>.")
             
@@ -431,18 +431,18 @@ async def settings(client, message):
 async def connect(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         group_id = message.chat.id
-        db.add_connect(group_id, message.from_user.id)
-        await message.reply_text('Successfully connected this group to PM, now you can manage your group using /settings inside your PM')
+        await db.add_connect(group_id, message.from_user.id)
+        await message.reply_text('✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ ᴛʜɪs ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ!')
     elif message.chat.type == enums.ChatType.PRIVATE:
         if len(message.command) > 1:
             group_id = message.command[1]
             if not await is_check_admin(client, int(group_id), message.from_user.id):
-                return await message.reply_text('You not admin in this group.')
+                return await message.reply_text('❌ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.')
             chat = await client.get_chat(int(group_id))
-            db.add_connect(int(group_id), message.from_user.id)
-            await message.reply_text(f'Successfully connected {chat.title} group to PM')
+            await db.add_connect(int(group_id), message.from_user.id)
+            await message.reply_text(f'✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ {chat.title} ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ')
         else:
-            await message.reply_text('Usage: /connect group_id\nor use /connect in group')
+            await message.reply_text('💡 ᴜsᴀɢᴇ: /connect ɢʀᴏᴜᴘ_ɪᴅ\nᴏʀ ᴜsᴇ /connect ɪɴ ɢʀᴏᴜᴘ')
 
 
 @Client.on_message(filters.command('delete'))
@@ -458,12 +458,8 @@ async def delete_file(bot, message):
         return await message.reply_text("<b>💡 ᴜsᴀɢᴇ: <code>/delete query</code></b>")
 
     btn = [
-        [
-            InlineKeyboardButton("✅ ʏᴇs, ᴅᴇʟᴇᴛᴇ ᴀʟʟ", callback_data=f"delete_{query}", style=enums.ButtonStyle.DANGER)
-        ],
-        [
-            InlineKeyboardButton("❌ ᴄʟᴏsᴇ / ᴄᴀɴᴄᴇʟ", callback_data="close_data", style=enums.ButtonStyle.SUCCESS)
-        ]
+        [InlineKeyboardButton("✅ ʏᴇs, ᴅᴇʟᴇᴛᴇ ᴀʟʟ", callback_data=f"delete_{query}", style=enums.ButtonStyle.DANGER)],
+        [InlineKeyboardButton("❌ ᴄʟᴏsᴇ / ᴄᴀɴᴄᴇʟ", callback_data="close_data", style=enums.ButtonStyle.SUCCESS)]
     ]
 
     await message.reply_text(
@@ -496,7 +492,6 @@ async def img_2_link(bot, message):
             f"✨ ᴘᴏᴡᴇʀᴇᴅ ʙʏ @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
             disable_web_page_preview=True
         )
-        
         if os.path.exists(path):
             os.remove(path)
             
@@ -508,7 +503,7 @@ async def ping(client, message):
     start_time = monotonic()
     msg = await message.reply("👀")
     end_time = monotonic()
-    await msg.edit(f'{round((end_time - start_time) * 1000)} ms')
+    await msg.edit(f'<b>{round((end_time - start_time) * 1000)} ᴍs</b>')
     
 
 @Client.on_message(filters.command('myplan') & filters.private)
@@ -517,7 +512,7 @@ async def myplan(client, message):
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>')
     
     user_id = message.from_user.id
-    mp = db.get_plan(user_id)
+    mp = await db.get_plan(user_id)
     
     if not await is_premium(user_id, client):
         btn = [[
@@ -566,7 +561,7 @@ async def plan(client, message):
 
 @Client.on_message(filters.command('add_prm'))
 async def add_prm(bot, message):
-    if not db.is_sudo(message.from_user.id):
+    if not await db.is_sudo(message.from_user.id):
         return
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
@@ -585,7 +580,7 @@ async def add_prm(bot, message):
                     'premium': True,
                     'trial': True
                 }
-                db.update_plan(user_id, status)
+                await db.update_plan(user_id, status)
                 
                 try:
                     target_user = await bot.get_users(user_id)
@@ -647,7 +642,8 @@ async def add_prm(bot, message):
                     for admin_id in ADMINS:
                         try:
                             await bot.send_message(admin_id, sudo_alert)
-                        except: pass
+                        except:
+                            pass
             else:
                 await message.reply_text("❌ <b>ɪɴᴠᴀʟɪᴅ ᴛɪᴍᴇ ꜰᴏʀᴍᴀᴛ.</b>")
         except Exception as e:
@@ -659,7 +655,7 @@ async def add_prm(bot, message):
 
 @Client.on_message(filters.command('rm_prm'))
 async def rm_prm(bot, message):
-    if not db.is_sudo(message.from_user.id):
+    if not await db.is_sudo(message.from_user.id):
         return
     if not IS_PREMIUM:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ ᴅɪsᴀʙʟᴇᴅ.</b>')
@@ -678,7 +674,7 @@ async def rm_prm(bot, message):
             role = "ʙᴏᴛ ᴏᴡɴᴇʀ" if is_owner else "sᴜᴅᴏ ᴀᴅᴍɪɴ"
             
             status = {'expire': '', 'plan': '', 'premium': False, 'trial': True}
-            db.update_plan(user_id, status)
+            await db.update_plan(user_id, status)
 
             if is_owner:
                 user_msg = "<b>⚠️ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ʙʏ ᴀᴅᴍɪɴ.</b>"
@@ -727,14 +723,13 @@ async def prm_list(bot, message):
     
     tx = await message.reply('<b>🔍 ꜰᴇᴛᴄʜɪɴɢ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ʟɪsᴛ...</b>')
     
-    premium_users = db.get_premium_users()
+    premium_users = await db.get_premium_users()
     pr = [i['id'] for i in premium_users if i.get('status', {}).get('premium')]
     
     if not pr:
         return await tx.edit_text('<b>❌ ɴᴏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ.</b>')
     
     t = '<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs\n\n'
-    
     for count, p in enumerate(pr, 1):
         try:
             u = await bot.get_users(p)
@@ -754,38 +749,35 @@ async def set_fsub(bot, message):
     try:
         _, ids = message.text.split(' ', 1)
     except ValueError:
-        return await message.reply('usage: /set_fsub -100xxx -100xxx')
+        return await message.reply('💡 ᴜsᴀɢᴇ: /set_fsub -100xxx -100xxx')
     title = ""
     for id in ids.split(' '):
         try:
             chat = await bot.get_chat(int(id))
-            title += f'{chat.title}\n'
+            title += f'⠂{chat.title}\n'
         except Exception as e:
-            return await message.reply(f'ERROR: {e}')
-    db.update_bot_sttgs('FORCE_SUB_CHANNELS', ids)
-    await message.reply(f'added force subscribe channels: {title}')
-
-        
+            return await message.reply(f'❌ ᴇʀʀᴏʀ: {e}')
+    await db.update_bot_sttgs('FORCE_SUB_CHANNELS', ids)
+    await message.reply(f'✅ ᴀᴅᴅᴇᴅ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟs:\n{title}')
 
 @Client.on_message(filters.command('set_req_fsub') & filters.user(ADMINS))
 async def set_req_fsub(bot, message):
     try:
         _, id = message.text.split(' ', 1)
     except ValueError:
-        return await message.reply('usage: /set_req_fsub -100xxx')
+        return await message.reply('💡 ᴜsᴀɢᴇ: /set_req_fsub -100xxx')
     try:
         chat = await bot.get_chat(int(id))
     except Exception as e:
-        return await message.reply(f'ERROR: {e}')
-    db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
-    await message.reply(f'added request force subscribe channel: {chat.title}')
+        return await message.reply(f'❌ ᴇʀʀᴏʀ: {e}')
+    await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
+    await message.reply(f'✅ ᴀᴅᴅᴇᴅ ʀᴇǫᴜᴇsᴛ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟ: {chat.title}')
 
 @Client.on_message(filters.command('resetallgroups') & filters.user(ADMINS))
 async def reset_all_groups_cmd(client, message):
     msg = await message.reply("<b>⏳ ʀᴇsᴇᴛᴛɪɴɢ ᴀʟʟ ɢʀᴏᴜᴘs sᴇᴛᴛɪɴɢs ᴛᴏ ᴅᴇꜰᴀᴜʟᴛ...</b>")
     try:
-        modified_count = db.reset_all_groups_settings()
-        
+        modified_count = await db.reset_all_groups_settings()
         await msg.edit(
             f"<b>✅ sᴜᴄᴄᴇss!</b>\n\n"
             f"<b>sᴇᴛᴛɪɴɢs ꜰᴏʀ <code>{modified_count}</code> ɢʀᴏᴜᴘs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇsᴇᴛ ᴛᴏ ᴅᴇꜰᴀᴜʟᴛ.</b>"
@@ -795,42 +787,41 @@ async def reset_all_groups_cmd(client, message):
 
 @Client.on_message(filters.command('off_auto_filter') & filters.user(ADMINS))
 async def off_auto_filter(bot, message):
-    db.update_bot_sttgs('AUTO_FILTER', False)
+    await db.update_bot_sttgs('AUTO_FILTER', False)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏꜰꜰ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ꜰᴏʀ ᴀʟʟ ɢʀᴏᴜᴘs</b>')
 
 
 @Client.on_message(filters.command('on_auto_filter') & filters.user(ADMINS))
 async def on_auto_filter(bot, message):
-    db.update_bot_sttgs('AUTO_FILTER', True)
+    await db.update_bot_sttgs('AUTO_FILTER', True)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏɴ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ꜰᴏʀ ᴀʟʟ ɢʀᴏᴜᴘs</b>')
 
 
 @Client.on_message(filters.command('off_pm_search') & filters.user(ADMINS))
 async def off_pm_search(bot, message):
-    db.update_bot_sttgs('PM_SEARCH', False)
+    await db.update_bot_sttgs('PM_SEARCH', False)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏꜰꜰ ᴘᴍ sᴇᴀʀᴄʜ ꜰᴏʀ ᴀʟʟ ᴜsᴇʀs</b>')
 
 
 @Client.on_message(filters.command('on_pm_search') & filters.user(ADMINS))
 async def on_pm_search(bot, message):
-    db.update_bot_sttgs('PM_SEARCH', True)
+    await db.update_bot_sttgs('PM_SEARCH', True)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏɴ ᴘᴍ sᴇᴀʀᴄʜ ꜰᴏʀ ᴀʟʟ ᴜsᴇʀs</b>')
 
-# ----------------------------- ADD SUDO -----------------------------
 @Client.on_message(filters.command("addsudo") & filters.user(ADMINS))
 async def add_sudo_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply_text("<b>💡 ᴜsᴀɢᴇ: <code>/addsudo user_id</code></b>")
     try:
         user_id = int(message.command[1])
-        if db.add_sudo(user_id):
+        if await db.add_sudo(user_id):
             try:
                 user = await bot.get_users(user_id)
                 target_mention = user.mention
                 target_name = user.first_name
             except:
                 target_mention = f"<code>{user_id}</code>"
-                target_name = "User"
+                target_name = "ᴜsᴇʀ"
 
             adder = message.from_user
 
@@ -865,7 +856,6 @@ async def add_sudo_cmd(bot, message):
     except ValueError:
         await message.reply_text("<b>❌ ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ɴᴜᴍᴇʀɪᴄ ᴜsᴇʀ ɪᴅ.</b>")
 
-# ---------------------------- REMOVE SUDO ----------------------------
 @Client.on_message(filters.command("rmsudo") & filters.user(ADMINS))
 async def rm_sudo_cmd(bot, message):
     if len(message.command) < 2:
@@ -881,11 +871,11 @@ async def rm_sudo_cmd(bot, message):
             target_name = user.first_name
         except:
             target_mention = f"<code>{user_id}</code>"
-            target_name = "User"
+            target_name = "ᴜsᴇʀ"
 
         adder = message.from_user
 
-        if db.remove_sudo(user_id):
+        if await db.remove_sudo(user_id):
             user_msg = (
                 f"⚠️ <b>ʜᴇʏ {target_name},\n\n"
                 f"ʏᴏᴜʀ ᴀᴅᴍɪɴ (sᴜᴅᴏ ᴜsᴇʀ) ᴘᴇʀᴍɪssɪᴏɴs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ.\n"
@@ -921,7 +911,7 @@ async def rm_sudo_cmd(bot, message):
 
 @Client.on_message(filters.command("sudolist") & filters.user(ADMINS))
 async def sudo_list_cmd(bot, message):
-    sudoers = db.get_sudo_list()
+    sudoers = await db.get_sudo_list()
     if not sudoers:
         return await message.reply_text("<b>❌ ɴᴏ sᴜᴅᴏ ᴜsᴇʀs ꜰᴏᴜɴᴅ.</b>")
     

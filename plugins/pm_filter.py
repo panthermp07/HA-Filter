@@ -28,13 +28,13 @@ async def pm_search(client, message):
     except:
         pass
 
-    stg = db.get_bot_sttgs()
+    stg = await db.get_bot_sttgs()
     if await is_premium(message.from_user.id, client):
         s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
         await auto_filter(client, message, s)
 
     else:
-        if stg.get('PM_SEARCH'):
+        if stg and stg.get('PM_SEARCH'):
             s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
             await auto_filter(client, message, s)
             
@@ -60,8 +60,8 @@ async def pm_search(client, message):
 async def group_search(client, message):
     chat_id = message.chat.id
     user_id = message.from_user.id if message and message.from_user else 0
-    stg = db.get_bot_sttgs()
-    if stg.get('AUTO_FILTER'):
+    stg = await db.get_bot_sttgs()
+    if stg and stg.get('AUTO_FILTER'):
         if not user_id:
             await message.reply("I'm not working for anonymous admin!")
             return
@@ -480,7 +480,7 @@ async def advantage_spoll_choker(bot, query):
         movie = await get_poster(data[1], id=True)
         search = movie.get('title')
 
-    s = await query.message.edit_text(f"<b><i>🔍 `{search}` ᴄʜᴇᴄᴋɪɴɢ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ...</i></b>")
+    s = await query.message.edit_text(f"<b><i><code>{search}</code> Check In My Database...</i></b>")
     await query.answer('')
     
     files, offset, total_results = await get_search_results(search)
@@ -488,9 +488,18 @@ async def advantage_spoll_choker(bot, query):
         k = (search, files, offset, total_results)
         await auto_filter(bot, query, s, k)
     else:
-        k = await query.message.edit(f"<b>❌ sᴏʀʀʏ, ɴᴏ ꜰɪʟᴇs ꜰᴏᴜɴᴅ ꜰᴏʀ '{search}'</b>")
-        await asyncio.sleep(10)
+        k = await query.message.edit(
+            text=f"👋 Hello {query.from_user.mention},\n\nI don't find <b>'{search}'</b> in my database. 😔",
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
+        asyncio.create_task(bot.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {query.from_user.mention}\nContent: {search}"))
+        
+        await asyncio.sleep(60)
         await k.delete()
+        try:
+            await query.message.reply_to_message.delete()
+        except:
+            pass
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
@@ -572,7 +581,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer("Movie request format.\nExample:\nBlack Adam or Black Adam 2022\n\nTV Reries request format.\nExample:\nLoki S01E01 or Loki S01 E01\n\nDon't use symbols.", show_alert=True)
 
     elif query.data == 'activate_trial':
-        mp = db.get_plan(query.from_user.id)
+        mp = await db.get_plan(query.from_user.id)
         if mp['trial']:
             return await query.message.edit('You already used trial, use /plan to activate plan')
         ex = datetime.now() + timedelta(hours=1)
@@ -580,7 +589,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         mp['trial'] = True
         mp['plan'] = '1 hour'
         mp['premium'] = True
-        db.update_plan(query.from_user.id, mp)
+        await db.update_plan(query.from_user.id, mp)
         await query.message.edit(f"Congratulations! Your activated trial for 1 hour\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
 
     elif query.data == 'activate_plan':
@@ -656,7 +665,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         files = db_count_documents()
         users = await db.total_users_count()
         chats = await db.total_chat_count()
-        prm = db.get_premium_count()
+        prm = await db.get_premium_count()
         used_files_db_size = get_size(await db.get_files_db_size())
         used_data_db_size = get_size(await db.get_data_db_size())
 
