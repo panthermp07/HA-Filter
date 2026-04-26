@@ -489,7 +489,7 @@ async def img_2_link(bot, message):
         await text.edit_text(
             f"<b>✅ ɪᴍᴀɢᴇ ᴜᴘʟᴏᴀᴅᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ\n\n"
             f"🔗 ʟɪɴᴋ ⠂<code>{response}</code>\n\n"
-            f"✨ ᴘᴏᴡᴇʀᴇᴅ ʙʏ @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
+            f"✨ ᴘᴏᴡᴇʀᴇᴅ ʙʏ  <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
             disable_web_page_preview=True
         )
         if os.path.exists(path):
@@ -532,7 +532,7 @@ async def myplan(client, message):
         f"⏳ ᴘʟᴀɴ: {mp['plan']}\n"
         f"📅 ᴇxᴘɪʀʏ: <code>{expire_str}</code>\n\n"
         f"✨ ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!\n"
-        f"🌍 @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>",
+        f"🌍 <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
         disable_web_page_preview=True
     )
 

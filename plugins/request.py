@@ -17,8 +17,8 @@ async def request_movie(client, message):
         f"➲ <b>ᴜsᴇʀ:</b> {user.mention}\n"
         f"➲ <b>ɪᴅ:</b> <code>{user.id}</code>"
     )
-    
-    safe_movie_name = movie_name[:20] 
+
+    safe_movie_name = movie_name[:40] 
     btn = [[
         InlineKeyboardButton("✅ ᴍᴀʀᴋ ᴀᴠᴀɪʟᴀʙʟᴇ", callback_data=f"req_done_{user.id}_{safe_movie_name}")
     ]]
@@ -30,7 +30,7 @@ async def request_movie(client, message):
             reply_markup=InlineKeyboardMarkup(btn)
         )
         await message.reply_text(
-            f"<b>✅ ᴅᴏɴᴇ {user.first_name}!\n\nʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ꜰᴏʀ '{movie_name}' ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴏᴜʀ ᴀᴅᴍɪɴs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!</b>"
+            f"<b>✅ ᴅᴏɴᴇ {user.first_name}!\n\nʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ꜰᴏʀ '<code>{movie_name}</code>' ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴏᴜʀ ᴀᴅᴍɪɴs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!</b>"
         )
     except Exception as e:
         logging.error(e)
@@ -38,18 +38,21 @@ async def request_movie(client, message):
 
 @Client.on_callback_query(filters.regex(r"^req_done_"))
 async def handle_request_done(client, query):
-    data = query.data.split("_")
+    data = query.data.split("_", 3)
     user_id = int(data[2])
-    movie = data[3]
+    movie = data[3] if len(data) > 3 else "ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ"
 
     try:
         await client.send_message(
             chat_id=user_id, 
-            text=f"<b>✨ ʜᴇʏ! ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴍᴏᴠɪᴇ '{movie}...' ɪs ɴᴏᴡ ᴀᴠᴀɪʟᴀʙʟᴇ ɪɴ ᴛʜᴇ ʙᴏᴛ! 🚀\n\nsᴇᴀʀᴄʜ ɴᴏᴡ ᴀɴᴅ ᴇɴᴊᴏʏ!</b>"
+            text=f"<b>✨ ʜᴇʏ! ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴍᴏᴠɪᴇ '<code>{movie}</code>' ɪs ɴᴏᴡ ᴀᴠᴀɪʟᴀʙʟᴇ ɪɴ ᴛʜᴇ ʙᴏᴛ! 🚀\n\nsᴇᴀʀᴄʜ ɴᴏᴡ ᴀɴᴅ ᴇɴᴊᴏʏ!</b>"
         )
-        await query.answer("ᴜsᴇʀ ʜᴀs ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ!", show_alert=True)
+        await query.answer("✅ ᴜsᴇʀ ʜᴀs ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ!", show_alert=True)
         await query.edit_message_text(
             text=f"{query.message.text.html}\n\n✅ <b>sᴛᴀᴛᴜs: ᴄᴏᴍᴘʟᴇᴛᴇᴅ ʙʏ {query.from_user.mention}</b>"
         )
     except Exception as e:
-        await query.answer(f"⚠️ ᴇʀʀᴏʀ: {e}", show_alert=True)
+        await query.answer("⚠️ ᴇʀʀᴏʀ: ᴜsᴇʀ ʙʟᴏᴄᴋᴇᴅ ʙᴏᴛ ᴏʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!", show_alert=True)
+        await query.edit_message_text(
+            text=f"{query.message.text.html}\n\n❌ <b>sᴛᴀᴛᴜs: ꜰᴀɪʟᴇᴅ ᴛᴏ ɴᴏᴛɪꜰʏ (ʙʟᴏᴄᴋᴇᴅ)</b>"
+        )

@@ -128,7 +128,7 @@ async def groups_broadcast(bot, message):
                     else:
                         failed += 1
                 tasks.clear()
-                await asyncio.sleep(1) # Safe delay limit
+                await asyncio.sleep(1)
                 
                 if time.time() - last_update > 10:
                     btn = [[InlineKeyboardButton('🚫 ᴄᴀɴᴄᴇʟ', callback_data='broadcast_cancel#groups')]]

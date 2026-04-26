@@ -10,7 +10,6 @@ from pyrogram.errors import UserNotParticipant
 from utils import get_size, temp
 from info import ADMINS
 
-# --- ID COMMAND ---
 @Client.on_message(filters.command('id'))
 async def showid(client, message):
     chat_type = message.chat.type
@@ -70,7 +69,7 @@ async def speedtest(client, message):
 ┠ <b>ɪsᴘ:</b> <code>{result['client']['isp']}</code>
 ┖ <b>ɪsᴘ ʀᴀᴛɪɴɢ:</b> <code>{result['client']['isprating']}</code>
 
-🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"'''
+🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>'''
 
     await message.reply_photo(photo=photo, caption=text)
     await msg.delete()
