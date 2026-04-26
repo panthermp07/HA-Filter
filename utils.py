@@ -248,21 +248,25 @@ async def is_premium(user_id, bot):
 
 async def check_premium(bot):
     while True:
-        pr = [i for i in db.get_premium_users() if i['status']['premium']]
+        premium_users = await db.get_premium_users() 
+        pr = [i for i in premium_users if i.get('status', {}).get('premium')]
+        
         for p in pr:
             mp = p['status']
-            if mp['expire'] < datetime.now():
-                try:
-                    await bot.send_message(
-                        p['id'],
-                        f"Your premium {mp['plan']} plan is expired in {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate new plan again"
-                    )
-                except Exception:
-                    pass
-                mp['expire'] = ''
-                mp['plan'] = ''
-                mp['premium'] = False
-                db.update_plan(p['id'], mp)
+            if mp.get('expire') and isinstance(mp['expire'], datetime):
+                if mp['expire'] < datetime.now():
+                    try:
+                        await bot.send_message(
+                            p['id'],
+                            f"<b>ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ {mp['plan']} ᴘʟᴀɴ ɪs ᴇxᴘɪʀᴇᴅ ɪɴ {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, ᴜsᴇ /plan ᴛᴏ ᴀᴄᴛɪᴠᴀᴛᴇ ɴᴇᴡ ᴘʟᴀɴ ᴀɢᴀɪɴ!</b>"
+                        )
+                    except Exception:
+                        pass
+                    mp['expire'] = ''
+                    mp['plan'] = ''
+                    mp['premium'] = False
+                    await db.update_plan(p['id'], mp)
+        
         await asyncio.sleep(1200)
 
 

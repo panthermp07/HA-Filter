@@ -118,7 +118,7 @@ class Database:
         return user.get('ban_status', default)
 
     async def get_all_users(self):
-        return self.col.find({})
+        return await self.col.find({}).to_list(length=None)
     
     async def delete_user(self, user_id):
         self.col.delete_many({'id': int(user_id)})
@@ -139,10 +139,10 @@ class Database:
         res = self.sudo.delete_one({'id': int(user_id)})
         return res.deleted_count > 0
 
-    def get_sudo_list(self):
-        """Returns a list of all sudo user IDs."""
-        return [user['id'] for user in self.sudo.find({})]
-
+    async def get_sudo_list(self):
+        cursor = await self.sudo.find({}).to_list(length=None)
+        return [user['id'] for user in cursor]
+        
     def is_sudo(self, user_id):
         """Checks if a user is a sudo user or a bot admin."""
         if user_id in ADMINS: # Admins are super-sudo by default
@@ -160,8 +160,8 @@ class Database:
         self.req.drop()
 
     async def get_banned(self):
-        users = self.col.find({'ban_status.is_banned': True})
-        chats = self.grp.find({'chat_status.is_disabled': True})
+        users = await self.col.find({'ban_status.is_banned': True}).to_list(length=None)
+        chats = await self.grp.find({'chat_status.is_disabled': True}).to_list(length=None)
         b_chats = [chat['id'] for chat in chats]
         b_users = [user['id'] for user in users]
         return b_users, b_chats
@@ -304,7 +304,7 @@ class Database:
         return self.prm.count_documents({'status.premium': True})
     
     def get_premium_users(self):
-        return self.prm.find({})
+        return await self.prm.find({}).to_list(length=None)
     
     def add_connect(self, group_id, user_id):
         user= self.con.find_one({'_id': user_id})
