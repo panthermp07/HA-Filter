@@ -1,6 +1,9 @@
 kurigram
 tgcrypto
+motor
 pymongo
+thefuzz
+python-Levenshtein
 shortzy
 aiohttp
 aiofiles

@@ -1,6 +1,5 @@
-import time
 from datetime import datetime, timedelta
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from info import (
     BOT_ID, ADMINS, DATABASE_NAME, DATA_DATABASE_URL, FILES_DATABASE_URL, 
     SECOND_FILES_DATABASE_URL, IMDB_TEMPLATE, WELCOME_TEXT, LINK_MODE, 
@@ -8,14 +7,14 @@ from info import (
     IMDB, WELCOME, SPELL_CHECK, PROTECT_CONTENT, AUTO_DELETE, IS_STREAM, VERIFY_EXPIRE
 )
 
-files_db_client = MongoClient(FILES_DATABASE_URL)
+files_db_client = AsyncIOMotorClient(FILES_DATABASE_URL)
 files_db = files_db_client[DATABASE_NAME]
 
-data_db_client = MongoClient(DATA_DATABASE_URL)
+data_db_client = AsyncIOMotorClient(DATA_DATABASE_URL)
 data_db = data_db_client[DATABASE_NAME]
 
 if SECOND_FILES_DATABASE_URL:
-    second_files_db_client = MongoClient(SECOND_FILES_DATABASE_URL)
+    second_files_db_client = AsyncIOMotorClient(SECOND_FILES_DATABASE_URL)
     second_files_db = second_files_db_client[DATABASE_NAME]
 
 class Database:
@@ -58,6 +57,7 @@ class Database:
         self.con = data_db.Connections
         self.stg = data_db.Settings
         self.sudo = data_db.Sudoers
+        self.movies = files_db.Files
 
     def new_user(self, id, name):
         return dict(
@@ -233,7 +233,21 @@ class Database:
     async def get_all_chats_count(self):
         grp = self.grp.count_documents({})
         return grp
-    
+
+    async def get_all_movie_titles(self):
+        """AI Search ke liye saare titles fetch karta hai"""
+        cursor = self.movies.find({}, {"title": 1, "file_name": 1})
+        titles = []
+        async for t in cursor:
+            title = t.get('title') or t.get('file_name')
+            if title:
+                titles.append(title)
+        return list(set(titles))
+
+    #async def get_all_movie_titles(self):
+    #titles = await self.movies.find().to_list(length=10000)
+    #return list(set([t.get('title') or t.get('file_name') for t in titles if t]))
+
     def get_plan(self, id):
         st = self.prm.find_one({'id': id})
         if st:

@@ -3,6 +3,7 @@ import re
 from time import time as time_now
 import math, os
 import qrcode, random
+from thefuzz import process
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
 from datetime import datetime, timedelta
@@ -468,13 +469,18 @@ async def quality_next_page(bot, query):
 
 @Client.on_callback_query(filters.regex(r"^spolling"))
 async def advantage_spoll_choker(bot, query):
-    _, id, user = query.data.split('#')
-    if int(user) != 0 and query.from_user.id != int(user):
+    data = query.data.split('#')
+    user = int(data[2])
+    if user != 0 and query.from_user.id != user:
         return await query.answer(f"Hello {query.from_user.first_name},\nDon't Click Other Results!", show_alert=True)
-        
-    movie = await get_poster(id, id=True)
-    search = movie.get('title')
-    s = await query.message.edit_text(f"<b><i><code>{search}</code> Check In My Database...</i></b>")
+
+    if data[1] == "dbmatch":
+        search = query.message.reply_markup.inline_keyboard[0][0].text.replace("✨ ", "")
+    else:
+        movie = await get_poster(data[1], id=True)
+        search = movie.get('title')
+
+    s = await query.message.edit_text(f"<b><i>🔍 `{search}` ᴄʜᴇᴄᴋɪɴɢ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ...</i></b>")
     await query.answer('')
     
     files, offset, total_results = await get_search_results(search)
@@ -482,18 +488,9 @@ async def advantage_spoll_choker(bot, query):
         k = (search, files, offset, total_results)
         await auto_filter(bot, query, s, k)
     else:
-        k = await query.message.edit(
-            text=f"👋 Hello {query.from_user.mention},\n\nI don't find <b>'{search}'</b> in my database. 😔",
-            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
-        )
-        asyncio.create_task(bot.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {query.from_user.mention}\nContent: {search}"))
-        
-        await asyncio.sleep(60)
+        k = await query.message.edit(f"<b>❌ sᴏʀʀʏ, ɴᴏ ꜰɪʟᴇs ꜰᴏᴜɴᴅ ꜰᴏʀ '{search}'</b>")
+        await asyncio.sleep(10)
         await k.delete()
-        try:
-            await query.message.reply_to_message.delete()
-        except:
-            pass
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
@@ -1241,64 +1238,63 @@ async def auto_filter(client, msg, s, spoll=False):
 async def advantage_spell_chok(message, s):
     search = message.text
     google_search = search.replace(" ", "+")
+    user_id = message.from_user.id if message.from_user else 0
+    
     btn = [[
-        InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs ⚠️", callback_data='instructions'),
-        InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ 🔍", url=f"https://www.google.com/search?q={google_search}")
+        InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs", callback_data='instructions'),
+        InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ", url=f"https://www.google.com/search?q={google_search}")
+    ],[
+        InlineKeyboardButton("🛸 ʀᴇǫᴜᴇsᴛ ᴍᴏᴠɪᴇ", callback_data=f"request_msg_{user_id}")
     ]]
+
     try:
         movies = await get_poster(search, bulk=True)
     except:
-        n = await s.edit_text(
-            text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
-            reply_markup=InlineKeyboardMarkup(btn),
-            link_preview_options=LinkPreviewOptions(is_disabled=True) # Preview OFF
-        )
-        await asyncio.sleep(60)
-        await n.delete()
-        try:
-            await message.delete()
-        except:
-            pass
-        return
+        movies = None
         
     if not movies:
+        all_titles = await db.get_all_movie_titles()
+        matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
+        
+        if matches:
+            db_btns = [[
+                InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")
+            ] for match in matches]
+            db_btns.extend(btn)
+            
+            return await s.edit_text(
+                text=f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ᴅɪʀᴇᴄᴛʟʏ.\nᴅɪᴅ ʏᴏᴜ ᴍᴇᴀɴ ᴏɴᴇ ᴏꜰ ᴛʜᴇsᴇ ꜰʀᴏᴍ ᴍʏ ʟɪʙʀᴀʀʏ? 👇</b>",
+                reply_markup=InlineKeyboardMarkup(db_btns),
+                link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
+
         n = await s.edit_text(
             text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
             reply_markup=InlineKeyboardMarkup(btn),
             link_preview_options=LinkPreviewOptions(is_disabled=True)
         )
-        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"#No_Result\n\nRequester: {message.from_user.mention}\nContent: {search}"))
-        
+        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"#No_Result\n\nUser: {message.from_user.mention}\nSearch: {search}"))
         await asyncio.sleep(60)
         await n.delete()
-        try:
-            await message.delete()
-        except:
-            pass
+        try: await message.delete()
+        except: pass
         return
 
-    user = message.from_user.id if message.from_user else 0
     buttons = [[
-        InlineKeyboardButton(text=movie.get('title'), callback_data=f"spolling#{movie['id']}#{user}")
-    ]
-        for movie in movies
-    ]
-    buttons.append(
-        [InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)]
-    )
+        InlineKeyboardButton(text=f"🎬 {movie.get('title')}", callback_data=f"spolling#{movie['id']}#{user_id}")
+    ] for movie in movies]
+    
+    buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
+    
     s = await s.edit_text(
-        text = (
-            f"👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\n"
-            f"I couldn't find the <b>'{search}'</b> you requested.\n"
-            f"Select if you meant one of these? 👇"
-        ),
-
+        text=f"<b>👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\nɪ ꜰᴏᴜɴᴅ sᴏᴍᴇ sɪᴍɪʟᴀʀ ᴛɪᴛʟᴇs. sᴇʟᴇᴄᴛ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ: 👇</b>",
         reply_markup=InlineKeyboardMarkup(buttons),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)  # Preview OFF
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
     )
+    
     await asyncio.sleep(300)
-    await s.delete()
     try:
+        await s.delete()
         await message.delete()
     except:
         pass
