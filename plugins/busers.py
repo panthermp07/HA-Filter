@@ -13,6 +13,6 @@ async def blocked_user_handler(client, update, users, chats):
             logging.info(f"🚫 {user_id} - Removed from DB (User blocked the bot)")
         else:
             if not await db.is_user_exist(user_id):
-                await db.add_user(user_id)
+                await db.add_user(user_id, "ᴜsᴇʀ")
                 logging.info(f"✅ {user_id} - Added back to DB (User unblocked the bot)")
     raise ContinuePropagation
