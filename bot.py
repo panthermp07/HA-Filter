@@ -7,7 +7,6 @@ from typing import Union, Optional, AsyncGenerator
 from pyrogram import types, Client, StopPropagation
 from pyrogram.handlers import MessageHandler
 
-# Aapke existing imports
 from web import web_app
 from database.users_chats_db import db
 from utils import temp, check_premium
@@ -19,7 +18,10 @@ from info import (
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
+    handlers=[
+        logging.FileHandler('bot.log'),
+        logging.StreamHandler()
+    ]
 )
 logging.getLogger('pyrogram').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
