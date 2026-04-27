@@ -489,7 +489,7 @@ async def advantage_spoll_choker(bot, query):
         k = (search, files, offset, total_results)
         if not query.message:
             return await query.answer("ᴍᴇssᴀɢᴇ ᴇxᴘɪʀᴇᴅ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
-        await auto_filter(bot, query, s, k)
+        await auto_filter(bot, query, s, spoll=k)
     else:
         k = await query.message.edit(
             text=f"<b>👋 ʜᴇʟʟᴏ {query.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ɪɴ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ. 😔</b>",
@@ -1124,20 +1124,28 @@ async def auto_filter(client, msg, s, spoll=False):
         files, offset, total_results = await get_search_results(search)
         if not files:
             if settings["spell_check"]:
-                await advantage_spell_chok(message, s)
+                return await advantage_spell_chok(message, s)
             else:
-                await s.edit(f'I cant find {search}')
-            return
+                return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
     else:
         settings = await get_settings(msg.message.chat.id)
-        message = msg.message.reply_to_message
+        message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
         search, files, offset, total_results = spoll
-    req = message.from_user.id if message and message.from_user else 0
-    if not message:
+
+    if not message or message is None:
         if isinstance(msg, CallbackQuery):
-            return await msg.answer("ᴏʟᴅ ᴍᴇssᴀɢᴇ! sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ.", show_alert=True)
-        return
-    key = f"{message.chat.id}-{message.id}"
+            await msg.answer("ᴏʟᴅ ᴍᴇssᴀɢᴇ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
+        return await s.edit("<b>❌ ᴇʀʀᴏʀ: ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ.</b>")
+
+    req = message.from_user.id if message.from_user else 0
+    
+    try:
+        chat_id = message.chat.id
+        msg_id = message.id
+        key = f"{chat_id}-{msg_id}"
+    except AttributeError:
+        key = f"{msg.message.chat.id}-{msg.message.id}"
+ 
     temp.FILES[key] = files
     BUTTONS[key] = search
     files_link = ""
