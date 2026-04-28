@@ -307,10 +307,16 @@ class Database:
         result = await self.grp.update_many({}, {'$set': {'settings': self.default_setgs}})
         return result.modified_count
 
-    async def add_shortener(self, site, api):
+    async def add_shortener(self, site, api, weight=50):
+        """Adds a shortener with a custom traffic weight (default 50)"""
         return await self.stg.update_one(
             {'id': BOT_ID},
-            {'$push': {'shortener_list': {'site': site, 'api': api, 'total_clicks': 0}}},
+            {'$push': {'shortener_list': {
+                'site': site, 
+                'api': api, 
+                'weight': int(weight), 
+                'total_clicks': 0
+            }}},
             upsert=True
         )
 

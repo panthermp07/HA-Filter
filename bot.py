@@ -3,16 +3,18 @@ import time
 import asyncio
 import logging
 from aiohttp import web
+from datetime import datetime, timedelta
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types, Client, StopPropagation
 from pyrogram.handlers import MessageHandler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from web import web_app
 from database.users_chats_db import db
 from utils import temp, check_premium
 from info import (
     URL, LOG_CHANNEL, API_ID, API_HASH, BOT_TOKEN, 
-    PORT, ADMINS
+    PORT, ADMINS, TIME_ZONE, VERIFICATION_NOTIFY_CHANNEL, BOT_ID
 )
 
 logging.basicConfig(
@@ -40,15 +42,13 @@ class Bot(Client):
             api_hash=API_HASH,
             bot_token=BOT_TOKEN,
             plugins={"root": "plugins"},
-            workers=50,             # Optimized for Koyeb
-            sleep_threshold=30      # Floodwait handling
+            workers=50,
+            sleep_threshold=30
         )
         self.listeners = {}
-        # Listener handler ko group -1 par rakha hai taaki ye sabse pehle chale
         self.add_handler(MessageHandler(self._listener_handler), group=-1)
 
     async def _listener_handler(self, client: Client, message: types.Message):
-        # Basic checks to avoid crashes
         if not message.from_user:
             return
         
@@ -57,14 +57,12 @@ class Bot(Client):
             future = self.listeners[listener_id]
             if not future.done():
                 future.set_result(message)
-                # Sirf tab stop karein jab listener active ho
                 raise StopPropagation
 
     async def listen(self, chat_id: int, user_id: int, timeout: int = 60) -> Optional[types.Message]:
         future = asyncio.get_event_loop().create_future()
         listener_id = (chat_id, user_id)
         
-        # Purane pending listener ko hatayein
         if listener_id in self.listeners:
             old_future = self.listeners[listener_id]
             if not old_future.done():
@@ -83,7 +81,6 @@ class Bot(Client):
         await super().start()
         temp.START_TIME = time.time()
         
-        # Database loading with fallback
         try:
             b_users, b_chats = await db.get_banned()
             temp.BANNED_USERS = b_users
@@ -91,7 +88,6 @@ class Bot(Client):
         except Exception as e:
             logger.error(f"Error loading banned list: {e}")
 
-        # Restart message handling
         if os.path.exists('restart.txt'):
             try:
                 with open("restart.txt") as file:
@@ -101,7 +97,6 @@ class Bot(Client):
             except Exception as e:
                 logger.debug(f"Restart file error: {e}")
 
-        # Bot Info Setup
         temp.BOT = self
         me = await self.get_me()
         temp.ME = me.id
@@ -117,13 +112,23 @@ class Bot(Client):
         # Premium check & Background Tasks
         asyncio.create_task(check_premium(self))
         
-        # Notification Log
+        # --- ELITE AUTOMATION SCHEDULER ---
+        scheduler = AsyncIOScheduler(timezone=TIME_ZONE)
+        
+        # 1. Midnight Report (11:59 PM)
+        scheduler.add_job(self.send_daily_report, "cron", hour=23, minute=59)
+        
+        # 2. Automated Analytics Cleanup (Weekly on Sunday)
+        scheduler.add_job(self.cleanup_old_analytics, "cron", day_of_week='sun', hour=0, minute=0)
+        
+        scheduler.start()
+        logger.info("Elite Automation Scheduler Started ✓")
+
         try:
             await self.send_message(chat_id=LOG_CHANNEL, text=f"<b>{me.mention} Is Online Now! 🚀</b>")
         except Exception as e:
             logger.warning(f"Could not send start message to LOG_CHANNEL: {e}")
 
-        # Admin Notification
         for admin in ADMINS:
             try:
                 await self.send_message(admin, "<b>๏[-ิ_•ิ]๏ sʏsᴛᴇᴍ ʀᴇsᴛᴀʀᴛᴇᴅ ✅</b>")
@@ -135,6 +140,44 @@ class Bot(Client):
     async def stop(self, **kwargs):
         await super().stop()
         logger.info("Bot Stopped! Bye...")
+
+    async def send_daily_report(self):
+        all_sh = await db.get_all_shorteners()
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        report = f"<b>🌙 ᴅᴀɪʟʏ ɴᴇᴛᴡᴏʀᴋ sᴜᴍᴍᴀʀʏ ({today})</b>\n"
+        report += "<code>━━━━━━━━━━━━━━━━━━━━━━━</code>\n\n"
+        
+        total_clicks = 0
+        for sh in all_sh:
+            clicks = sh.get(f'clicks_{today}', 0)
+            total_clicks += clicks
+            report += f"🌐 <b>{sh['site']}</b>: <code>{clicks}</code>\n"
+        
+        report += f"\n📊 <b>ᴛᴏᴛᴀʟ ᴅᴀɪʟʏ ᴄʟɪᴄᴋs:</b> <code>{total_clicks}</code>\n"
+        report += "<code>━━━━━━━━━━━━━━━━━━━━━━━</code>"
+
+        for admin in ADMINS:
+            try:
+                await self.send_message(admin, report)
+            except:
+                pass
+        if VERIFICATION_NOTIFY_CHANNEL:
+            try:
+                await self.send_message(VERIFICATION_NOTIFY_CHANNEL, report)
+            except:
+                pass
+
+    async def cleanup_old_analytics(self):
+        old_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        try:
+            await db.stg.update_many(
+                {'id': BOT_ID},
+                {'$unset': {f'shortener_list.$.clicks_{old_date}': ""}}
+            )
+            logger.info(f"Cleaned up analytics for {old_date}")
+        except Exception as e:
+            logger.error(f"Cleanup Error: {e}")
 
     async def iter_messages(self, chat_id: Union[int, str], limit: int, offset: int = 0) -> Optional[AsyncGenerator[types.Message, None]]:
         current = offset

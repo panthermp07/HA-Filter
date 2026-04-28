@@ -991,24 +991,36 @@ async def verification_analytics_pro(client, message):
 
 @Client.on_message(filters.command("add_sh") & filters.user(ADMINS))
 async def add_sh_pro(c, m):
-    if len(m.command) < 3: return await m.reply("`/add_sh site.com api_key`")
-    await db.add_shortener(m.command[1], m.command[2])
-    await m.reply(f"<b>✅ ᴀᴅᴅᴇᴅ <code>{m.command[1]}</code></b>")
+    if len(m.command) < 3: 
+        return await m.reply("<b>❌ ᴜsᴀɢᴇ: <code>/add_sh site.com api_key weight(opt)</code></b>")
+    
+    site = m.command[1]
+    api = m.command[2]
+    weight = m.command[3] if len(m.command) > 3 else 50
+    
+    await db.add_shortener(site, api, weight)
+    await m.reply(f"<b>✅ ᴀᴅᴅᴇᴅ <code>{site}</code> ᴡɪᴛʜ ᴡᴇɪɢʜᴛ <code>{weight}%</code></b>")
 
 @Client.on_message(filters.command("rm_sh") & filters.user(ADMINS))
 async def rm_sh_pro(c, m):
-    if len(m.command) < 2: return await m.reply("`/rm_sh site.com`")
+    if len(m.command) < 2: 
+        return await m.reply("<b>❌ ᴜsᴀɢᴇ: <code>/rm_sh site.com</code></b>")
+    
     await db.remove_shortener(m.command[1])
-    await m.reply(f"<b>🗑️ ʀᴇᴍᴏᴠᴇᴅ <code>{m.command[1]}</code></b>")
+    await m.reply(f"<b>🗑️ ʀᴇᴍᴏᴠᴇᴅ <code>{m.command[1]}</code> ꜰʀᴏᴍ ʀᴏᴛᴀᴛɪᴏɴ.</b>")
 
 @Client.on_message(filters.command("sh_stats") & filters.user(ADMINS))
 async def sh_stats_pro(c, m):
     all_sh = await db.get_all_shorteners()
-    if not all_sh: return await m.reply("<b>❌ ɴᴏ sʜᴏʀᴛᴇɴᴇʀs ꜰᴏᴜɴᴅ.</b>")
+    if not all_sh: 
+        return await m.reply("<b>❌ ɴᴏ sʜᴏʀᴛᴇɴᴇʀs ꜰᴏᴜɴᴅ.</b>")
+    
     today = datetime.now().strftime("%Y-%m-%d")
-    msg = "<b>📊 sʜᴏʀᴛᴇɴᴇʀ ᴀɴᴀʟʏᴛɪᴄs</b>\n\n"
+    msg = "<b>📊 sʜᴏʀᴛᴇɴᴇʀ ᴀɴᴀʟʏᴛɪᴄs (ᴡᴇɪɢʜᴛᴇᴅ)</b>\n\n"
+    
     for sh in all_sh:
-        msg += f"🌐 <code>{sh['site']}</code>\n"
+        msg += f"🌐 <code>{sh['site']}</code> (⚖️ {sh.get('weight', 50)}%)\n"
         msg += f"├ ᴛᴏᴅᴀʏ: <code>{sh.get(f'clicks_{today}', 0)}</code>\n"
         msg += f"└ ᴛᴏᴛᴀʟ: <code>{sh.get('total_clicks', 0)}</code>\n\n"
+        
     await m.reply(msg)

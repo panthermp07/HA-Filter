@@ -1,15 +1,16 @@
 import re
 import pytz
+import random
+import aiohttp
 import asyncio
 import requests
-import random
 from pyrogram import enums
 from datetime import datetime
 from shortzy import Shortzy
 from database.users_chats_db import db
 from pyrogram.types import InlineKeyboardButton
 from pyrogram.errors import UserNotParticipant, FloodWait
-from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY
+from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY, SHORTLINK_URL, SHORTLINK_API
 
 class temp(object):
     START_TIME = 0
@@ -329,34 +330,38 @@ def get_size(size):
 #    return link
 
 async def get_shortlink(link, user_id, grp_id=None):
-    shortener_to_use = None
+    """Elite Rotating Shortener: Weighted Choice + Failover Retry Loop"""
+    all_sh = await db.get_all_shorteners()
+    retry_list = []
     if grp_id:
         settings = await get_settings(grp_id)
         if settings.get('url') and settings.get('api'):
-            shortener_to_use = {'site': settings['url'], 'api': settings['api']}
+            retry_list.append({'site': settings['url'], 'api': settings['api']})
 
-    if not shortener_to_use:
-        all_sh = await db.get_all_shorteners()
-        shortener_to_use = random.choice(all_sh) if all_sh else None
-
-    if not shortener_to_use:
-        from info import SHORTLINK_URL, SHORTLINK_API
-        shortener_to_use = {'site': SHORTLINK_URL, 'api': SHORTLINK_API}
-
-    try:
-        from shortzy import Shortzy
-        shortzy = Shortzy(api_key=shortener_to_use['api'], base_site=shortener_to_use['site'])
-        short_url = await shortzy.convert(link)
-        
-        await db.update_sh_clicks(shortener_to_use['site'])
-        
-        if not hasattr(temp, 'VERIFY_LOGS'):
-            temp.VERIFY_LOGS = {}
-        temp.VERIFY_LOGS[user_id] = shortener_to_use['site']
-        
-        return short_url
-    except:
-        return link
+    if all_sh:
+        sites = [sh['site'] for sh in all_sh]
+        weights = [sh.get('weight', 50) for sh in all_sh]
+        selected_sites = random.choices(sites, weights=weights, k=len(sites))
+        for site_url in selected_sites:
+            sh_details = next((item for item in all_sh if item["site"] == site_url), None)
+            if sh_details:
+                retry_list.append(sh_details)
+    retry_list.append({'site': SHORTLINK_URL, 'api': SHORTLINK_API})
+    for shortener in retry_list:
+        try:
+            timeout = aiohttp.ClientTimeout(total=10)
+            shortzy = Shortzy(api_key=shortener['api'], base_site=shortener['site'], timeout=timeout)
+            short_url = await shortzy.convert(link)
+            await db.update_sh_clicks(shortener['site'])
+            if not hasattr(temp, 'VERIFY_LOGS'): temp.VERIFY_LOGS = {}
+            temp.VERIFY_LOGS[user_id] = shortener['site']
+            
+            return short_url
+        except Exception as e:
+            print(f"Shortener {shortener['site']} failed, trying next... Error: {e}")
+            continue
+            
+    return link
 
 def get_readable_time(seconds):
     periods = [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]
