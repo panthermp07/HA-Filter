@@ -67,6 +67,7 @@ async def start(client, message):
             caption=script.START_TXT.format(message.from_user.mention, get_wish()),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
+            message_effect_id=5104841245755180586
         )
         return
 
@@ -964,7 +965,6 @@ async def sudo_help_guide(bot, message):
         "🌍 <b>ᴘᴏᴡᴇʀᴇᴅ ʙʏ @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>"
     )
 
-    # Stylish Button
     buttons = [[
         InlineKeyboardButton("🛡️ sᴜᴘᴘᴏʀᴛ ᴄᴇɴᴛᴇʀ", url="https://t.me/talk_mrs_bot"),
         InlineKeyboardButton("📊 sᴛᴀᴛs", callback_data="stats")
