@@ -67,7 +67,7 @@ async def start(client, message):
             caption=script.START_TXT.format(message.from_user.mention, get_wish()),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML,
-            message_effect_id=5104841245755180586
+            effect_id=5104841245755180586
         )
         return
 
