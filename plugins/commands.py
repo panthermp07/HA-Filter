@@ -934,19 +934,24 @@ async def sudo_list_cmd(bot, message):
 
 @Client.on_message(filters.command("helpsudo") & filters.user(ADMINS))
 async def sudo_help_guide(bot, message):
-    try:
-        await bot.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
-    except:
-        pass
+    await bot.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     buttons = [[
         InlineKeyboardButton("🛡️ sᴜᴘᴘᴏʀᴛ ᴄᴇɴᴛᴇʀ", url="https://t.me/talk_mrs_bot"),
         InlineKeyboardButton("📊 sᴛᴀᴛs", callback_data="stats")
     ]]
 
-    await message.reply(
-        text=script.HELPSUDO_TXT,
-        reply_markup=InlineKeyboardMarkup(buttons),
-        disable_web_page_preview=True,
-        quote=True,
-        effect_id=5104841245755180586
-    )
+    try:
+        await message.reply(
+            text=script.HELPSUDO_TXT,
+            reply_markup=InlineKeyboardMarkup(buttons),
+            disable_web_page_preview=True,
+            quote=True,
+            effect_id=5104841245755180586
+        )
+    except Exception:
+        await message.reply(
+            text=script.HELPSUDO_TXT,
+            reply_markup=InlineKeyboardMarkup(buttons),
+            disable_web_page_preview=True,
+            quote=True
+        )
