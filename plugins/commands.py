@@ -934,48 +934,16 @@ async def sudo_list_cmd(bot, message):
 
 @Client.on_message(filters.command("helpsudo") & filters.user(ADMINS))
 async def sudo_help_guide(bot, message):
-    # Professional High-Tech Header
-    header = "<b>✨ ɪɴꜰɪɴɪᴛʏ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ᴘʀᴏ ᴘᴀɴᴇʟ</b>\n"
-    separator = "<code>" + "━" * 25 + "</code>\n"
-    
-    # Detailed Command List with Small Caps
-    help_text = (
-        f"{header}{separator}"
-        "👋 ʜᴇʟʟᴏ ᴀᴅᴍɪɴ! ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ ᴇxᴄʟᴜsɪᴠᴇ <b>sᴜᴅᴏ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ ɢᴜɪᴅᴇ</b>. "
-        "ʜᴇʀᴇ ʏᴏᴜ ᴄᴀɴ ᴄᴏɴᴛʀᴏʟ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ᴀɴᴅ sʏsᴛᴇᴍ ᴘᴇʀᴍɪssɪᴏɴs.\n\n"
-        
-        "<b>💎 ᴘʀᴇᴍɪᴜᴍ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ</b>\n"
-        "➲ <code>/add_prm [ɪᴅ] [ᴛɪᴍᴇ]</code> ⠂ᴀᴅᴅ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ᴜsᴇʀ\n"
-        "   <i>ᴇɢ: /add_prm 12345 1ᴍᴏɴᴛʜ</i>\n"
-        "➲ <code>/rm_prm [ɪᴅ]</code> ⠂ʀᴇᴠᴏᴋᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ\n"
-        "➲ <code>/prm_list</code> ⠂ᴠɪᴇᴡ ᴀʟʟ ᴘᴀɪᴅ ᴜsᴇʀs\n\n"
-        
-        "<b>👮 sᴜᴅᴏ ᴄᴏɴᴛʀᴏʟs</b>\n"
-        "➲ <code>/addsudo [ɪᴅ]</code> ⠂ᴀᴘᴘᴏɪɴᴛ ɴᴇᴡ sᴜᴅᴏ ᴀᴅᴍɪɴ\n"
-        "➲ <code>/rmsudo [ɪᴅ]</code> ⠂ᴅᴇᴍᴏᴛᴇ sᴜᴅᴏ ᴀᴅᴍɪɴ\n"
-        "➲ <code>/sudolist</code> ⠂ʟɪsᴛ ᴏꜰ ᴀʟʟ sᴜᴅᴏ ᴜsᴇʀs\n\n"
-        
-        "<b>⚙️ ɢʟᴏʙᴀʟ sʏsᴛᴇᴍ sᴇᴛᴛɪɴɢs</b>\n"
-        "➲ <code>/on_auto_filter</code> ⠂ᴇɴᴀʙʟᴇ ꜰɪʟᴛᴇʀ ɴᴇᴛᴡᴏʀᴋ\n"
-        "➲ <code>/off_auto_filter</code> ⠂ᴅɪsᴀʙʟᴇ ꜰɪʟᴛᴇʀ ɴᴇᴛᴡᴏʀᴋ\n"
-        "➲ <code>/on_pm_search</code> ⠂ᴀʟʟᴏᴡ ᴘʀɪᴠᴀᴛᴇ sᴇᴀʀᴄʜ\n"
-        "➲ <code>/off_pm_search</code> ⠂ᴅɪsᴀʙʟᴇ ᴘʀɪᴠᴀᴛᴇ sᴇᴀʀᴄʜ\n"
-        "➲ <code>/resetallgroups</code> ⠂ꜰᴀᴄᴛᴏʀʏ ʀᴇsᴇᴛ ᴀʟʟ ɢʀᴏᴜᴘs\n\n"
-        
-        "<b>📑 ᴄʜᴀɴɴᴇʟ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ</b>\n"
-        "➲ <code>/set_fsub [ɪᴅ]</code> ⠂ᴜᴘᴅᴀᴛᴇ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ\n"
-        "➲ <code>/set_req_fsub [ɪᴅ]</code> ⠂ᴜᴘᴅᴀᴛᴇ ᴀᴘᴘʀᴏᴠᴀʟ sᴜʙ\n"
-        f"{separator}"
-        "🌍 <b>ᴘᴏᴡᴇʀᴇᴅ ʙʏ @ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</b>"
-    )
-
+    await bot.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     buttons = [[
         InlineKeyboardButton("🛡️ sᴜᴘᴘᴏʀᴛ ᴄᴇɴᴛᴇʀ", url="https://t.me/talk_mrs_bot"),
         InlineKeyboardButton("📊 sᴛᴀᴛs", callback_data="stats")
     ]]
 
-    await message.reply_text(
-        text=help_text,
+    await message.reply(
+        text=script.HELPSUDO_TXT,
         reply_markup=InlineKeyboardMarkup(buttons),
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
+        quote=True,
+        effect_id=5104841245755180586
     )
