@@ -44,9 +44,40 @@ async def start(client, message):
     except:
         await message.react(emoji="⚡️", big=True)
 
-    if not await db.is_user_exist(message.from_user.id):
+    is_new_user = not await db.is_user_exist(message.from_user.id)
+    if is_new_user:
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.NEW_USER_TXT.format(message.from_user.mention, message.from_user.id))
+        
+        # 🟢 ELITE REFERRAL TRACKING 🟢
+        if len(message.command) > 1 and message.command[1].startswith('ref_'):
+            try:
+                inviter_id = int(message.command[1].split("_")[1])
+                # Khud ka link use karne se rokein
+                if inviter_id != message.from_user.id:
+                    inviter_data = await db.add_referral(inviter_id)
+                    if inviter_data:
+                        ref_count = inviter_data.get('referral_count', 0)
+                        
+                        # Agar 5 refers poore ho gaye, toh 5 Day Premium do!
+                        if ref_count % 5 == 0:
+                            expiry = datetime.now() + timedelta(days=5)
+                            status = {'expire': expiry, 'plan': '1 Day Reward', 'premium': True, 'trial': True}
+                            await db.update_plan(inviter_id, status)
+                            
+                            reward_msg = (
+                                "<b>🎉 ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs!\n\n"
+                                f"5 ᴜsᴇʀs ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ ᴜsɪɴɢ ʏᴏᴜʀ ʟɪɴᴋ! ʏᴏᴜ'ᴠᴇ ʙᴇᴇɴ ʀᴇᴡᴀʀᴅᴇᴅ ᴡɪᴛʜ 1 ᴅᴀʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss. 💎\n\n"
+                                f"⏳ ᴇxᴘɪʀᴇs ᴏɴ: <code>{expiry.strftime('%d %b %Y, %I:%M %p')}</code></b>"
+                            )
+                            await client.send_message(inviter_id, reward_msg)
+                        else:
+                            # Normal referral alert
+                            left_needed = 5 - (ref_count % 5)
+                            alert_msg = f"<b>✨ sᴏᴍᴇᴏɴᴇ ᴊᴏɪɴᴇᴅ ᴜsɪɴɢ ʏᴏᴜʀ ʀᴇꜰᴇʀʀᴀʟ ʟɪɴᴋ!\n\n📈 ᴛᴏᴛᴀʟ ʀᴇꜰᴇʀs: <code>{ref_count}</code>\n🎯 ɪɴᴠɪᴛᴇ {left_needed} ᴍᴏʀᴇ ᴛᴏ ɢᴇᴛ ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ!</b>"
+                            await client.send_message(inviter_id, alert_msg)
+            except Exception as e:
+                print(f"Referral Error: {e}")
 
     verify_status = await get_verify_status(message.from_user.id)
     if verify_status['is_verified'] and datetime.now() > verify_status['expire_time']:
@@ -286,7 +317,7 @@ async def start(client, message):
     await msg.delete()
     await vp.delete()
     await vp.reply("<b>❌ ᴛʜᴇ ꜰɪʟᴇ ʜᴀs ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ!</b>\nᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(btns))
-
+   
 
 @Client.on_message(filters.command('link'))
 async def link(bot, message):
@@ -1024,3 +1055,35 @@ async def sh_stats_pro(c, m):
         msg += f"└ ᴛᴏᴛᴀʟ: <code>{sh.get('total_clicks', 0)}</code>\n\n"
         
     await m.reply(msg)
+
+@Client.on_message(filters.command("refer") & filters.private)
+async def refer_system(client, message):
+    if not IS_PREMIUM:
+        return await message.reply("<b>⚠️ ʀᴇꜰᴇʀʀᴀʟ sʏsᴛᴇᴍ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴅɪsᴀʙʟᴇᴅ.</b>")
+        
+    user_id = message.from_user.id
+    ref_link = f"https://t.me/{temp.U_NAME}?start=ref_{user_id}"
+    ref_count = await db.get_referral_count(user_id)
+    
+    left_needed = 5 - (ref_count % 5)
+    
+    text = (
+        "<b>🎁 ɪɴꜰɪɴɪᴛʏ ʀᴇꜰᴇʀ ᴀɴᴅ ᴇᴀʀɴ\n\n"
+        "sʜᴀʀᴇ ʏᴏᴜʀ ʟɪɴᴋ ᴡɪᴛʜ ꜰʀɪᴇɴᴅs ᴀɴᴅ ɢᴇᴛ ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ᴡʜᴇɴ ᴛʜᴇʏ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ! 🚀\n\n"
+        "<code>━━━━━━━━━━━━━━━━━━</code>\n"
+        f"🔗 ʏᴏᴜʀ ʟɪɴᴋ: <code>{ref_link}</code>\n"
+        "<code>━━━━━━━━━━━━━━━━━━</code>\n\n"
+        f"📊 ʏᴏᴜʀ ᴛᴏᴛᴀʟ ɪɴᴠɪᴛᴇs: <code>{ref_count}</code>\n"
+        f"🎯 ɪɴᴠɪᴛᴇ <code>{left_needed}</code> ᴍᴏʀᴇ ꜰʀɪᴇɴᴅs ᴛᴏ ᴜɴʟᴏᴄᴋ 1 ᴅᴀʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss! 💎</b>"
+    )
+    
+    btn = [[
+        InlineKeyboardButton("📢 sʜᴀʀᴇ ʟɪɴᴋ", url=f"https://telegram.me/share/url?url={ref_link}&text=Join%20this%20awesome%20movie%20bot%20now!")
+    ]]
+    
+    await message.reply_photo(
+        photo=random.choice(PICS),
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(btn),
+        disable_web_page_preview=True
+    )

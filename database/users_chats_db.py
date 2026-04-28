@@ -342,4 +342,18 @@ class Database:
             }
         )
 
+    async def add_referral(self, inviter_id):
+        """Increments referral count and returns updated document."""
+        return await self.col.find_one_and_update(
+            {'id': int(inviter_id)},
+            {'$inc': {'referral_count': 1}},
+            return_document=True
+        )
+
+    async def get_referral_count(self, user_id):
+        """Gets current referral count."""
+        user = await self.col.find_one({'id': int(user_id)})
+        return user.get('referral_count', 0) if user else 0
+
+
 db = Database()
