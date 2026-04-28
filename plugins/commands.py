@@ -1084,6 +1084,5 @@ async def refer_system(client, message):
     await message.reply_photo(
         photo=random.choice(PICS),
         caption=text,
-        reply_markup=InlineKeyboardMarkup(btn),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
+        reply_markup=InlineKeyboardMarkup(btn)
     )
