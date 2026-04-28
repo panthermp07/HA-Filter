@@ -934,7 +934,10 @@ async def sudo_list_cmd(bot, message):
 
 @Client.on_message(filters.command("helpsudo") & filters.user(ADMINS))
 async def sudo_help_guide(bot, message):
-    await bot.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+    try:
+        await bot.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+    except:
+        pass
     buttons = [[
         InlineKeyboardButton("🛡️ sᴜᴘᴘᴏʀᴛ ᴄᴇɴᴛᴇʀ", url="https://t.me/talk_mrs_bot"),
         InlineKeyboardButton("📊 sᴛᴀᴛs", callback_data="stats")
