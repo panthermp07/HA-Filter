@@ -330,37 +330,66 @@ def get_size(size):
 #    return link
 
 async def get_shortlink(link, user_id, grp_id=None):
-    """Elite Rotating Shortener: Weighted Choice + Failover Retry Loop"""
+    """Elite Rotating Shortener: Weighted Choice + Failover Retry Loop + Admin Alert"""
     all_sh = await db.get_all_shorteners()
+    
     retry_list = []
+    
     if grp_id:
         settings = await get_settings(grp_id)
         if settings.get('url') and settings.get('api'):
             retry_list.append({'site': settings['url'], 'api': settings['api']})
 
+    # 2. Weighted Selection from Global List
     if all_sh:
         sites = [sh['site'] for sh in all_sh]
         weights = [sh.get('weight', 50) for sh in all_sh]
+        
         selected_sites = random.choices(sites, weights=weights, k=len(sites))
         for site_url in selected_sites:
             sh_details = next((item for item in all_sh if item["site"] == site_url), None)
             if sh_details:
                 retry_list.append(sh_details)
+
+    # 3. Info.py Fallback
+    from info import SHORTLINK_URL, SHORTLINK_API
     retry_list.append({'site': SHORTLINK_URL, 'api': SHORTLINK_API})
+
+    # 🚀 FAILOVER RETRY LOOP
     for shortener in retry_list:
         try:
-            timeout = aiohttp.ClientTimeout(total=10)
-            shortzy = Shortzy(api_key=shortener['api'], base_site=shortener['site'], timeout=timeout)
-            short_url = await shortzy.convert(link)
+            shortzy = Shortzy(api_key=shortener['api'], base_site=shortener['site'])
+            short_url = await asyncio.wait_for(shortzy.convert(link), timeout=10.0)
+            
             await db.update_sh_clicks(shortener['site'])
-            if not hasattr(temp, 'VERIFY_LOGS'): temp.VERIFY_LOGS = {}
+            if not hasattr(temp, 'VERIFY_LOGS'): 
+                temp.VERIFY_LOGS = {}
             temp.VERIFY_LOGS[user_id] = shortener['site']
             
             return short_url
+            
+        except asyncio.TimeoutError:
+            print(f"Shortener {shortener['site']} API Too Slow! Timed out, trying next...")
+            continue 
+            
         except Exception as e:
             print(f"Shortener {shortener['site']} failed, trying next... Error: {e}")
-            continue
+            continue 
             
+    # 🔴 CRITICAL ALERT: Agar saari APIs fail ho jayein
+    try:
+        if hasattr(temp, 'BOT') and temp.BOT:
+            alert_msg = (
+                "<b>⚠️ ᴄʀɪᴛɪᴄᴀʟ ᴀʟᴇʀᴛ: sʜᴏʀᴛᴇɴᴇʀ ᴀᴘɪs ᴅᴏᴡɴ!</b>\n\n"
+                "sᴀᴀʀᴇ sʜᴏʀᴛᴇɴᴇʀs ꜰᴀɪʟ ʜᴏ ɢᴀʏᴇ ʜᴀɪɴ ᴀᴜʀ ᴜsᴇʀ ᴋᴏ <b>ᴅɪʀᴇᴄᴛ ʟɪɴᴋ</b> ᴅɪʏᴀ ɢᴀʏᴀ ʜᴀɪ ᴛᴀᴀᴋɪ ʙᴏᴛ ʜᴀɴɢ ɴᴀ ʜᴏ.\n\n"
+                f"👤 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
+                f"🔗 <b>ᴏʀɪɢɪɴᴀʟ ʟɪɴᴋ:</b> {link}\n\n"
+                "<i>ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ʏᴏᴜʀ sʜᴏʀᴛᴇɴᴇʀ ᴀᴘɪ ᴋᴇʏs ᴏʀ ᴀᴅᴅ ɴᴇᴡ ᴏɴᴇs ᴜsɪɴɢ /add_sh</i>"
+            )
+            for admin in ADMINS:
+                await temp.BOT.send_message(chat_id=admin, text=alert_msg)
+    except Exception as e:
+        print(f"Failed to send admin alert: {e}")
     return link
 
 def get_readable_time(seconds):
