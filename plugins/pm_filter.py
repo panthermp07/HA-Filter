@@ -66,6 +66,10 @@ async def group_search(client, message):
             await message.reply("<b>⚠️ ɪ ᴀᴍ ɴᴏᴛ ᴡᴏʀᴋɪɴɢ ꜰᴏʀ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴs!</b>")
             return
         if message.chat.id == SUPPORT_GROUP:
+            try:
+                await client.send_chat_action(chat_id, enums.ChatAction.TYPING)
+            except:
+                pass
             files, offset, total = await get_search_results(message.text)
             if files:
                 btn = [[
@@ -114,6 +118,10 @@ async def group_search(client, message):
             await message.reply_text("<b>✅ ʀᴇǫᴜᴇsᴛ sᴇɴᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ!</b>")
             return  
         else:
+            try:
+                await client.send_chat_action(chat_id, enums.ChatAction.TYPING)
+            except:
+                pass
             s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>")
             await auto_filter(client, message, s)
     else:
