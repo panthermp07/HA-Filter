@@ -307,4 +307,33 @@ class Database:
         result = await self.grp.update_many({}, {'$set': {'settings': self.default_setgs}})
         return result.modified_count
 
+    async def add_shortener(self, site, api):
+        return await self.stg.update_one(
+            {'id': BOT_ID},
+            {'$push': {'shortener_list': {'site': site, 'api': api, 'total_clicks': 0}}},
+            upsert=True
+        )
+
+    async def remove_shortener(self, site):
+        return await self.stg.update_one(
+            {'id': BOT_ID},
+            {'$pull': {'shortener_list': {'site': site}}}
+        )
+
+    async def get_all_shorteners(self):
+        data = await self.stg.find_one({'id': BOT_ID})
+        return data.get('shortener_list', []) if data else []
+
+    async def update_sh_clicks(self, site):
+        today = datetime.now().strftime("%Y-%m-%d")
+        await self.stg.update_one(
+            {'id': BOT_ID, 'shortener_list.site': site},
+            {
+                '$inc': {
+                    'shortener_list.$.total_clicks': 1,
+                    f'shortener_list.$.clicks_{today}': 1
+                }
+            }
+        )
+
 db = Database()

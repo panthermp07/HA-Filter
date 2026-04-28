@@ -2,6 +2,7 @@ import re
 import pytz
 import asyncio
 import requests
+import random
 from pyrogram import enums
 from datetime import datetime
 from shortzy import Shortzy
@@ -322,10 +323,40 @@ def get_size(size):
     return "%.2f %s" % (size, units[i])
 
 
-async def get_shortlink(url, api, link):
-    shortzy = Shortzy(api_key=api, base_site=url)
-    link = await shortzy.convert(link)
-    return link
+#async def get_shortlink(url, api, link):
+#    shortzy = Shortzy(api_key=api, base_site=url)
+#    link = await shortzy.convert(link)
+#    return link
+
+async def get_shortlink(link, user_id, grp_id=None):
+    shortener_to_use = None
+    if grp_id:
+        settings = await get_settings(grp_id)
+        if settings.get('url') and settings.get('api'):
+            shortener_to_use = {'site': settings['url'], 'api': settings['api']}
+
+    if not shortener_to_use:
+        all_sh = await db.get_all_shorteners()
+        shortener_to_use = random.choice(all_sh) if all_sh else None
+
+    if not shortener_to_use:
+        from info import SHORTLINK_URL, SHORTLINK_API
+        shortener_to_use = {'site': SHORTLINK_URL, 'api': SHORTLINK_API}
+
+    try:
+        from shortzy import Shortzy
+        shortzy = Shortzy(api_key=shortener_to_use['api'], base_site=shortener_to_use['site'])
+        short_url = await shortzy.convert(link)
+        
+        await db.update_sh_clicks(shortener_to_use['site'])
+        
+        if not hasattr(temp, 'VERIFY_LOGS'):
+            temp.VERIFY_LOGS = {}
+        temp.VERIFY_LOGS[user_id] = shortener_to_use['site']
+        
+        return short_url
+    except:
+        return link
 
 def get_readable_time(seconds):
     periods = [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]

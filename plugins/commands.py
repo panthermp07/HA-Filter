@@ -109,13 +109,15 @@ async def start(client, message):
         await vdb.record_verification(message.from_user.id)
         
         if VERIFICATION_NOTIFY_CHANNEL:
+            sh_used = getattr(temp, 'VERIFY_LOGS', {}).get(message.from_user.id, "Default Info.py")
             try:
                 date_str = datetime.now().strftime('%d %B %Y')
                 await client.send_message(
                     VERIFICATION_NOTIFY_CHANNEL,
-                    f"[♻️ ᴜsᴇʀ ᴠᴇʀɪꜰɪᴇᴅ ✓]</b>\n\n"
+                    f"[♻️ #ᴜsᴇʀ_ᴠᴇʀɪꜰɪᴇᴅ ✓]</b>\n\n"
                     f"👤 <b>ɴᴀᴍᴇ:</b> {message.from_user.first_name}\n"
                     f"🆔 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{message.from_user.id}</code>\n"
+                    f"🌐 <b>sʜᴏʀᴛᴇɴᴇʀ:</b> <code>{sh_used}</code>\n"
                     f"📅 <b>ᴅᴀᴛᴇ:</b> {date_str}\n\n"
                     f"<b>#ᴍᴏᴠɪᴇs_ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ_ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>"
                 )
@@ -136,7 +138,7 @@ async def start(client, message):
     if IS_VERIFY and not verify_status['is_verified'] and not await is_premium(message.from_user.id, client):
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         await update_verify_status(message.from_user.id, verify_token=token, link="" if mc == 'inline_verify' else mc)
-        link = await get_shortlink(SHORTLINK_URL, SHORTLINK_API, f'https://t.me/{temp.U_NAME}?start=verify_{token}')
+        link = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=verify_{token}', message.from_user.id, message.chat.id)
         btn = [[
             InlineKeyboardButton("🧿 ᴠᴇʀɪꜰʏ ɴᴏᴡ 🧿", url=link, style=enums.ButtonStyle.PRIMARY)
         ],[
@@ -986,3 +988,27 @@ async def verification_analytics_pro(client, message):
         )
     except Exception:
         await message.reply(text=report, quote=True)
+
+@Client.on_message(filters.command("add_sh") & filters.user(ADMINS))
+async def add_sh_pro(c, m):
+    if len(m.command) < 3: return await m.reply("`/add_sh site.com api_key`")
+    await db.add_shortener(m.command[1], m.command[2])
+    await m.reply(f"<b>✅ ᴀᴅᴅᴇᴅ <code>{m.command[1]}</code></b>")
+
+@Client.on_message(filters.command("rm_sh") & filters.user(ADMINS))
+async def rm_sh_pro(c, m):
+    if len(m.command) < 2: return await m.reply("`/rm_sh site.com`")
+    await db.remove_shortener(m.command[1])
+    await m.reply(f"<b>🗑️ ʀᴇᴍᴏᴠᴇᴅ <code>{m.command[1]}</code></b>")
+
+@Client.on_message(filters.command("sh_stats") & filters.user(ADMINS))
+async def sh_stats_pro(c, m):
+    all_sh = await db.get_all_shorteners()
+    if not all_sh: return await m.reply("<b>❌ ɴᴏ sʜᴏʀᴛᴇɴᴇʀs ꜰᴏᴜɴᴅ.</b>")
+    today = datetime.now().strftime("%Y-%m-%d")
+    msg = "<b>📊 sʜᴏʀᴛᴇɴᴇʀ ᴀɴᴀʟʏᴛɪᴄs</b>\n\n"
+    for sh in all_sh:
+        msg += f"🌐 <code>{sh['site']}</code>\n"
+        msg += f"├ ᴛᴏᴅᴀʏ: <code>{sh.get(f'clicks_{today}', 0)}</code>\n"
+        msg += f"└ ᴛᴏᴛᴀʟ: <code>{sh.get('total_clicks', 0)}</code>\n\n"
+    await m.reply(msg)
