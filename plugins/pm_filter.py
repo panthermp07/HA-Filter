@@ -24,6 +24,10 @@ async def pm_search(client, message):
     if message.text.startswith("/"):
         return
     try:
+        await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+    except:
+        pass
+    try:
         await message.react(emoji=random.choice(REACTIONS), big=True)
     except:
         pass
@@ -49,11 +53,18 @@ async def pm_search(client, message):
                 ]]
                 reply_markup = InlineKeyboardMarkup(btn)
                 
-                await message.reply_text(
-                    f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n'
-                    f'<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
-                    reply_markup=reply_markup
-                )
+                try:
+                    await message.reply_text(
+                        f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
+                        reply_markup=InlineKeyboardMarkup(btn),
+                        effect_id=5104841245755180586
+                    )
+                except Exception:
+                    await message.reply_text(
+                        f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n'
+                        f'<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
+                        reply_markup=reply_markup
+                    )
             
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
@@ -65,6 +76,10 @@ async def group_search(client, message):
         if not user_id:
             await message.reply("<b>⚠️ ɪ ᴀᴍ ɴᴏᴛ ᴡᴏʀᴋɪɴɢ ꜰᴏʀ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴs!</b>")
             return
+        try:
+            await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+        except:
+            pass
         if message.chat.id == SUPPORT_GROUP:
             try:
                 await client.send_chat_action(chat_id, enums.ChatAction.TYPING)

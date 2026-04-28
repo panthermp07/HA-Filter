@@ -105,6 +105,7 @@ async def start(client, message):
             return await message.reply("<b>❌ ʏᴏᴜʀ ᴠᴇʀɪꜰʏ ᴛᴏᴋᴇɴ ɪs ɪɴᴠᴀʟɪᴅ!</b>")
         expiry_time = datetime.now() + timedelta(seconds=VERIFY_EXPIRE)
         await update_verify_status(message.from_user.id, is_verified=True, expire_time=expiry_time)
+        await vdb.record_verification(message.from_user.id)
         
         if VERIFICATION_NOTIFY_CHANNEL:
             try:
@@ -955,3 +956,32 @@ async def sudo_help_guide(bot, message):
             disable_web_page_preview=True,
             quote=True
         )
+
+@Client.on_message(filters.command("vstats") & filters.user(ADMINS))
+async def verification_analytics_pro(client, message):
+    try: 
+        await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+    except Exception: 
+        pass
+    stats = await vdb.get_advanced_vstats()
+    report = (
+        "<b>📊 ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴀɴᴀʟʏᴛɪᴄs ᴘʀᴏ\n"
+        "<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\n\n"
+        f"📅 ᴛᴏᴅᴀʏ⠂<code>{stats['today']}</code>\n"
+        f"⏳ ʏᴇsᴛᴇʀᴅᴀʏ⠂<code>{stats['yesterday']}</code>\n"
+        f"📅 ʟᴀsᴛ 7 ᴅᴀʏs⠂<code>{stats['seven_days']}</code>\n"
+        f"📅 ᴛʜɪs ᴍᴏɴᴛʜ⠂<code>{stats['month']}</code>\n"
+        f"📅 ᴛʜɪs ʏᴇᴀʀ⠂<code>{stats['year']}</code>\n"
+        f"📅 ᴘʀᴇᴠɪᴏᴜs ʏᴇᴀʀ⠂<code>{stats['prev_year']}</code>\n\n"
+        "<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\n"
+        "✨ ᴅᴀᴛᴀ ᴜᴘᴅᴀᴛᴇᴅ ɪɴ ʀᴇᴀʟ-ᴛɪᴍᴇ!</b>"
+    )
+
+    try:
+        await message.reply(
+            text=report,
+            quote=True,
+            effect_id=5104841245755180586
+        )
+    except Exception:
+        await message.reply(text=report, quote=True)
