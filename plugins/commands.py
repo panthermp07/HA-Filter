@@ -1085,5 +1085,5 @@ async def refer_system(client, message):
         photo=random.choice(PICS),
         caption=text,
         reply_markup=InlineKeyboardMarkup(btn),
-        disable_web_page_preview=True
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
     )
