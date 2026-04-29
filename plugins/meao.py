@@ -1,48 +1,186 @@
-import motor.motor_asyncio
-from pyrogram import Client, filters
-from info import ADMINS
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import BulkWriteError
+from info import ADMINS  # Dekho, yahan se DATABASE_NAME hata diya gaya hai
+import asyncio
 
-@Client.on_message(filters.command("cleardb") & filters.private)
-async def clear_database(client, message):
-    # ⚠️ SECURITY CHECK: Sirf Admins is command ko use kar sakte hain
-    if message.from_user.id not in ADMINS:
-        return await message.reply("<b>❌ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!\n\nʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.</b>")
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🟢 1. CLONE MONGO (OLD URL to NEW URL)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@Client.on_message(filters.command("clonemongo") & filters.user(ADMINS))
+async def clone_mongo_cmd(bot, message):
+    if len(message.command) != 3:
+        return await message.reply("<b>💡 ᴜsᴀɢᴇ:</b> <code>/clonemongo [OLD_URL] [NEW_URL]</code>\n\n⚠️ <i>URL ke end mein DB name zaroor lagayein. Example: mongodb+srv://.../MyDatabase</i>")
 
-    if len(message.command) < 2:
-        return await message.reply("<b>⚠️ ᴜsᴀɢᴇ:</b>\n<code>/cleardb [MONGODB_URL]</code>\n\n<i>Note: Message bhejte hi turant delete kar dena security ke liye!</i>")
-
-    mongo_url = message.command[1]
+    old_url = message.command[1]
+    new_url = message.command[2]
     
-    status_msg = await message.reply("<b>⏳ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴅᴀᴛᴀʙᴀsᴇ...</b>")
-
+    status_msg = await message.reply("<b>⏳ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴅᴀᴛᴀʙᴀsᴇs...</b>")
+    
     try:
-        # Async connection banayein (Bot ko hang hone se bachane ke liye)
-        db_client = motor.motor_asyncio.AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+        old_client = AsyncIOMotorClient(old_url)
+        new_client = AsyncIOMotorClient(new_url)
         
-        # Connection test karein
-        await db_client.server_info() 
+        # 🟢 SMART LOGIC: URL se khud Database name nikalega
+        try:
+            old_db = old_client.get_default_database()
+            new_db = new_client.get_default_database()
+        except Exception:
+            return await status_msg.edit("<b>❌ ᴇʀʀᴏʀ:</b> ᴘʟᴇᴀsᴇ ɪɴᴄʟᴜᴅᴇ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ ɴᴀᴍᴇ ɪɴ ʏᴏᴜʀ ᴜʀʟs!\nExample: <code>mongodb+srv://.../DB_NAME</code>")
         
-        await status_msg.edit("<b>⚠️ ᴡᴀʀɴɪɴɢ: ᴅᴇʟᴇᴛɪɴɢ ᴀʟʟ ᴅᴀᴛᴀʙᴀsᴇs... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!</b>")
-        
-        # Saare databases ki list nikalein
-        db_names = await db_client.list_database_names()
-        
-        deleted_dbs = []
-        for db_name in db_names:
-            # System databases ko chod kar baaki sab uda dein
-            if db_name not in ['admin', 'local', 'config']:
-                await db_client.drop_database(db_name)
-                deleted_dbs.append(db_name)
-                
-        if deleted_dbs:
-            await status_msg.edit(
-                f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ᴅᴀᴛᴀʙᴀsᴇs:</b>\n"
-                f"<code>{', '.join(deleted_dbs)}</code>\n\n"
-                f"🚀 <b>sᴀᴀʀᴀ ᴅᴀᴛᴀ sᴀᴀꜰ ʜᴏ ɢᴀʏᴀ ʜᴀɪ!</b>\n\n"
-                f"<i>⚠️ P.S. Ab jaldi se apne '/cleardb' wale message ko Telegram se delete kar do!</i>"
-            )
-        else:
-            await status_msg.edit("<b>✅ ɴᴏ ᴄᴜsᴛᴏᴍ ᴅᴀᴛᴀʙᴀsᴇs ꜰᴏᴜɴᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ.</b>")
+        colls = await old_db.list_collection_names()
+        if not colls:
+            return await status_msg.edit("<b>❌ ɴᴏ ᴄᴏʟʟᴇᴄᴛɪᴏɴs ꜰᴏᴜɴᴅ ɪɴ ᴏʟᴅ ᴅᴀᴛᴀʙᴀsᴇ.</b>")
             
+        report = f"<b>📂 ᴄʟᴏɴɪɴɢ sᴛᴀʀᴛᴇᴅ!</b>\nꜰᴏᴜɴᴅ {len(colls)} ᴄᴏʟʟᴇᴄᴛɪᴏɴs ɪɴ <code>{old_db.name}</code>.\n\n"
+        await status_msg.edit(report)
+        
+        total_docs = 0
+        for coll_name in colls:
+            old_col = old_db[coll_name]
+            new_col = new_db[coll_name]
+            
+            cursor = old_col.find({})
+            batch = []
+            coll_migrated = 0
+            
+            async for doc in cursor:
+                batch.append(doc)
+                if len(batch) >= 1500:
+                    try:
+                        await new_col.insert_many(batch, ordered=False)
+                    except BulkWriteError:
+                        pass
+                    coll_migrated += len(batch)
+                    batch = []
+                    
+            if batch:
+                try:
+                    await new_col.insert_many(batch, ordered=False)
+                except BulkWriteError:
+                    pass
+                coll_migrated += len(batch)
+                
+            total_docs += coll_migrated
+            report += f"✅ <code>{coll_name}</code>: {coll_migrated} ᴅᴏᴄs\n"
+            try:
+                await status_msg.edit(report + "\n<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ ɴᴇxᴛ...</b>")
+            except:
+                pass
+                
+        await status_msg.edit(f"{report}\n<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄʟᴏɴᴇᴅ {total_docs} ᴅᴏᴄᴜᴍᴇɴᴛs ᴛᴏ <code>{new_db.name}</code>!</b>\n\n⚠️ <i>ᴘʟᴇᴀsᴇ ᴅᴇʟᴇᴛᴇ ʏᴏᴜʀ ᴄᴏᴍᴍᴀɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ ʜɪᴅᴇ ᴜʀʟs.</i>")
+        
     except Exception as e:
-        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ:</b>\n<code>{e}</code>\n\n<i>Check if your MongoDB URL and password are correct.</i>")
+        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ:</b>\n<code>{str(e)}</code>")
+    finally:
+        try:
+            old_client.close()
+            new_client.close()
+        except: pass
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🟢 2. MONGO INFO (Check DB Stats)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@Client.on_message(filters.command("monginfo") & filters.user(ADMINS))
+async def mongo_info_cmd(bot, message):
+    if len(message.command) != 2:
+        return await message.reply("<b>💡 ᴜsᴀɢᴇ:</b> <code>/monginfo [MONGO_URL]</code>")
+        
+    url = message.command[1]
+    status_msg = await message.reply("<b>⏳ ꜰᴇᴛᴄʜɪɴɢ ᴅᴀᴛᴀʙᴀsᴇ ɪɴꜰᴏ...</b>")
+    
+    try:
+        client = AsyncIOMotorClient(url, serverSelectionTimeoutMS=5000)
+        try:
+            db = client.get_default_database()
+        except Exception:
+            return await status_msg.edit("<b>❌ ᴇʀʀᴏʀ:</b> ᴘʟᴇᴀsᴇ ɪɴᴄʟᴜᴅᴇ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ ɴᴀᴍᴇ ɪɴ ʏᴏᴜʀ ᴜʀʟ!\nExample: <code>mongodb+srv://.../DB_NAME</code>")
+        
+        colls = await db.list_collection_names()
+        if not colls:
+            return await status_msg.edit(f"<b>⚠️ ᴅᴀᴛᴀʙᴀsᴇ <code>{db.name}</code> ɪs ᴇᴍᴘᴛʏ!</b>")
+            
+        report = f"<b>📊 ᴍᴏɴɢᴏᴅʙ sᴛᴀᴛɪsᴛɪᴄs ꜰᴏʀ <code>{db.name}</code>:</b>\n<code>━━━━━━━━━━━━━━━━━━</code>\n\n"
+        total_docs = 0
+        
+        for coll_name in colls:
+            count = await db[coll_name].count_documents({})
+            total_docs += count
+            report += f"⠂ <b>{coll_name}</b>: <code>{count}</code> ᴅᴏᴄs\n"
+            
+        report += f"\n<code>━━━━━━━━━━━━━━━━━━</code>\n<b>📈 ᴛᴏᴛᴀʟ ᴅᴏᴄᴜᴍᴇɴᴛs:</b> <code>{total_docs}</code>"
+        
+        await status_msg.edit(report)
+    except Exception as e:
+        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ ᴄᴏɴɴᴇᴄᴛɪɴɢ:</b>\n<code>{str(e)}</code>")
+    finally:
+        try: client.close()
+        except: pass
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🟢 3. DELETE MONGO COLLECTION (Remove Specific Col)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@Client.on_message(filters.command("delmongocol") & filters.user(ADMINS))
+async def del_mongo_col_cmd(bot, message):
+    if len(message.command) != 3:
+        return await message.reply("<b>💡 ᴜsᴀɢᴇ:</b> <code>/delmongocol [MONGO_URL] [COLLECTION_NAME]</code>")
+        
+    url = message.command[1]
+    col_name = message.command[2]
+    
+    status_msg = await message.reply(f"<b>⏳ ᴅᴇʟᴇᴛɪɴɢ ᴄᴏʟʟᴇᴄᴛɪᴏɴ '{col_name}'...</b>")
+    
+    try:
+        client = AsyncIOMotorClient(url)
+        try:
+            db = client.get_default_database()
+        except Exception:
+            return await status_msg.edit("<b>❌ ᴇʀʀᴏʀ:</b> ᴘʟᴇᴀsᴇ ɪɴᴄʟᴜᴅᴇ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ ɴᴀᴍᴇ ɪɴ ʏᴏᴜʀ ᴜʀʟ!")
+        
+        colls = await db.list_collection_names()
+        if col_name not in colls:
+            return await status_msg.edit(f"<b>❌ ᴄᴏʟʟᴇᴄᴛɪᴏɴ '{col_name}' ɴᴏᴛ ꜰᴏᴜɴᴅ ɪɴ <code>{db.name}</code>!</b>")
+            
+        await db.drop_collection(col_name)
+        await status_msg.edit(f"<b>✅ ᴄᴏʟʟᴇᴄᴛɪᴏɴ '{col_name}' sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ꜰʀᴏᴍ <code>{db.name}</code>!</b>")
+        
+    except Exception as e:
+        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ:</b>\n<code>{str(e)}</code>")
+    finally:
+        try: client.close()
+        except: pass
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🟢 4. CLEAR FULL DATABASE (DANGER ZONE)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@Client.on_message(filters.command("cleardb") & filters.user(ADMINS))
+async def clear_db_cmd(bot, message):
+    if len(message.command) != 2:
+        return await message.reply("<b>💡 ᴜsᴀɢᴇ:</b> <code>/cleardb [MONGO_URL]</code>")
+        
+    url = message.command[1]
+    status_msg = await message.reply("<b>⏳ ᴄʟᴇᴀʀɪɴɢ ᴇɴᴛɪʀᴇ ᴅᴀᴛᴀʙᴀsᴇ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
+    
+    try:
+        client = AsyncIOMotorClient(url)
+        try:
+            db = client.get_default_database()
+        except Exception:
+            return await status_msg.edit("<b>❌ ᴇʀʀᴏʀ:</b> ᴘʟᴇᴀsᴇ ɪɴᴄʟᴜᴅᴇ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ ɴᴀᴍᴇ ɪɴ ʏᴏᴜʀ ᴜʀʟ!\nExample: <code>mongodb+srv://.../DB_NAME</code>")
+        
+        colls = await db.list_collection_names()
+        if not colls:
+            return await status_msg.edit(f"<b>⚠️ ᴅᴀᴛᴀʙᴀsᴇ <code>{db.name}</code> ɪs ᴀʟʀᴇᴀᴅʏ ᴇᴍᴘᴛʏ!</b>")
+            
+        for coll_name in colls:
+            await db.drop_collection(coll_name)
+            
+        await status_msg.edit(f"<b>✅ ᴅᴀᴛᴀʙᴀsᴇ <code>{db.name}</code> sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄʟᴇᴀʀᴇᴅ! ᴀʟʟ ᴄᴏʟʟᴇᴄᴛɪᴏɴs ᴅʀᴏᴘᴘᴇᴅ.</b>")
+        
+    except Exception as e:
+        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ:</b>\n<code>{str(e)}</code>")
+    finally:
+        try: client.close()
+        except: pass
