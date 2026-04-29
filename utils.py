@@ -341,43 +341,42 @@ def get_size(size):
 #    return link
 
 async def get_shortlink(link, user_id, grp_id=None):
-    """Elite Rotating Shortener with Advanced Execution Logging & Error Capture"""
+    """Elite Shortener: Fixed PM Bug & Enforced 100% Accurate Weighted (70-30) Logic"""
     logger.info(f"🔗 --- sʜᴏʀᴛʟɪɴᴋ ʀᴇǫᴜᴇsᴛ sᴛᴀʀᴛᴇᴅ | ᴜsᴇʀ: {user_id} | ɢʀᴏᴜᴘ: {grp_id} ---")
     
-    all_sh = await db.get_all_shorteners()
     retry_list = []
+    is_custom_group = False
     
-    # 1. Group-specific Check
     if grp_id:
         settings = await get_settings(grp_id)
-        if settings.get('url') and settings.get('api'):
-            logger.info(f"🎯 ɢʀᴏᴜᴘ sᴘᴇᴄɪꜰɪᴄ sʜᴏʀᴛᴇɴᴇʀ ꜰᴏᴜɴᴅ: {settings['url']}")
+        if settings.get('url') and settings.get('api') and settings.get('url') != SHORTLINK_URL:
+            logger.info(f"🎯 ᴄᴜsᴛᴏᴍ ɢʀᴏᴜᴘ sʜᴏʀᴛᴇɴᴇʀ ꜰᴏᴜɴᴅ: {settings['url']}")
             retry_list.append({'site': settings['url'], 'api': settings['api']})
+            is_custom_group = True
 
-    # 2. Weighted Selection from Global List
-    if all_sh:
-        sites = [sh['site'] for sh in all_sh]
-        weights = [sh.get('weight', 50) for sh in all_sh]
-        
-        selected_sites = random.choices(sites, weights=weights, k=len(sites))
-        logger.info(f"🎲 ɢʟᴏʙᴀʟ sʜᴏʀᴛᴇɴᴇʀs sᴇʟᴇᴄᴛᴇᴅ (ᴡᴇɪɢʜᴛᴇᴅ): {selected_sites}")
-        
-        for site_url in selected_sites:
-            sh_details = next((item for item in all_sh if item["site"] == site_url), None)
-            if sh_details:
-                retry_list.append(sh_details)
-
-    # 3. Info.py Fallback
-    from info import SHORTLINK_URL, SHORTLINK_API
+    if not is_custom_group:
+        all_sh = await db.get_all_shorteners()
+        if all_sh:
+            weights = [int(sh.get('weight', 50)) for sh in all_sh]
+            selected_sh = random.choices(all_sh, weights=weights, k=1)[0]
+            
+            logger.info(f"⚖️ ᴡᴇɪɢʜᴛ sʏsᴛᴇᴍ ᴡɪɴɴᴇʀ: {selected_sh['site']} (Weight: {selected_sh.get('weight')}%)")
+            retry_list.append(selected_sh)
     retry_list.append({'site': SHORTLINK_URL, 'api': SHORTLINK_API})
     
-    logger.info(f"📋 ꜰɪɴᴀʟ sʜᴏʀᴛᴇɴᴇʀ ǫᴜᴇᴜᴇ: {[s['site'] for s in retry_list]}")
+    final_queue = []
+    seen = set()
+    for sh in retry_list:
+        if sh['site'] not in seen:
+            final_queue.append(sh)
+            seen.add(sh['site'])
+
+    logger.info(f"📋 ꜰɪɴᴀʟ ǫᴜᴇᴜᴇ ᴛᴏ ᴇxᴇᴄᴜᴛᴇ: {[s['site'] for s in final_queue]}")
 
     last_error = "No specific error captured."
 
-    # 🚀 FAILOVER RETRY LOOP
-    for shortener in retry_list:
-        logger.info(f"🔄 ᴀᴛᴛᴇᴍᴘᴛɪɴɢ ᴛᴏ ᴄᴏɴᴠᴇʀᴛ ᴜsɪɴɢ: {shortener['site']}")
+    for shortener in final_queue:
+        logger.info(f"🔄 ᴀᴛᴛᴇᴍᴘᴛɪɴɢ: {shortener['site']}")
         try:
             shortzy = Shortzy(api_key=shortener['api'], base_site=shortener['site'])
             short_url = await shortzy.convert(link)
@@ -387,15 +386,14 @@ async def get_shortlink(link, user_id, grp_id=None):
                 temp.VERIFY_LOGS = {}
             temp.VERIFY_LOGS[user_id] = shortener['site']
             
-            logger.info(f"✅ sᴜᴄᴄᴇss! ʟɪɴᴋ ᴄᴏɴᴠᴇʀᴛᴇᴅ ʙʏ: {shortener['site']}")
+            logger.info(f"✅ sᴜᴄᴄᴇss: {shortener['site']}")
             return short_url
             
         except Exception as e:
             last_error = str(e)
-            logger.warning(f"❌ ꜰᴀɪʟᴇᴅ ᴀᴛ {shortener['site']} | ᴇʀʀᴏʀ: {last_error}")
+            logger.warning(f"❌ ꜰᴀɪʟᴇᴅ {shortener['site']} | ᴇʀʀᴏʀ: {last_error}")
             continue 
             
-    # 🔴 CRITICAL ALERT
     logger.error("🚨 ᴀʟʟ sʜᴏʀᴛᴇɴᴇʀs ꜰᴀɪʟᴇᴅ! ᴘʀᴏᴠɪᴅɪɴɢ ᴅɪʀᴇᴄᴛ ʟɪɴᴋ.")
     try:
         if hasattr(temp, 'BOT') and temp.BOT:
@@ -403,15 +401,13 @@ async def get_shortlink(link, user_id, grp_id=None):
                 "<b>⚠️ ᴄʀɪᴛɪᴄᴀʟ ᴀʟᴇʀᴛ: sʜᴏʀᴛᴇɴᴇʀ ᴀᴘɪs ᴅᴏᴡɴ!</b>\n\n"
                 "sᴀᴀʀᴇ sʜᴏʀᴛᴇɴᴇʀs ꜰᴀɪʟ ʜᴏ ɢᴀʏᴇ ʜᴀɪɴ ᴀᴜʀ ᴜsᴇʀ ᴋᴏ <b>ᴅɪʀᴇᴄᴛ ʟɪɴᴋ</b> ᴅɪʏᴀ ɢᴀʏᴀ ʜᴀɪ.\n\n"
                 f"👤 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
-                f"🔗 <b>ᴏʀɪɢɪɴᴀʟ ʟɪɴᴋ:</b> {link}\n\n"
-                f"❌ <b>ᴇxᴀᴄᴛ ᴇʀʀᴏʀ ᴡʜʏ ɪᴛ ꜰᴀɪʟᴇᴅ:</b>\n<code>{last_error}</code>\n\n"
-                "<i>ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ʏᴏᴜʀ sʜᴏʀᴛᴇɴᴇʀ ᴀᴘɪ ᴋᴇʏs ᴏʀ ᴀᴅᴅ ɴᴇᴡ ᴏɴᴇs ᴜsɪɴɢ /add_sh</i>"
+                f"❌ <b>ᴇʀʀᴏʀ:</b>\n<code>{last_error}</code>"
             )
             for admin in ADMINS:
                 await temp.BOT.send_message(chat_id=admin, text=alert_msg)
     except Exception as alert_e:
         logger.error(f"Failed to send admin alert: {alert_e}")
-        
+        pass
     return link
 
 def get_readable_time(seconds):
