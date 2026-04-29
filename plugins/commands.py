@@ -180,8 +180,8 @@ async def start(client, message):
         
         await chk_msg.edit(
             text="<b>🔒 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!\n\nʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ ꜰᴏʀ ᴛᴏᴅᴀʏ. ᴋɪɴᴅʟʏ ᴠᴇʀɪꜰʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ᴀɴᴅ ᴜɴʟᴏᴄᴋ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ.</b>", 
-            reply_markup=InlineKeyboardMarkup(btn), 
-            protect_content=True
+            reply_markup=InlineKeyboardMarkup(btn)#, 
+            #protect_content=True
         )
         return
 
@@ -276,7 +276,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton("🚀 ʜᴏᴡ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ 🚀", url=settings['tutorial'], style=enums.ButtonStyle.PRIMARY)
         ]]
-        await message.reply(f"[{get_size(files['file_size'])}] {files['file_name']}\n\nʏᴏᴜʀ ꜰɪʟᴇ ɪs ʀᴇᴀᴅʏ, ᴘʟᴇᴀsᴇ ɢᴇᴛ ᴜsɪɴɢ ᴛʜɪs ʟɪɴᴋ. 👍", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
+        await message.reply(f"[{get_size(files['file_size'])}] {files['file_name']}\n\nʏᴏᴜʀ ꜰɪʟᴇ ɪs ʀᴇᴀᴅʏ, ᴘʟᴇᴀsᴇ ɢᴇᴛ ᴜsɪɴɢ ᴛʜɪs ʟɪɴᴋ. 👍", reply_markup=InlineKeyboardMarkup(btn))#, protect_content=True)
         return
             
     CAPTION = settings['caption']
