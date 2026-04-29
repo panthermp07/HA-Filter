@@ -82,7 +82,7 @@ async def start(client, message):
     verify_status = await get_verify_status(message.from_user.id)
     if verify_status['is_verified'] and datetime.now() > verify_status['expire_time']:
         await update_verify_status(message.from_user.id, is_verified=False)
-    if (len(message.command) != 2) or (len(message.command) == 2 and message.command[1] == 'start'):
+    if (len(message.command) != 2) or (len(message.command) == 2 and (message.command[1] == 'start' or message.command[1].startswith('ref_'))):
         buttons = [[
             InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀᴛ ➕", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
         ],[
