@@ -787,34 +787,130 @@ async def prm_list(bot, message):
         disable_web_page_preview=True
     )
 
+# 🟢 1. ELITE NORMAL FSUB SETTER (With Permission Check)
 @Client.on_message(filters.command('set_fsub') & filters.user(ADMINS))
 async def set_fsub(bot, message):
     try:
         _, ids = message.text.split(' ', 1)
     except ValueError:
-        return await message.reply('💡 ᴜsᴀɢᴇ: /set_fsub -100xxx -100xxx')
+        return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/set_fsub -100xxxx -100yyyy</code>')
+        
     title = ""
-    for id in ids.split(' '):
+    status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
+    
+    bot_me = getattr(temp, 'ME', None)
+    if not bot_me:
+        bot_me = await bot.get_me()
+        temp.ME = bot_me
+
+    for chat_id in ids.split(' '):
         try:
-            chat = await bot.get_chat(int(id))
+            chat_id = int(chat_id)
+            bot_member = await bot.get_chat_member(chat_id, bot_me.id)
+            if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR:
+                return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b>\nʙᴏᴛ ɪs ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ᴄʜᴀɴɴᴇʟ!')
+            if not bot_member.privileges.can_invite_users:
+                return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b>\nʙᴏᴛ ᴅᴏᴇsɴ\'ᴛ ʜᴀᴠᴇ <b>"ɪɴᴠɪᴛᴇ ᴜsᴇʀs ᴠɪᴀ ʟɪɴᴋ"</b> ᴘᴇʀᴍɪssɪᴏɴ!')
+            
+            chat = await bot.get_chat(chat_id)
             title += f'⠂{chat.title}\n'
         except Exception as e:
-            return await message.reply(f'❌ ᴇʀʀᴏʀ: {e}')
+            return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b>\n<code>{e}</code>\n<i>(Make sure bot is added to the channel first)</i>')
+            
     await db.update_bot_sttgs('FORCE_SUB_CHANNELS', ids)
-    await message.reply(f'✅ ᴀᴅᴅᴇᴅ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟs:\n{title}')
+    await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟs:</b>\n\n{title}')
 
+
+# 🟢 2. ELITE REQUEST FSUB SETTER (With Permission Check)
 @Client.on_message(filters.command('set_req_fsub') & filters.user(ADMINS))
 async def set_req_fsub(bot, message):
     try:
         _, id = message.text.split(' ', 1)
     except ValueError:
-        return await message.reply('💡 ᴜsᴀɢᴇ: /set_req_fsub -100xxx')
+        return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/set_req_fsub -100xxxx</code>')
+        
+    status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
+    
+    bot_me = getattr(temp, 'ME', None)
+    if not bot_me:
+        bot_me = await bot.get_me()
+        temp.ME = bot_me
+
     try:
-        chat = await bot.get_chat(int(id))
+        chat_id = int(id)
+        bot_member = await bot.get_chat_member(chat_id, bot_me.id)
+        if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR:
+            return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b>\nʙᴏᴛ ɪs ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ᴄʜᴀɴɴᴇʟ!')
+        if not bot_member.privileges.can_invite_users:
+            return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b>\nʙᴏᴛ ᴅᴏᴇsɴ\'ᴛ ʜᴀᴠᴇ <b>"ɪɴᴠɪᴛᴇ ᴜsᴇʀs ᴠɪᴀ ʟɪɴᴋ"</b> ᴘᴇʀᴍɪssɪᴏɴ!')
+            
+        chat = await bot.get_chat(chat_id)
     except Exception as e:
-        return await message.reply(f'❌ ᴇʀʀᴏʀ: {e}')
+        return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b>\n<code>{e}</code>\n<i>(Make sure bot is added to the channel first)</i>')
+        
     await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
-    await message.reply(f'✅ ᴀᴅᴅᴇᴅ ʀᴇǫᴜᴇsᴛ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟ: {chat.title}')
+    await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟ:</b>\n⠂ {chat.title}')
+
+
+# 🟢 3. NEW COMMAND: DYNAMIC FSUB DASHBOARD
+@Client.on_message(filters.command('showfsubs') & filters.user(ADMINS))
+async def show_fsubs(bot, message):
+    msg = await message.reply("<b>⏳ ꜰᴇᴛᴄʜɪɴɢ ᴀᴄᴛɪᴠᴇ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs...</b>")
+    stg = await db.get_bot_sttgs()
+    
+    if not stg:
+        return await msg.edit("<b>❌ ɴᴏ sᴇᴛᴛɪɴɢs ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ.</b>")
+        
+    text = "<b>📡 ᴀᴄᴛɪᴠᴇ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs</b>\n<code>━━━━━━━━━━━━━━━━━━</code>\n\n"
+    
+    # --- Fetching Normal FSubs ---
+    normal_fsubs = stg.get('FORCE_SUB_CHANNELS', '')
+    text += "<b>🟢 ɴᴏʀᴍᴀʟ ꜰsᴜʙs:</b>\n"
+    if normal_fsubs:
+        for chat_id in normal_fsubs.split(' '):
+            try:
+                chat = await bot.get_chat(int(chat_id))
+                link = chat.invite_link
+                if not link: # Agar link cached nahi hai toh naya banayega
+                    link = await bot.export_chat_invite_link(int(chat_id))
+                text += f"⠂ <b>{chat.title}</b>\n  🔗 <code>{link}</code>\n"
+            except Exception as e:
+                text += f"⠂ ❌ Error fetching <code>{chat_id}</code>: <i>{e}</i>\n"
+    else:
+        text += "⠂ <i>None active</i>\n"
+        
+    text += "\n<b>🔵 ʀᴇǫᴜᴇsᴛ ꜰsᴜʙs:</b>\n"
+    
+    # --- Fetching Request FSubs ---
+    req_fsub = stg.get('REQUEST_FORCE_SUB_CHANNELS', '')
+    if req_fsub:
+        try:
+            chat = await bot.get_chat(int(req_fsub))
+            link = chat.invite_link
+            if not link:
+                link = await bot.export_chat_invite_link(int(req_fsub))
+            text += f"⠂ <b>{chat.title}</b>\n  🔗 <code>{link}</code>\n"
+        except Exception as e:
+            text += f"⠂ ❌ Error fetching <code>{req_fsub}</code>: <i>{e}</i>\n"
+    else:
+        text += "⠂ <i>None active</i>\n"
+        
+    text += "\n<code>━━━━━━━━━━━━━━━━━━</code>\n💡 <i>Use /set_fsub or /set_req_fsub to update these.</i>"
+    
+    await msg.edit(text, disable_web_page_preview=True)
+
+@Client.on_message(filters.command('clearfsub') & filters.user(ADMINS))
+async def clear_fsub(bot, message):
+    btn = [
+        [InlineKeyboardButton("✅ ᴄʟᴇᴀʀ ɴᴏʀᴍᴀʟ ꜰsᴜʙ", callback_data="clear_normal_fsub")],
+        [InlineKeyboardButton("✅ ᴄʟᴇᴀʀ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ", callback_data="clear_request_fsub")],
+        [InlineKeyboardButton("🗑️ ᴄʟᴇᴀʀ ʙᴏᴛʜ", callback_data="clear_all_fsub")],
+        [InlineKeyboardButton("❌ ᴄᴀɴᴄᴇʟ", callback_data="close_data")]
+    ]
+    await message.reply(
+        "<b>⚙️ ꜰsᴜʙ sᴇᴛᴛɪɴɢs ᴍᴀɴᴀɢᴇʀ</b>\n\nᴡʜɪᴄʜ ꜰᴏʀᴄᴇ-sᴜʙsᴄʀɪʙᴇ ᴄʜᴀɴɴᴇʟs ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ʀᴇᴍᴏᴠᴇ ꜰʀᴏᴍ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ?",
+        reply_markup=InlineKeyboardMarkup(btn)
+    )
 
 @Client.on_message(filters.command('resetallgroups') & filters.user(ADMINS))
 async def reset_all_groups_cmd(client, message):

@@ -1053,6 +1053,19 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return        
         await query.answer(url=f"https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}")
 
+    elif query.data == "clear_normal_fsub":
+        await db.update_bot_sttgs('FORCE_SUB_CHANNELS', "")
+        await query.message.edit("<b>✅ ɴᴏʀᴍᴀʟ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴄʟᴇᴀʀᴇᴅ.</b>")
+
+    elif query.data == "clear_request_fsub":
+        await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', "")
+        await query.message.edit("<b>✅ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴄʟᴇᴀʀᴇᴅ.</b>")
+        
+    elif query.data == "clear_all_fsub":
+        await db.update_bot_sttgs('FORCE_SUB_CHANNELS', "")
+        await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', "")
+        await query.message.edit("<b>🗑️ ᴀʟʟ ꜰsᴜʙ sᴇᴛᴛɪɴɢs ʜᴀᴠᴇ ʙᴇᴇɴ ᴄʟᴇᴀʀᴇᴅ.</b>")
+
     elif query.data == "unmute_all_members":
         if not await is_check_admin(client, query.message.chat.id, query.from_user.id):
             await query.answer("⚠️ ᴛʜɪs ɪs ɴᴏᴛ ꜰᴏʀ ʏᴏᴜ!", show_alert=True)

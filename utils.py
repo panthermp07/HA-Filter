@@ -35,29 +35,38 @@ async def is_subscribed(bot, query):
     btn = []
     if await is_premium(query.from_user.id, bot):
         return btn
+        
     stg = await db.get_bot_sttgs()
-    if not stg or not stg.get('FORCE_SUB_CHANNELS'):
+    if not stg:
         return btn
-    for id in stg.get('FORCE_SUB_CHANNELS').split(' '):
-        chat = await bot.get_chat(int(id))
-        try:
-            await bot.get_chat_member(int(id), query.from_user.id)
-        except UserNotParticipant:
-            btn.append(
-                [InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)]
-            )
-    if stg and stg.get('REQUEST_FORCE_SUB_CHANNELS') and not await db.find_join_req(query.from_user.id):
-        id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
-        chat = await bot.get_chat(int(id))
-        try:
-            await bot.get_chat_member(int(id), query.from_user.id)
-        except UserNotParticipant:
-            url = await bot.create_chat_invite_link(int(id), creates_join_request=True)
-            btn.append(
-                [InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)]
-            )
-    return btn
+        
+    if stg.get('FORCE_SUB_CHANNELS'):
+        for id in stg.get('FORCE_SUB_CHANNELS').split(' '):
+            try:
+                chat = await bot.get_chat(int(id))
+                await bot.get_chat_member(int(id), query.from_user.id)
+            except UserNotParticipant:
+                btn.append(
+                    [InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)]
+                )
+            except Exception as e:
+                logger.error(f"Normal FSub Error: {e}")
 
+    if stg.get('REQUEST_FORCE_SUB_CHANNELS') and not await db.find_join_req(query.from_user.id):
+        id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
+        try:
+            chat = await bot.get_chat(int(id))
+            await bot.get_chat_member(int(id), query.from_user.id)
+        except UserNotParticipant:
+            try:
+                url = await bot.create_chat_invite_link(int(id), creates_join_request=True)
+                btn.append(
+                    [InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)]
+                )
+            except Exception as e:
+                logger.error(f"Invite Link Error: {e}")
+                
+    return btn
 
 def upload_image(file_path):
     with open(file_path, 'rb') as f:
