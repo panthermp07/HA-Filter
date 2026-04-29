@@ -820,6 +820,7 @@ async def hyper_req_fsub(bot, message):
 @Client.on_message(filters.command('set_fsub'))
 async def set_grp_fsub(bot, message):
     user_id = message.from_user.id
+    
     if user_id not in ADMINS and not await db.is_sudo(user_id):
         return await message.reply("<b>⚠️ ᴛʜɪs ꜰᴇᴀᴛᴜʀᴇ ɪs ᴇxᴄʟᴜsɪᴠᴇ ꜰᴏʀ sᴜᴅᴏ ᴜsᴇʀs.\nᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ ᴛᴏ ᴜɴʟᴏᴄᴋ!</b>")
     
@@ -834,16 +835,13 @@ async def set_grp_fsub(bot, message):
         
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
-    bot_me = getattr(temp, 'ME', None)
-    if not bot_me:
-        bot_me = await bot.get_me()
-        temp.ME = bot_me
+    bot_id = bot.me.id if bot.me else (await bot.get_me()).id
 
     title = ""
     for chat_id in ids.split(' '):
         try:
             chat_id = int(chat_id)
-            bot_member = await bot.get_chat_member(chat_id, bot_me.id)
+            bot_member = await bot.get_chat_member(chat_id, bot_id)
             if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR or not bot_member.privileges.can_invite_users:
                 return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ ᴏʀ ᴄᴀɴɴᴏᴛ ɪɴᴠɪᴛᴇ ᴜsᴇʀs!')
             chat = await bot.get_chat(chat_id)
@@ -858,6 +856,7 @@ async def set_grp_fsub(bot, message):
 @Client.on_message(filters.command('set_req_fsub'))
 async def set_grp_req_fsub(bot, message):
     user_id = message.from_user.id
+    
     if user_id not in ADMINS and not await db.is_sudo(user_id):
         return await message.reply("<b>⚠️ ᴛʜɪs ꜰᴇᴀᴛᴜʀᴇ ɪs ᴇxᴄʟᴜsɪᴠᴇ ꜰᴏʀ sᴜᴅᴏ ᴜsᴇʀs.\nᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ ᴛᴏ ᴜɴʟᴏᴄᴋ!</b>")
     
@@ -872,14 +871,11 @@ async def set_grp_req_fsub(bot, message):
         
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
-    bot_me = getattr(temp, 'ME', None)
-    if not bot_me:
-        bot_me = await bot.get_me()
-        temp.ME = bot_me
+    bot_id = bot.me.id if bot.me else (await bot.get_me()).id
 
     try:
         chat_id = int(id)
-        bot_member = await bot.get_chat_member(chat_id, bot_me.id)
+        bot_member = await bot.get_chat_member(chat_id, bot_id)
         if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR or not bot_member.privileges.can_invite_users:
             return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ ᴏʀ ᴄᴀɴɴᴏᴛ ɪɴᴠɪᴛᴇ ᴜsᴇʀs!')
         chat = await bot.get_chat(chat_id)
@@ -889,10 +885,6 @@ async def set_grp_req_fsub(bot, message):
     await save_group_settings(grp_id, 'req_fsub', id)
     await status_msg.edit(f'✅ <b>ɢʀᴏᴜᴘ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ sᴇᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ:</b>\n⠂{chat.title}')
 
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🟢 4. DYNAMIC FSUB DASHBOARD (Shows Hyper Fsubs)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @Client.on_message(filters.command('showfsubs') & filters.user(ADMINS))
 async def show_fsubs(bot, message):
     msg = await message.reply("<b>⏳ ꜰᴇᴛᴄʜɪɴɢ ᴀᴄᴛɪᴠᴇ ʜʏᴘᴇʀ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs...</b>")
