@@ -1,11 +1,9 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from pyrogram import Client, filters
 from pymongo.errors import BulkWriteError
 from info import ADMINS  # Dekho, yahan se DATABASE_NAME hata diya gaya hai
 import asyncio
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🟢 1. CLONE MONGO (OLD URL to NEW URL)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @Client.on_message(filters.command("clonemongo") & filters.user(ADMINS))
 async def clone_mongo_cmd(bot, message):
     if len(message.command) != 3:
@@ -20,7 +18,6 @@ async def clone_mongo_cmd(bot, message):
         old_client = AsyncIOMotorClient(old_url)
         new_client = AsyncIOMotorClient(new_url)
         
-        # 🟢 SMART LOGIC: URL se khud Database name nikalega
         try:
             old_db = old_client.get_default_database()
             new_db = new_client.get_default_database()
@@ -78,9 +75,6 @@ async def clone_mongo_cmd(bot, message):
         except: pass
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🟢 2. MONGO INFO (Check DB Stats)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @Client.on_message(filters.command("monginfo") & filters.user(ADMINS))
 async def mongo_info_cmd(bot, message):
     if len(message.command) != 2:
@@ -117,10 +111,6 @@ async def mongo_info_cmd(bot, message):
         try: client.close()
         except: pass
 
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🟢 3. DELETE MONGO COLLECTION (Remove Specific Col)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @Client.on_message(filters.command("delmongocol") & filters.user(ADMINS))
 async def del_mongo_col_cmd(bot, message):
     if len(message.command) != 3:
@@ -151,10 +141,6 @@ async def del_mongo_col_cmd(bot, message):
         try: client.close()
         except: pass
 
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🟢 4. CLEAR FULL DATABASE (DANGER ZONE)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @Client.on_message(filters.command("cleardb") & filters.user(ADMINS))
 async def clear_db_cmd(bot, message):
     if len(message.command) != 2:
