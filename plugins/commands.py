@@ -82,6 +82,7 @@ async def start(client, message):
     verify_status = await get_verify_status(message.from_user.id)
     if verify_status['is_verified'] and datetime.now() > verify_status['expire_time']:
         await update_verify_status(message.from_user.id, is_verified=False)
+        
     if (len(message.command) != 2) or (len(message.command) == 2 and (message.command[1] == 'start' or message.command[1].startswith('ref_'))):
         buttons = [[
             InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀᴛ ➕", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
@@ -167,6 +168,7 @@ async def start(client, message):
     verify_status = await get_verify_status(message.from_user.id)
     
     if IS_VERIFY and not verify_status['is_verified'] and not await is_premium(message.from_user.id, client):
+        chk_msg = await message.reply("<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         await update_verify_status(message.from_user.id, verify_token=token, link="" if mc == 'inline_verify' else mc)
         link = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=verify_{token}', message.from_user.id, message.chat.id)
@@ -176,7 +178,7 @@ async def start(client, message):
             InlineKeyboardButton('🗳 ᴛᴜᴛᴏʀɪᴀʟ ɢᴜɪᴅᴇ 🗳', url=VERIFY_TUTORIAL, style=enums.ButtonStyle.PRIMARY)
         ]]
         
-        await message.reply(
+        await chk_msg.edit(
             text="<b>🔒 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!\n\nʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ ꜰᴏʀ ᴛᴏᴅᴀʏ. ᴋɪɴᴅʟʏ ᴠᴇʀɪꜰʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ᴀɴᴅ ᴜɴʟᴏᴄᴋ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ.</b>", 
             reply_markup=InlineKeyboardMarkup(btn), 
             protect_content=True
@@ -265,7 +267,9 @@ async def start(client, message):
         return await message.reply('❌ ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!')
     files = files_
     settings = await get_settings(int(grp_id))
+    
     if type_ != 'shortlink' and settings['shortlink'] and not await is_premium(message.from_user.id, client):
+        chk_msg = await message.reply("<b>⏳ ɢᴇɴᴇʀᴀᴛɪɴɢ sᴇᴄᴜʀᴇ ʟɪɴᴋ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
         link = await get_shortlink(f"https://t.me/{temp.U_NAME}?start=shortlink_{grp_id}_{file_id}", message.from_user.id, int(grp_id))
         btn = [[
             InlineKeyboardButton("💎 ɢᴇᴛ ꜰɪʟᴇ(s)", url=link, style=enums.ButtonStyle.SUCCESS)
