@@ -32,7 +32,9 @@ class Database:
         'api': SHORTLINK_API,
         'shortlink': SHORTLINK,
         'tutorial': TUTORIAL,
-        'links': LINK_MODE
+        'links': LINK_MODE,
+        'fsub': "",
+        'req_fsub': ""
     }
 
     default_verify = {

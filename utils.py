@@ -31,41 +31,60 @@ class temp(object):
     BOT = None
     PREMIUM = {}
 
-async def is_subscribed(bot, query):
+async def is_subscribed(bot, query, grp_id=None):
     btn = []
-    if await is_premium(query.from_user.id, bot):
+    user_id = query.from_user.id
+    if await is_premium(user_id, bot):
         return btn
         
-    stg = await db.get_bot_sttgs()
-    if not stg:
-        return btn
-        
-    if stg.get('FORCE_SUB_CHANNELS'):
-        for id in stg.get('FORCE_SUB_CHANNELS').split(' '):
+    if grp_id:
+        grp_stg = await get_settings(int(grp_id))
+        if grp_stg.get('fsub'):
+            for channel_id in str(grp_stg['fsub']).split(' '):
+                try:
+                    chat = await bot.get_chat(int(channel_id))
+                    await bot.get_chat_member(int(channel_id), user_id)
+                except UserNotParticipant:
+                    btn.append([InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)])
+                except Exception as e:
+                    logger.error(f"Group FSub Error: {e}")
+                    
+        if grp_stg.get('req_fsub') and not await db.find_join_req(user_id):
+            req_id = grp_stg['req_fsub']
             try:
-                chat = await bot.get_chat(int(id))
-                await bot.get_chat_member(int(id), query.from_user.id)
+                chat = await bot.get_chat(int(req_id))
+                await bot.get_chat_member(int(req_id), user_id)
             except UserNotParticipant:
-                btn.append(
-                    [InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)]
-                )
-            except Exception as e:
-                logger.error(f"Normal FSub Error: {e}")
+                try:
+                    url = await bot.create_chat_invite_link(int(req_id), creates_join_request=True)
+                    btn.append([InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)])
+                except Exception as e:
+                    logger.error(f"Group Req FSub Error: {e}")
 
-    if stg.get('REQUEST_FORCE_SUB_CHANNELS') and not await db.find_join_req(query.from_user.id):
-        id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
-        try:
-            chat = await bot.get_chat(int(id))
-            await bot.get_chat_member(int(id), query.from_user.id)
-        except UserNotParticipant:
+    stg = await db.get_bot_sttgs()
+    if stg:
+        if stg.get('FORCE_SUB_CHANNELS'):
+            for channel_id in str(stg.get('FORCE_SUB_CHANNELS')).split(' '):
+                try:
+                    chat = await bot.get_chat(int(channel_id))
+                    await bot.get_chat_member(int(channel_id), user_id)
+                except UserNotParticipant:
+                    btn.append([InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)])
+                except Exception as e:
+                    pass
+
+        if stg.get('REQUEST_FORCE_SUB_CHANNELS') and not await db.find_join_req(user_id):
+            req_id = stg.get('REQUEST_FORCE_SUB_CHANNELS')
             try:
-                url = await bot.create_chat_invite_link(int(id), creates_join_request=True)
-                btn.append(
-                    [InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)]
-                )
-            except Exception as e:
-                logger.error(f"Invite Link Error: {e}")
-                
+                chat = await bot.get_chat(int(req_id))
+                await bot.get_chat_member(int(req_id), user_id)
+            except UserNotParticipant:
+                try:
+                    url = await bot.create_chat_invite_link(int(req_id), creates_join_request=True)
+                    btn.append([InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)])
+                except Exception as e:
+                    pass
+                    
     return btn
 
 def upload_image(file_path):

@@ -588,10 +588,16 @@ async def cb_handler(client: Client, query: CallbackQuery):
             
     elif query.data.startswith("checksub"):
         ident, mc = query.data.split("#")
-        settings = await get_settings(int(mc.split("_", 2)[1]))
-        btn = await is_subscribed(client, query)
+        grp_id = None
+        if mc.startswith(('file_', 'all_', 'shortlink_')):
+            try:
+                grp_id = int(mc.split("_")[1])
+            except:
+                pass
+                
+        btn = await is_subscribed(client, query, grp_id)
         if btn:
-            await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴍʏ ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ.", show_alert=True)
+            await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ.", show_alert=True)
             btn.append(
                 [InlineKeyboardButton("🔁 ᴛʀʏ ᴀɢᴀɪɴ 🔁", callback_data=f"checksub#{mc}", style=enums.ButtonStyle.PRIMARY)]
             )
@@ -777,6 +783,17 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
         btn = await get_grp_stg(int(grp_id))
         await query.message.edit_reply_markup(InlineKeyboardMarkup(btn))
+        
+    elif query.data.startswith("fsub_info"):
+        _, grp_id = query.data.split("#")
+        user_id = query.from_user.id
+        
+        # Sudo / Owner ke liye help text
+        if user_id in ADMINS or await db.is_sudo(user_id):
+            await query.answer("💡 ᴛᴏ ᴜᴘᴅᴀᴛᴇ, sᴇɴᴅ /set_fsub ᴏʀ /set_req_fsub ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.", show_alert=True)
+        # Normal users ke liye restriction pop-up
+        else:
+            await query.answer("⚠️ ᴛʜɪs ꜰᴇᴀᴛᴜʀᴇ ɪs ᴇxᴄʟᴜsɪᴠᴇ ꜰᴏʀ sᴜᴅᴏ ᴜsᴇʀs.\nᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ ᴛᴏ ᴜɴʟᴏᴄᴋ!", show_alert=True)
             
     elif query.data.startswith("imdb_setgs"):
         _, grp_id = query.data.split("#")
