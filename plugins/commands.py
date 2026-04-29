@@ -1077,9 +1077,10 @@ async def refer_system(client, message):
         f"🎯 ɪɴᴠɪᴛᴇ <code>{left_needed}</code> ᴍᴏʀᴇ ꜰʀɪᴇɴᴅs ᴛᴏ ᴜɴʟᴏᴄᴋ 1 ᴅᴀʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss! 💎</b>"
     )
     
-    btn = [[
-        InlineKeyboardButton("📢 sʜᴀʀᴇ ʟɪɴᴋ", url=f"https://telegram.me/share/url?url={ref_link}&text=Join%20this%20awesome%20movie%20bot%20now!")
-    ]]
+    btn = [
+        [InlineKeyboardButton("📢 sʜᴀʀᴇ ʟɪɴᴋ", url=f"https://telegram.me/share/url?url={ref_link}&text=Join%20this%20awesome%20movie%20bot%20now!")],
+        [InlineKeyboardButton("📋 ᴄᴏᴘʏ ʟɪɴᴋ", copy_text=ref_link)]
+    ]
     
     await message.reply_photo(
         photo=random.choice(PICS),
