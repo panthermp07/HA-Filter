@@ -62,12 +62,12 @@ async def start(client, message):
                         # Agar 5 refers poore ho gaye, toh 5 Day Premium do!
                         if ref_count % 5 == 0:
                             expiry = datetime.now() + timedelta(days=5)
-                            status = {'expire': expiry, 'plan': '1 Day Reward', 'premium': True, 'trial': True}
+                            status = {'expire': expiry, 'plan': 'Reward Plan', 'premium': True, 'trial': True}
                             await db.update_plan(inviter_id, status)
                             
                             reward_msg = (
                                 "<b>🎉 ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs!\n\n"
-                                f"5 ᴜsᴇʀs ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ ᴜsɪɴɢ ʏᴏᴜʀ ʟɪɴᴋ! ʏᴏᴜ'ᴠᴇ ʙᴇᴇɴ ʀᴇᴡᴀʀᴅᴇᴅ ᴡɪᴛʜ 1 ᴅᴀʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss. 💎\n\n"
+                                f"5 ᴜsᴇʀs ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ ᴜsɪɴɢ ʏᴏᴜʀ ʟɪɴᴋ! ʏᴏᴜ'ᴠᴇ ʙᴇᴇɴ ʀᴇᴡᴀʀᴅᴇᴅ ᴡɪᴛʜ 5 ᴅᴀʏs ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss. 💎\n\n"
                                 f"⏳ ᴇxᴘɪʀᴇs ᴏɴ: <code>{expiry.strftime('%d %b %Y, %I:%M %p')}</code></b>"
                             )
                             await client.send_message(inviter_id, reward_msg)
@@ -266,7 +266,7 @@ async def start(client, message):
     files = files_
     settings = await get_settings(int(grp_id))
     if type_ != 'shortlink' and settings['shortlink'] and not await is_premium(message.from_user.id, client):
-        link = await get_shortlink(settings['url'], settings['api'], f"https://t.me/{temp.U_NAME}?start=shortlink_{grp_id}_{file_id}")
+        link = await get_shortlink(f"https://t.me/{temp.U_NAME}?start=shortlink_{grp_id}_{file_id}", message.from_user.id, int(grp_id))
         btn = [[
             InlineKeyboardButton("💎 ɢᴇᴛ ꜰɪʟᴇ(s)", url=link, style=enums.ButtonStyle.SUCCESS)
         ],[
@@ -317,7 +317,6 @@ async def start(client, message):
     await msg.delete()
     await vp.delete()
     await vp.reply("<b>❌ ᴛʜᴇ ꜰɪʟᴇ ʜᴀs ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ!</b>\nᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(btns))
-   
 
 @Client.on_message(filters.command('link'))
 async def link(bot, message):
@@ -1074,7 +1073,7 @@ async def refer_system(client, message):
         f"🔗 ʏᴏᴜʀ ʟɪɴᴋ: <code>{ref_link}</code>\n"
         "<code>━━━━━━━━━━━━━━━━━━</code>\n\n"
         f"📊 ʏᴏᴜʀ ᴛᴏᴛᴀʟ ɪɴᴠɪᴛᴇs: <code>{ref_count}</code>\n"
-        f"🎯 ɪɴᴠɪᴛᴇ <code>{left_needed}</code> ᴍᴏʀᴇ ꜰʀɪᴇɴᴅs ᴛᴏ ᴜɴʟᴏᴄᴋ 1 ᴅᴀʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss! 💎</b>"
+        f"🎯 ɪɴᴠɪᴛᴇ <code>{left_needed}</code> ᴍᴏʀᴇ ꜰʀɪᴇɴᴅs ᴛᴏ ᴜɴʟᴏᴄᴋ 5 ᴅᴀʏs ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss! 💎</b>"
     )
     
     btn = [
