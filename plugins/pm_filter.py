@@ -192,7 +192,7 @@ async def next_page(bot, query):
             InlineKeyboardButton("🔍 ǫᴜᴀʟɪᴛʏ", callback_data=f"quality#{key}#{req}#{offset}")]
         )
         btn.insert(1,
-            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}'))]
+            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id))]
         )
     else:
         btn.insert(0,
@@ -291,7 +291,7 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
         ]
     if settings['shortlink'] and not await is_premium(query.from_user.id, client):
         btn.insert(0,
-            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}')),
+            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id)),
             InlineKeyboardButton("🔍 ǫᴜᴀʟɪᴛʏ", callback_data=f"quality#{key}#{req}#{offset}")]
         )
     else:
@@ -345,7 +345,7 @@ async def lang_next_page(bot, query):
         ]
     if settings['shortlink'] and not await is_premium(query.from_user.id, bot):
         btn.insert(1,
-            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}')),
+            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id)),
             InlineKeyboardButton("🔍 ǫᴜᴀʟɪᴛʏ", callback_data=f"quality#{key}#{req}#{l_offset}")]
         )
     else:
@@ -409,7 +409,7 @@ async def quality_search(client: Client, query: CallbackQuery):
         ]
     if settings['shortlink'] and not await is_premium(query.from_user.id, client):
         btn.insert(0,
-            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}'))]
+            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id))]
         )
     else:
         btn.insert(0,
@@ -460,7 +460,7 @@ async def quality_next_page(bot, query):
         ]
     if settings['shortlink'] and not await is_premium(query.from_user.id, bot):
         btn.insert(0,
-            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}'))]
+            [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id))]
         )
     else:
         btn.insert(0,
@@ -788,10 +788,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
         _, grp_id = query.data.split("#")
         user_id = query.from_user.id
         
-        # Sudo / Owner ke liye help text
         if user_id in ADMINS or await db.is_sudo(user_id):
             await query.answer("💡 ᴛᴏ ᴜᴘᴅᴀᴛᴇ, sᴇɴᴅ /set_fsub ᴏʀ /set_req_fsub ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.", show_alert=True)
-        # Normal users ke liye restriction pop-up
         else:
             await query.answer("⚠️ ᴛʜɪs ꜰᴇᴀᴛᴜʀᴇ ɪs ᴇxᴄʟᴜsɪᴠᴇ ꜰᴏʀ sᴜᴅᴏ ᴜsᴇʀs.\nᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ ᴛᴏ ᴜɴʟᴏᴄᴋ!", show_alert=True)
             
@@ -1219,7 +1217,7 @@ async def auto_filter(client, msg, s, spoll=False):
                 InlineKeyboardButton("🔍 ǫᴜᴀʟɪᴛʏ", callback_data=f"quality#{key}#{req}#{offset}")]
             )
             btn.insert(1,
-                [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}'))]
+                [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}', req, message.chat.id))]
             )
         else:
             btn.insert(0,
@@ -1236,7 +1234,7 @@ async def auto_filter(client, msg, s, spoll=False):
     else:
         if settings['shortlink'] and not await is_premium(message.from_user.id, client):
             btn.insert(0,
-                [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(settings['url'], settings['api'], f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}'))]
+                [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", url=await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}', req, message.chat.id))]
             )
         else:
             btn.insert(0,
