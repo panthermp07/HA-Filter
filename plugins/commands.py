@@ -161,14 +161,24 @@ async def start(client, message):
             
         await message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴠᴇʀɪꜰɪᴇᴅ ᴜɴᴛɪʟ: {get_readable_time(VERIFY_EXPIRE)}</b>", reply_markup=reply_markup, protect_content=True)
         return
-    
+
+    grp_id = None
+    if mc.startswith(('file_', 'all_', 'shortlink_')):
+        try:
+            grp_id = int(mc.split("_")[1])
+        except:
+            pass
+
     verify_status = await get_verify_status(message.from_user.id)
     
     if IS_VERIFY and not verify_status['is_verified'] and not await is_premium(message.from_user.id, client):
         chk_msg = await message.reply("<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         await update_verify_status(message.from_user.id, verify_token=token, link="" if mc == 'inline_verify' else mc)
-        link = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=verify_{token}', message.from_user.id, message.chat.id)
+        
+        target_shortener_id = grp_id if grp_id else message.chat.id
+        link = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=verify_{token}', message.from_user.id, target_shortener_id)
+        
         btn = [[
             InlineKeyboardButton("🧿 ᴠᴇʀɪꜰʏ ɴᴏᴡ 🧿", url=link, style=enums.ButtonStyle.PRIMARY)
         ],[
@@ -183,13 +193,7 @@ async def start(client, message):
         )
         return
 
-    grp_id = None
-    if mc.startswith(('file_', 'all_', 'shortlink_')):
-        try:
-            grp_id = int(mc.split("_")[1])
-        except:
-            pass
-
+    # ⚠️ FSub Check
     btn = await is_subscribed(client, message, grp_id)
     if btn:
         btn.append(
