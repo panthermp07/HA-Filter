@@ -866,7 +866,10 @@ async def set_grp_fsub(bot, message):
         ids = message.command[1]
     else:
         return await message.reply("💡 <b>ᴜsᴀɢᴇ ɪɴ ᴘᴍ:</b> <code>/set_fsub [GRP_ID] -100xxx</code>\n💡 <b>ᴜsᴀɢᴇ ɪɴ ɢʀᴏᴜᴘ:</b> <code>/set_fsub -100xxx</code>")
-        
+    if user_id not in ADMINS:
+        if not await is_check_admin(bot, grp_id, user_id):
+            return await message.reply("<b>⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ: ʏᴏᴜ ᴍᴜsᴛ ʙᴇ ᴀɴ ᴀᴅᴍɪɴ ᴏʀ ᴏᴡɴᴇʀ ᴏꜰ ᴛʜɪs sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴛᴏ sᴇᴛ ꜰsᴜʙ ʀᴜʟᴇs ʜᴇʀᴇ!</b>")
+
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
     me = await bot.get_me()
@@ -905,7 +908,10 @@ async def set_grp_req_fsub(bot, message):
         id = message.command[1]
     else:
         return await message.reply("💡 <b>ᴜsᴀɢᴇ ɪɴ ᴘᴍ:</b> <code>/set_req_fsub [GRP_ID] -100xxx</code>\n💡 <b>ᴜsᴀɢᴇ ɪɴ ɢʀᴏᴜᴘ:</b> <code>/set_req_fsub -100xxx</code>")
-        
+    if user_id not in ADMINS:
+        if not await is_check_admin(bot, grp_id, user_id):
+            return await message.reply("<b>⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ: ʏᴏᴜ ᴍᴜsᴛ ʙᴇ ᴀɴ ᴀᴅᴍɪɴ ᴏʀ ᴏᴡɴᴇʀ ᴏꜰ ᴛʜɪs sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴛᴏ sᴇᴛ ꜰsᴜʙ ʀᴜʟᴇs ʜᴇʀᴇ!</b>")
+
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
     me = await bot.get_me()

@@ -944,24 +944,80 @@ async def cb_handler(client: Client, query: CallbackQuery):
         userid = query.from_user.id if query.from_user else None
         if not await is_check_admin(client, int(grp_id), userid):
             return await query.answer("⚠️ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ!", show_alert=True)
+            
         btn = [[
             InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data=f'shortlink_setgs#{grp_id}', style=enums.ButtonStyle.DANGER)
         ]]
-        m = await query.message.edit('<b>📝 sᴇɴᴅ sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ:</b>')
+        m = await query.message.edit(
+            '<b>📝 sᴛᴇᴘ 1: sᴇɴᴅ ʏᴏᴜʀ sʜᴏʀᴛʟɪɴᴋ ᴅᴏᴍᴀɪɴ</b>\n\n'
+            '💡 <i>ᴇxᴀᴍᴘʟᴇ: shareus.io ᴏʀ https://shareus.io</i>\n'
+            '⚠️ ᴅᴏ ɴᴏᴛ sᴇɴᴅ ᴛʜᴇ ᴀᴘɪ ᴋᴇʏ ʜᴇʀᴇ, ᴊᴜsᴛ ᴛʜᴇ ᴡᴇʙsɪᴛᴇ ʟɪɴᴋ.',
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
         url_msg = await client.listen(chat_id=query.message.chat.id, user_id=query.from_user.id)
         if not url_msg:
             await m.delete()
             return await query.message.reply('<b>⏱ ᴛɪᴍᴇᴏᴜᴛ!</b>', reply_markup=InlineKeyboardMarkup(btn))
+            
+        shortener_url = url_msg.text.strip().lower()
+        if not shortener_url.startswith(("http://", "https://")):
+            shortener_url = f"https://{shortener_url}"
+        if shortener_url.endswith("/"):
+            shortener_url = shortener_url[:-1]
+
         await m.delete()
-        k = await query.message.reply('<b>📝 sᴇɴᴅ sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ ᴋᴇʏ:</b>')
+
+        k = await query.message.reply(
+            '<b>📝 sᴛᴇᴘ 2: sᴇɴᴅ ʏᴏᴜʀ ᴀᴘɪ ᴋᴇʏ</b>\n\n'
+            '💡 <i>ʏᴏᴜ ᴄᴀɴ ꜰɪɴᴅ ᴛʜɪs ɪɴ ʏᴏᴜʀ sʜᴏʀᴛᴇɴᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ (ᴜsᴜᴀʟʟʏ ᴜɴᴅᴇʀ ᴛᴏᴏʟs ➔ ᴅᴇᴠᴇʟᴏᴘᴇʀs ᴀᴘɪ).</i>',
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
         key_msg = await client.listen(chat_id=query.message.chat.id, user_id=query.from_user.id)
         if not key_msg:
-            await m.delete()
+            await k.delete()
             return await query.message.reply('<b>⏱ ᴛɪᴍᴇᴏᴜᴛ!</b>', reply_markup=InlineKeyboardMarkup(btn))
-        await save_group_settings(int(grp_id), 'url', url_msg.text)
-        await save_group_settings(int(grp_id), 'api', key_msg.text)
+            
+        api_key = key_msg.text.strip()
         await k.delete()
-        await query.message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄʜᴀɴɢᴇᴅ sʜᴏʀᴛʟɪɴᴋ!</b>', reply_markup=InlineKeyboardMarkup(btn))
+        
+        test_msg = await query.message.reply('<b>⏳ ᴠᴇʀɪꜰʏɪɴɢ ʏᴏᴜʀ sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>')
+        
+        try:
+            from shortzy import Shortzy
+            from info import LOG_CHANNEL
+            import logging
+            
+            shortzy = Shortzy(api_key=api_key, base_site=shortener_url)
+            test_link = await shortzy.convert("https://telegram.me/infinity_botzz")
+            
+            if test_link:
+                await save_group_settings(int(grp_id), 'url', shortener_url)
+                await save_group_settings(int(grp_id), 'api', api_key)
+                await test_msg.edit('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴠᴇʀɪꜰɪᴇᴅ ᴀɴᴅ ᴜᴘᴅᴀᴛᴇᴅ sʜᴏʀᴛʟɪɴᴋ!</b>', reply_markup=InlineKeyboardMarkup(btn))
+                
+                try:
+                    grp_chat = await client.get_chat(int(grp_id))
+                    log_text = (
+                        "<b>🔗 #ɴᴇᴡ_ɢʀᴏᴜᴘ_sʜᴏʀᴛʟɪɴᴋ</b>\n"
+                        "<code>━━━━━━━━━━━━━━━━━━</code>\n"
+                        f"👤 <b>ᴀᴅᴍɪɴ:</b> {query.from_user.mention}\n"
+                        f"👥 <b>ɢʀᴏᴜᴘ:</b> {grp_chat.title}\n"
+                        f"🆔 <b>ɢʀᴏᴜᴘ ɪᴅ:</b> <code>{grp_id}</code>\n"
+                        f"🌐 <b>ᴅᴏᴍᴀɪɴ:</b> <code>{shortener_url}</code>\n"
+                        f"🔑 <b>ᴀᴘɪ ᴋᴇʏ:</b> <code>{api_key[:6]}••••••••{api_key[-4:]}</code>\n"
+                        "<code>━━━━━━━━━━━━━━━━━━</code>"
+                    )
+                    await client.send_message(LOG_CHANNEL, log_text)
+                except Exception as log_err:
+                    logging.getLogger(__name__).error(f"Failed to log shortlink: {log_err}")
+                    
+        except Exception as e:
+            error_text = (
+                f"<b>❌ ᴀᴘɪ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜰᴀɪʟᴇᴅ!</b>\n\n"
+                f"<b>⚠️ ʀᴇᴀsᴏɴ:</b> <code>{str(e)}</code>\n\n"
+                f"<i>ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ɪꜰ ʏᴏᴜʀ ᴜʀʟ ᴀɴᴅ ᴀᴘɪ ᴋᴇʏ ᴀʀᴇ ᴄᴏʀʀᴇᴄᴛ ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ. ɪꜰ ᴛʜᴇ ɪssᴜᴇ ᴘᴇʀsɪsᴛs, ᴄᴏɴᴛᴀᴄᴛ <a href='https://t.me/talk_mrs_bot'>sᴜᴘᴘᴏʀᴛ ᴀᴅᴍɪɴ</a>.</i>"
+            )
+            await test_msg.edit(error_text, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
 
     elif query.data.startswith("default_shortlink"):
         _, grp_id = query.data.split("#")
