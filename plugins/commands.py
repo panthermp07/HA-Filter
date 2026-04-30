@@ -805,8 +805,27 @@ async def hyper_fsub(bot, message):
         _, ids = message.text.split(' ', 1)
     except ValueError:
         return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/hyper_fsub -100xxxx</code>')
+        
+    status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
+    
+    me = await bot.get_me()
+    bot_id = getattr(me, "id", me)
+    
+    title = ""
+    for chat_id in ids.split(' '):
+        if not chat_id.strip(): continue
+        try:
+            chat_id = int(chat_id)
+            bot_member = await bot.get_chat_member(chat_id, bot_id)
+            if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR:
+                return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ!')
+            chat = await bot.get_chat(chat_id)
+            title += f'⠂{chat.title}\n'
+        except Exception as e:
+            return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> <code>{e}</code>')
+            
     await db.update_bot_sttgs('FORCE_SUB_CHANNELS', ids)
-    await message.reply(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ꜰsᴜʙ:</b>\n{ids}')
+    await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ꜰsᴜʙ:</b>\n{title}')
 
 @Client.on_message(filters.command('hyper_req_fsub') & filters.user(ADMINS))
 async def hyper_req_fsub(bot, message):
@@ -814,8 +833,23 @@ async def hyper_req_fsub(bot, message):
         _, id = message.text.split(' ', 1)
     except ValueError:
         return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/hyper_req_fsub -100xxxx</code>')
+        
+    status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
+    
+    me = await bot.get_me()
+    bot_id = getattr(me, "id", me)
+    
+    try:
+        chat_id = int(id)
+        bot_member = await bot.get_chat_member(chat_id, bot_id)
+        if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR:
+            return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ!')
+        chat = await bot.get_chat(chat_id)
+    except Exception as e:
+        return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>')
+        
     await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
-    await message.reply(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ:</b>\n{id}')
+    await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ:</b>\n⠂{chat.title}')
 
 @Client.on_message(filters.command('set_fsub'))
 async def set_grp_fsub(bot, message):
@@ -835,10 +869,13 @@ async def set_grp_fsub(bot, message):
         
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
-    bot_id = bot.me.id if bot.me else (await bot.get_me()).id
+    me = await bot.get_me()
+    bot_id = getattr(me, "id", me)
 
     title = ""
     for chat_id in ids.split(' '):
+        if not chat_id.strip():
+            continue
         try:
             chat_id = int(chat_id)
             bot_member = await bot.get_chat_member(chat_id, bot_id)
@@ -871,7 +908,8 @@ async def set_grp_req_fsub(bot, message):
         
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
-    bot_id = bot.me.id if bot.me else (await bot.get_me()).id
+    me = await bot.get_me()
+    bot_id = getattr(me, "id", me)
 
     try:
         chat_id = int(id)
@@ -959,18 +997,15 @@ async def off_auto_filter(bot, message):
     await db.update_bot_sttgs('AUTO_FILTER', False)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏꜰꜰ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ꜰᴏʀ ᴀʟʟ ɢʀᴏᴜᴘs</b>')
 
-
 @Client.on_message(filters.command('on_auto_filter') & filters.user(ADMINS))
 async def on_auto_filter(bot, message):
     await db.update_bot_sttgs('AUTO_FILTER', True)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏɴ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ꜰᴏʀ ᴀʟʟ ɢʀᴏᴜᴘs</b>')
 
-
 @Client.on_message(filters.command('off_pm_search') & filters.user(ADMINS))
 async def off_pm_search(bot, message):
     await db.update_bot_sttgs('PM_SEARCH', False)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏꜰꜰ ᴘᴍ sᴇᴀʀᴄʜ ꜰᴏʀ ᴀʟʟ ᴜsᴇʀs</b>')
-
 
 @Client.on_message(filters.command('on_pm_search') & filters.user(ADMINS))
 async def on_pm_search(bot, message):
