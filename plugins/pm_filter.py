@@ -938,7 +938,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data=f'back_setgs#{grp_id}', style=enums.ButtonStyle.DANGER)
         ]]
         await query.message.edit(f'<b>⚙️ sᴇʟᴇᴄᴛ ʏᴏᴜʀ ᴏᴘᴛɪᴏɴ\n\n📝 ᴄᴜʀʀᴇɴᴛ sʜᴏʀᴛʟɪɴᴋ:</b>\n<code>{settings["url"]} - {settings["api"]}</code>', reply_markup=InlineKeyboardMarkup(btn))
-        
+
     elif query.data.startswith("set_shortlink"):
         _, grp_id = query.data.split("#")
         userid = query.from_user.id if query.from_user else None
@@ -948,9 +948,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
         btn = [[
             InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data=f'shortlink_setgs#{grp_id}', style=enums.ButtonStyle.DANGER)
         ]]
+        
         m = await query.message.edit(
             '<b>📝 sᴛᴇᴘ 1: sᴇɴᴅ ʏᴏᴜʀ sʜᴏʀᴛʟɪɴᴋ ᴅᴏᴍᴀɪɴ</b>\n\n'
-            '💡 <i>ᴇxᴀᴍᴘʟᴇ: shareus.io ᴏʀ https://shareus.io</i>\n'
+            '💡 <i>ᴇxᴀᴍᴘʟᴇ: shareus.io (ᴅᴏ ɴᴏᴛ ᴀᴅᴅ https://)</i>\n'
             '⚠️ ᴅᴏ ɴᴏᴛ sᴇɴᴅ ᴛʜᴇ ᴀᴘɪ ᴋᴇʏ ʜᴇʀᴇ, ᴊᴜsᴛ ᴛʜᴇ ᴡᴇʙsɪᴛᴇ ʟɪɴᴋ.',
             reply_markup=InlineKeyboardMarkup(btn)
         )
@@ -960,13 +961,15 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return await query.message.reply('<b>⏱ ᴛɪᴍᴇᴏᴜᴛ!</b>', reply_markup=InlineKeyboardMarkup(btn))
             
         shortener_url = url_msg.text.strip().lower()
-        if not shortener_url.startswith(("http://", "https://")):
-            shortener_url = f"https://{shortener_url}"
+        if shortener_url.startswith("https://"):
+            shortener_url = shortener_url.replace("https://", "")
+        elif shortener_url.startswith("http://"):
+            shortener_url = shortener_url.replace("http://", "")
         if shortener_url.endswith("/"):
             shortener_url = shortener_url[:-1]
 
         await m.delete()
-
+        
         k = await query.message.reply(
             '<b>📝 sᴛᴇᴘ 2: sᴇɴᴅ ʏᴏᴜʀ ᴀᴘɪ ᴋᴇʏ</b>\n\n'
             '💡 <i>ʏᴏᴜ ᴄᴀɴ ꜰɪɴᴅ ᴛʜɪs ɪɴ ʏᴏᴜʀ sʜᴏʀᴛᴇɴᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ (ᴜsᴜᴀʟʟʏ ᴜɴᴅᴇʀ ᴛᴏᴏʟs ➔ ᴅᴇᴠᴇʟᴏᴘᴇʀs ᴀᴘɪ).</i>',
