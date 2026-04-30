@@ -111,7 +111,7 @@ async def mongo_info(client: Client, message: Message):
 @Client.on_message(filters.command("delcol") & filters.user(ADMINS))
 async def del_col(client: Client, message: Message):
     if len(message.command) < 4:
-        return await message.reply_text("⚠️ ɪɴᴠᴀʟɪᴅ ғᴏʀᴍᴀᴛ.\nᴜsᴇ: `/delcol <mongourl> <dbname> <collection>`")
+        return await message.reply_text("⚠️ <b>ɪɴᴠᴀʟɪᴅ ꜰᴏʀᴍᴀᴛ.</b>\n💡 ᴜsᴇ: <code>/delcol [mongourl] [dbname] [collection]</code>")
     
     args = message.text.split(" ")
     url = args[1]
