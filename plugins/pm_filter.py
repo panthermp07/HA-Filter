@@ -60,7 +60,6 @@ def get_tags(search, key):
         'req_season': h_season or st.get('s')
     }
 
-
 def insert_dynamic_buttons(btn, settings, is_prem, shortlink_url, key, req, offset, tags, available_tags):
     idx = 0
     top_btn = []
@@ -108,7 +107,7 @@ def create_menu_buttons(items, tag_type, key, offset, req):
         btn.append([InlineKeyboardButton(text=str(items[-1]).title() if tag_type != 'q' else str(items[-1]).upper(), callback_data=f"ts#{tag_type}#{items[-1]}#{key}#{offset}#{req}")])
         
     btn.append([InlineKeyboardButton(text="✖️ ᴄʟᴇᴀʀ ꜰɪʟᴛᴇʀ", callback_data=f"ts#{tag_type}#ALL#{key}#{offset}#{req}")])
-    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
+    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"b2main_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
     return btn
 
 @Client.on_message(filters.private & filters.text & filters.incoming)
@@ -187,7 +186,7 @@ async def group_search(client, message):
         try: await message.delete()
         except: pass
 
-@Client.on_callback_query(filters.regex(r"^next"))
+@Client.on_callback_query(filters.regex(r"^(next|b2main)_"))
 async def next_page(bot, query):
     ident, req, key, offset = query.data.split("_")
     if int(req) not in [query.from_user.id, 0]:
@@ -200,17 +199,25 @@ async def next_page(bot, query):
     if not search: return await query.answer(f"⚠️ Request Expired!", show_alert=True)
 
     tags = get_tags(search, key)
-    files, n_offset, total = await get_search_results(tags['clean_search'], offset=offset, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     
-    available_tags = temp.FILES.get(f"tags_{key}")
+    # ⚡ FAST CACHE BYPASS: "Back to main page" ⚡
+    if ident == "b2main" and temp.FILES.get(key):
+        files = temp.FILES.get(key)
+        total = temp.FILES.get(f"total_{key}", 0)
+        n_offset = offset + MAX_BTN if (offset + MAX_BTN) < total else 0
+        if n_offset == 0 and total > MAX_BTN and offset >= MAX_BTN: 
+             n_offset = ''
+    else:
+        files, n_offset, total = await get_search_results(tags['clean_search'], offset=offset, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
+        temp.FILES[key] = files
+        temp.FILES[f"total_{key}"] = total
+
+    available_tags = temp.FILES.get(f"tags_{key}", {})
     if not available_tags:
         available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
         temp.FILES[f"tags_{key}"] = available_tags
     
     if not files: return
-    temp.FILES[key] = files
-    try: n_offset = int(n_offset)
-    except: n_offset = 0
 
     settings = await get_settings(query.message.chat.id)
     del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
@@ -244,8 +251,6 @@ async def next_page(bot, query):
                     
     await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
 
-
-# ====================================================================
 @Client.on_callback_query(filters.regex(r"^(languages|quality|years|seasons)#"))
 async def dynamic_menus(client: Client, query: CallbackQuery):
     action, key, req, offset = query.data.split("#")
@@ -286,10 +291,9 @@ async def generic_tag_search(client: Client, query: CallbackQuery):
     cap = CAP.get(key)
     if not search: return await query.answer("⚠️ Request Expired!", show_alert=True)
 
-    # State Management for Soft Tags
     st = temp.FILES.get(f"st_{key}", {})
     if val == "ALL":
-        if tag_type in st: del st[tag_type] # Clear the filter
+        if tag_type in st: del st[tag_type] 
     else:
         st[tag_type] = val
     temp.FILES[f"st_{key}"] = st
@@ -297,13 +301,15 @@ async def generic_tag_search(client: Client, query: CallbackQuery):
     tags = get_tags(search, key)
     files, t_offset, total_results = await get_search_results(tags['clean_search'], offset=0, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     
-    # ⚡ RE-FETCH CACHE BASED ON NEW FILTER SELECTION ⚡
+    # Cache total results 
+    temp.FILES[key] = files
+    temp.FILES[f"total_{key}"] = total_results
+    
     available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     temp.FILES[f"tags_{key}"] = available_tags
     
     if not files: return await query.answer(f"sᴏʀʀʏ '{val.title()}' ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
         
-    temp.FILES[key] = files
     settings = await get_settings(query.message.chat.id)
     del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     files_link = ''
@@ -327,9 +333,6 @@ async def generic_tag_search(client: Client, query: CallbackQuery):
     await query.message.edit_text(cap + files_link + del_msg, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
 
 
-# ====================================================================
-# 🚀 CORE FILTER & SPOLL LOGIC
-# ====================================================================
 @Client.on_callback_query(filters.regex(r"^locked#"))
 async def locked_filter_cb(client, query):
     _, filter_type, filter_val = query.data.split("#")
@@ -389,11 +392,14 @@ async def auto_filter(client, msg, s, spoll=False):
     try: key = f"{message.chat.id}-{message.id}"
     except AttributeError: key = f"{msg.message.chat.id}-{msg.message.id}"
  
-    temp.FILES[f"st_{key}"] = {} # Clear soft tags on new search
+    temp.FILES[f"st_{key}"] = {} 
     BUTTONS[key] = search
     tags = get_tags(search, key)
     
-    # ⚡ EXTREME SPEED CACHE WITH CURRENT FILTERS!
+    # ⚡ CACHE RESULTS FOR FAST BACK ⚡
+    temp.FILES[key] = files
+    temp.FILES[f"total_{key}"] = total_results
+    
     available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     temp.FILES[f"tags_{key}"] = available_tags
 
@@ -491,10 +497,6 @@ async def advantage_spell_chok(message, s):
         await suggestion_msg.delete()
         await message.delete()
     except: pass
-
-# ====================================================================
-# 🗃️ BAKI SAARI OLD CALLBACKS (Unchanged)
-# ====================================================================
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):

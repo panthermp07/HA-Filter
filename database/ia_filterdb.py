@@ -126,16 +126,27 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None
         else:
             filter_obj = {'$and': and_filters}
 
-    cursor = collection.find(filter_obj).sort('_id', -1)
-    results = [doc for doc in cursor]
-
-    if SECOND_FILES_DATABASE_URL:
-        cursor2 = second_collection.find(filter_obj).sort('_id', -1)
-        results.extend([doc for doc in cursor2])
-
-    total_results = len(results)
-    files = results[offset:][:max_results]
+    total1 = collection.count_documents(filter_obj)
+    total_results = total1
     
+    if SECOND_FILES_DATABASE_URL:
+        total2 = second_collection.count_documents(filter_obj)
+        total_results += total2
+
+    files = []
+    if offset < total1:
+        cursor = collection.find(filter_obj).sort('_id', -1).skip(offset).limit(max_results)
+        files = list(cursor)
+        if len(files) < max_results and SECOND_FILES_DATABASE_URL:
+            rem = max_results - len(files)
+            cursor2 = second_collection.find(filter_obj).sort('_id', -1).limit(rem)
+            files.extend(list(cursor2))
+    else:
+        if SECOND_FILES_DATABASE_URL:
+            skip_second = offset - total1
+            cursor2 = second_collection.find(filter_obj).sort('_id', -1).skip(skip_second).limit(max_results)
+            files = list(cursor2)
+
     next_offset = offset + max_results
     if next_offset >= total_results:
         next_offset = '' 
