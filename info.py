@@ -18,6 +18,7 @@ def is_enabled(type, value):
 def is_valid_ip(ip):
     ip_pattern = r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
     return re.match(ip_pattern, ip) is not None
+
 # Bot information
 API_ID = environ.get('API_ID', '')
 API_HASH = environ.get('API_HASH', '')
@@ -55,8 +56,11 @@ TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Kolkata')
 DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
-LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'bengali hindi english telugu tamil kannada malayalam marathi punjabi gujrati').split()]
-QUALITY = [quality.lower() for quality in environ.get('QUALITY', '240p 360p 480p 720p 1080p 2160p').split()]
+
+#Massive Global Language Tags Array
+LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi english telugu tamil kannada malayalam bengali marathi punjabi gujrati odia bhojpuri assamese urdu korean japanese chinese french spanish german russian arabic turkish portuguese thai dual multi org dubbed esub').split()]
+
+QUALITY = [quality.lower() for quality in environ.get('QUALITY', '240p 360p 480p 576p 720p 1080p 1440p 2160p').split()]
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
 SHORTLINK_URL = environ.get("SHORTLINK_URL", "")

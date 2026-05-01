@@ -5,12 +5,14 @@ from struct import pack
 from pyrogram.file_id import FileId
 from pymongo import MongoClient, TEXT
 from pymongo.errors import DuplicateKeyError, OperationFailure
-from info import USE_CAPTION_FILTER, FILES_DATABASE_URL, SECOND_FILES_DATABASE_URL, DATABASE_NAME, COLLECTION_NAME, MAX_BTN
+from info import USE_CAPTION_FILTER, FILES_DATABASE_URL, SECOND_FILES_DATABASE_URL, DATABASE_NAME, COLLECTION_NAME, MAX_BTN, LANGUAGES, QUALITY
+
 logger = logging.getLogger(__name__)
 
 client = MongoClient(FILES_DATABASE_URL)
 db = client[DATABASE_NAME]
 collection = db[COLLECTION_NAME]
+
 try:
     collection.create_index([("file_name", TEXT)])
 except OperationFailure as e:
@@ -37,21 +39,38 @@ def db_count_documents():
 
 
 async def save_file(media):
-    """Save file in database"""
+    """Save file in database with Ultra-Smart Tagging"""
     file_id = unpack_new_file_id(media.file_id)
     file_name = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.file_name))
     file_caption = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.caption))
+    text_to_scan = f"{file_name} {file_caption}".lower()
+
+    # 1. Extract Languages & Qualities (Exact word match using regex boundary \b)
+    file_langs = [lang for lang in LANGUAGES if re.search(rf"\b{lang}\b", text_to_scan)]
+    file_quals = [qual for qual in QUALITY if re.search(rf"\b{qual}\b", text_to_scan)]
+
+    # 2. Extract Year (1900 to 2099)
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', text_to_scan)
+    file_year = year_match.group(1) if year_match else None
+
+    # 3. Extract Season (e.g., S01, S1, Season 1)
+    season_match = re.search(r'\b(?:s|season\s*)([0-9]{1,2})\b', text_to_scan)
+    file_season = f"S{int(season_match.group(1)):02d}" if season_match else None
     
     document = {
         '_id': file_id,
         'file_name': file_name,
         'file_size': media.file_size,
-        'caption': file_caption
+        'caption': file_caption,
+        'languages': file_langs,   # e.g., ['hindi', 'dual']
+        'qualities': file_quals,   # e.g., ['1080p']
+        'year': file_year,         # e.g., '2025'
+        'season': file_season      # e.g., 'S01'
     }
     
     try:
         collection.insert_one(document)
-        logger.info(f'Saved - {file_name}')
+        logger.info(f"Saved: {file_name} | Tags: {file_langs} | Qual: {file_quals} | YR: {file_year} | S: {file_season}")
         return 'suc'
     except DuplicateKeyError:
         logger.warning(f'Already Saved - {file_name}')
@@ -69,12 +88,11 @@ async def save_file(media):
             logger.error(f'your FILES_DATABASE_URL is already full, add SECOND_FILES_DATABASE_URL')
             return 'err'
 
-async def get_search_results(query, max_results=MAX_BTN, offset=0, lang=None):
+async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None, req_qual=None, req_year=None, req_season=None):
     query = str(query).strip()
-    
-    if not query:
-        filter = {} 
-    else:
+    filter_obj = {}
+
+    if query:
         if ' ' not in query:
             raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
         else:
@@ -86,25 +104,35 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, lang=None):
             regex = query
 
         if USE_CAPTION_FILTER:
-            filter = {'$or': [{'file_name': regex}, {'caption': regex}]}
+            filter_obj = {'$or': [{'file_name': regex}, {'caption': regex}]}
         else:
-            filter = {'file_name': regex}
+            filter_obj = {'file_name': regex}
 
-    cursor = collection.find(filter).sort('_id', -1)
+    and_filters = []
+    
+    if req_lang:
+        and_filters.append({'$or': [{'languages': req_lang}, {'file_name': re.compile(rf"\b{req_lang}\b", re.IGNORECASE)}]})
+    if req_qual:
+        and_filters.append({'$or': [{'qualities': req_qual}, {'file_name': re.compile(rf"\b{req_qual}\b", re.IGNORECASE)}]})
+    if req_year:
+        and_filters.append({'$or': [{'year': req_year}, {'file_name': re.compile(rf"\b{req_year}\b", re.IGNORECASE)}]})
+    if req_season:
+        # Fallback regex maps 'S01' to find 'S01', 'S1', or 'Season 1' in old files
+        season_num = int(req_season[1:]) 
+        and_filters.append({'$or': [{'season': req_season}, {'file_name': re.compile(rf"\b(?:s|season\s*)0?{season_num}\b", re.IGNORECASE)}]})
+
+    if and_filters:
+        if filter_obj:
+            filter_obj = {'$and': [filter_obj] + and_filters}
+        else:
+            filter_obj = {'$and': and_filters}
+
+    cursor = collection.find(filter_obj).sort('_id', -1)
     results = [doc for doc in cursor]
 
     if SECOND_FILES_DATABASE_URL:
-        cursor2 = second_collection.find(filter).sort('_id', -1)
+        cursor2 = second_collection.find(filter_obj).sort('_id', -1)
         results.extend([doc for doc in cursor2])
-
-    if lang:
-        lang_files = [file for file in results if lang in file['file_name'].lower()]
-        files = lang_files[offset:][:max_results]
-        total_results = len(lang_files)
-        next_offset = offset + max_results
-        if next_offset >= total_results:
-            next_offset = ''
-        return files, next_offset, total_results
 
     total_results = len(results)
     files = results[offset:][:max_results]
@@ -114,6 +142,47 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, lang=None):
         next_offset = '' 
           
     return files, next_offset, total_results
+
+# ✅ PRO DEVELOPER UPGRADE: Fetch ONLY available tags for a search query
+async def get_available_tags(query):
+    """Fetch ONLY the available tags for a specific search query (Dynamic Filtering)"""
+    query = str(query).strip()
+    filter_obj = {}
+
+    if query:
+        if ' ' not in query:
+            raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
+        else:
+            raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
+        try:
+            regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+        except:
+            regex = query
+
+        if USE_CAPTION_FILTER:
+            filter_obj = {'$or': [{'file_name': regex}, {'caption': regex}]}
+        else:
+            filter_obj = {'file_name': regex}
+
+    # MongoDB 'distinct' automatically fetches unique available values for this exact search!
+    langs = collection.distinct("languages", filter_obj)
+    quals = collection.distinct("qualities", filter_obj)
+    years = collection.distinct("year", filter_obj)
+    seasons = collection.distinct("season", filter_obj)
+
+    if SECOND_FILES_DATABASE_URL:
+        langs.extend(second_collection.distinct("languages", filter_obj))
+        quals.extend(second_collection.distinct("qualities", filter_obj))
+        years.extend(second_collection.distinct("year", filter_obj))
+        seasons.extend(second_collection.distinct("season", filter_obj))
+
+    # Remove duplicates and None values
+    return {
+        'languages': list(set([x for x in langs if x])),
+        'qualities': list(set([x for x in quals if x])),
+        'years': list(set([x for x in years if x])),
+        'seasons': list(set([x for x in seasons if x]))
+    }
 
 
 async def delete_files(query):
