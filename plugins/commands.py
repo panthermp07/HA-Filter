@@ -17,6 +17,16 @@ from info import OWNER_USERNAME, IS_PREMIUM, PRE_DAY_AMOUNT, RECEIPT_SEND_USERNA
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
+    # 🛡️ ANTI-SPAM LOCK: Prevent Double Clicks & Duplicate Requests
+    user_id = message.from_user.id
+    if not hasattr(temp, 'START_SPAM'):
+        temp.START_SPAM = {}
+        
+    last_time, last_text = temp.START_SPAM.get(user_id, (0, ""))
+    if (time_now() - last_time) < 2.5 and last_text == message.text:
+        return 
+    temp.START_SPAM[user_id] = (time_now(), message.text)
+
     try:
         await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     except:
@@ -806,9 +816,19 @@ async def prm_list(bot, message):
 @Client.on_message(filters.command('hyper_fsub') & filters.user(ADMINS))
 async def hyper_fsub(bot, message):
     try:
-        _, ids = message.text.split(' ', 1)
+        _, ids_str = message.text.split(' ', 1)
     except ValueError:
         return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/hyper_fsub -100xxxx</code>')
+        
+    # Deduplicate input IDs
+    input_ids = list(dict.fromkeys([i for i in ids_str.split() if i.strip()]))
+    clean_ids = " ".join(input_ids)
+
+    stg = await db.get_bot_sttgs()
+    current_fsub = stg.get('FORCE_SUB_CHANNELS', "")
+    
+    if set(current_fsub.split()) == set(input_ids):
+        return await message.reply('<b>✅ ᴛʜᴇsᴇ ʜʏᴘᴇʀ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴀʀᴇ ᴀʟʀᴇᴀᴅʏ sᴇᴛ!</b>')
         
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
@@ -816,8 +836,7 @@ async def hyper_fsub(bot, message):
     bot_id = getattr(me, "id", me)
     
     title = ""
-    for chat_id in ids.split(' '):
-        if not chat_id.strip(): continue
+    for chat_id in input_ids:
         try:
             chat_id = int(chat_id)
             bot_member = await bot.get_chat_member(chat_id, bot_id)
@@ -828,23 +847,29 @@ async def hyper_fsub(bot, message):
         except Exception as e:
             return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> <code>{e}</code>')
             
-    await db.update_bot_sttgs('FORCE_SUB_CHANNELS', ids)
+    await db.update_bot_sttgs('FORCE_SUB_CHANNELS', clean_ids)
     await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ꜰsᴜʙ:</b>\n{title}')
 
 @Client.on_message(filters.command('hyper_req_fsub') & filters.user(ADMINS))
 async def hyper_req_fsub(bot, message):
     try:
-        _, id = message.text.split(' ', 1)
+        _, id_str = message.text.split(' ', 1)
     except ValueError:
         return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/hyper_req_fsub -100xxxx</code>')
-        
+    
+    clean_id = id_str.strip()
+    
+    stg = await db.get_bot_sttgs()
+    if stg.get('REQUEST_FORCE_SUB_CHANNELS', "") == clean_id:
+        return await message.reply('<b>✅ ᴛʜɪs ʜʏᴘᴇʀ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ ɪs ᴀʟʀᴇᴀᴅʏ sᴇᴛ!</b>')
+
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
     me = await bot.get_me()
     bot_id = getattr(me, "id", me)
     
     try:
-        chat_id = int(id)
+        chat_id = int(clean_id)
         bot_member = await bot.get_chat_member(chat_id, bot_id)
         if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR:
             return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ!')
@@ -852,7 +877,7 @@ async def hyper_req_fsub(bot, message):
     except Exception as e:
         return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>')
         
-    await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', id)
+    await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', clean_id)
     await status_msg.edit(f'✅ <b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ʜʏᴘᴇʀ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ:</b>\n⠂{chat.title}')
 
 @Client.on_message(filters.command('set_fsub'))
@@ -864,15 +889,23 @@ async def set_grp_fsub(bot, message):
     
     if len(message.command) == 3:
         grp_id = int(message.command[1])
-        ids = message.command[2]
+        ids_str = message.command[2]
     elif len(message.command) == 2 and message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         grp_id = message.chat.id
-        ids = message.command[1]
+        ids_str = message.command[1]
     else:
         return await message.reply("💡 <b>ᴜsᴀɢᴇ ɪɴ ᴘᴍ:</b> <code>/set_fsub [GRP_ID] -100xxx</code>\n💡 <b>ᴜsᴀɢᴇ ɪɴ ɢʀᴏᴜᴘ:</b> <code>/set_fsub -100xxx</code>")
+    
     if user_id not in ADMINS:
         if not await is_check_admin(bot, grp_id, user_id):
             return await message.reply("<b>⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ: ʏᴏᴜ ᴍᴜsᴛ ʙᴇ ᴀɴ ᴀᴅᴍɪɴ ᴏʀ ᴏᴡɴᴇʀ ᴏꜰ ᴛʜɪs sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴛᴏ sᴇᴛ ꜰsᴜʙ ʀᴜʟᴇs ʜᴇʀᴇ!</b>")
+
+    input_ids = list(dict.fromkeys([i for i in ids_str.split() if i.strip()]))
+    clean_ids = " ".join(input_ids)
+
+    settings = await get_settings(grp_id)
+    if set(settings.get('fsub', "").split()) == set(input_ids):
+        return await message.reply('<b>✅ ᴛʜᴇsᴇ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴀʀᴇ ᴀʟʀᴇᴀᴅʏ sᴇᴛ ꜰᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ!</b>')
 
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
@@ -880,9 +913,7 @@ async def set_grp_fsub(bot, message):
     bot_id = getattr(me, "id", me)
 
     title = ""
-    for chat_id in ids.split(' '):
-        if not chat_id.strip():
-            continue
+    for chat_id in input_ids:
         try:
             chat_id = int(chat_id)
             bot_member = await bot.get_chat_member(chat_id, bot_id)
@@ -893,7 +924,7 @@ async def set_grp_fsub(bot, message):
         except Exception as e:
             return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> <code>{e}</code>')
             
-    await save_group_settings(grp_id, 'fsub', ids)
+    await save_group_settings(grp_id, 'fsub', clean_ids)
     await status_msg.edit(f'✅ <b>ɢʀᴏᴜᴘ ꜰsᴜʙ sᴇᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ:</b>\n{title}')
 
 
@@ -906,15 +937,22 @@ async def set_grp_req_fsub(bot, message):
     
     if len(message.command) == 3:
         grp_id = int(message.command[1])
-        id = message.command[2]
+        id_str = message.command[2]
     elif len(message.command) == 2 and message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         grp_id = message.chat.id
-        id = message.command[1]
+        id_str = message.command[1]
     else:
         return await message.reply("💡 <b>ᴜsᴀɢᴇ ɪɴ ᴘᴍ:</b> <code>/set_req_fsub [GRP_ID] -100xxx</code>\n💡 <b>ᴜsᴀɢᴇ ɪɴ ɢʀᴏᴜᴘ:</b> <code>/set_req_fsub -100xxx</code>")
+    
     if user_id not in ADMINS:
         if not await is_check_admin(bot, grp_id, user_id):
             return await message.reply("<b>⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ: ʏᴏᴜ ᴍᴜsᴛ ʙᴇ ᴀɴ ᴀᴅᴍɪɴ ᴏʀ ᴏᴡɴᴇʀ ᴏꜰ ᴛʜɪs sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴛᴏ sᴇᴛ ꜰsᴜʙ ʀᴜʟᴇs ʜᴇʀᴇ!</b>")
+
+    clean_id = id_str.strip()
+    
+    settings = await get_settings(grp_id)
+    if settings.get('req_fsub', "") == clean_id:
+        return await message.reply('<b>✅ ᴛʜɪs ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ ɪs ᴀʟʀᴇᴀᴅʏ sᴇᴛ ꜰᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ!</b>')
 
     status_msg = await message.reply("⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴇʀᴍɪssɪᴏɴs...</b>")
     
@@ -922,7 +960,7 @@ async def set_grp_req_fsub(bot, message):
     bot_id = getattr(me, "id", me)
 
     try:
-        chat_id = int(id)
+        chat_id = int(clean_id)
         bot_member = await bot.get_chat_member(chat_id, bot_id)
         if bot_member.status != enums.ChatMemberStatus.ADMINISTRATOR or not bot_member.privileges.can_invite_users:
             return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ ɪɴ <code>{chat_id}</code>:</b> ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴅᴍɪɴ ᴏʀ ᴄᴀɴɴᴏᴛ ɪɴᴠɪᴛᴇ ᴜsᴇʀs!')
@@ -930,7 +968,7 @@ async def set_grp_req_fsub(bot, message):
     except Exception as e:
         return await status_msg.edit(f'❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>')
         
-    await save_group_settings(grp_id, 'req_fsub', id)
+    await save_group_settings(grp_id, 'req_fsub', clean_id)
     await status_msg.edit(f'✅ <b>ɢʀᴏᴜᴘ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ sᴇᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ:</b>\n⠂{chat.title}')
 
 @Client.on_message(filters.command('showfsubs') & filters.user(ADMINS))
