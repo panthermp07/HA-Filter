@@ -54,12 +54,12 @@ def insert_dynamic_buttons(btn, settings, is_prem, shortlink_url, key, req, offs
     top_btn = []
     
     if req_lang:
-        top_btn.append(InlineKeyboardButton(f"🔒 {req_lang.title()}", callback_data=f"locked#Language#{req_lang.title()}"))
+        top_btn.append(InlineKeyboardButton(f"✅ {req_lang.title()}", callback_data=f"languages#{key}#{req}#{offset}"))
     elif available_tags and available_tags.get('languages'):
         top_btn.append(InlineKeyboardButton("📰 ʟᴀɴɢᴜᴀɢᴇs", callback_data=f"languages#{key}#{req}#{offset}"))
         
     if req_qual:
-        top_btn.append(InlineKeyboardButton(f"🔒 {req_qual.upper()}", callback_data=f"locked#Quality#{req_qual.upper()}"))
+        top_btn.append(InlineKeyboardButton(f"✅ {req_qual.upper()}", callback_data=f"quality#{key}#{req}#{offset}"))
     elif available_tags and available_tags.get('qualities'):
         top_btn.append(InlineKeyboardButton("🔍 ǫᴜᴀʟɪᴛʏ", callback_data=f"quality#{key}#{req}#{offset}"))
         
@@ -69,12 +69,12 @@ def insert_dynamic_buttons(btn, settings, is_prem, shortlink_url, key, req, offs
         
     mid_btn = []
     if req_year:
-        mid_btn.append(InlineKeyboardButton(f"🔒 {req_year}", callback_data=f"locked#Year#{req_year}"))
+        mid_btn.append(InlineKeyboardButton(f"✅ {req_year}", callback_data=f"years#{key}#{req}#{offset}"))
     elif available_tags and available_tags.get('years') and len(available_tags['years']) > 1:
         mid_btn.append(InlineKeyboardButton("📅 ʏᴇᴀʀs", callback_data=f"years#{key}#{req}#{offset}"))
 
     if req_season:
-        mid_btn.append(InlineKeyboardButton(f"🔒 {req_season}", callback_data=f"locked#Season#{req_season}"))
+        mid_btn.append(InlineKeyboardButton(f"✅ {req_season}", callback_data=f"seasons#{key}#{req}#{offset}"))
     elif available_tags and available_tags.get('seasons'):
         mid_btn.append(InlineKeyboardButton("🎭 sᴇᴀsᴏɴs", callback_data=f"seasons#{key}#{req}#{offset}"))
         
@@ -88,7 +88,20 @@ def insert_dynamic_buttons(btn, settings, is_prem, shortlink_url, key, req, offs
         btn.insert(idx, [InlineKeyboardButton("♻️ sᴇɴᴅ ᴀʟʟ ♻️", callback_data=f"send_all#{key}#{req}")])
     return btn
 
+def create_menu_buttons(items, tag_type, key, offset, req):
+    btn = [
+        [InlineKeyboardButton(text=str(items[i]).title() if tag_type != 'q' else str(items[i]).upper(), callback_data=f"ts#{tag_type}#{items[i]}#{key}#{offset}#{req}"),
+         InlineKeyboardButton(text=str(items[i+1]).title() if tag_type != 'q' else str(items[i+1]).upper(), callback_data=f"ts#{tag_type}#{items[i+1]}#{key}#{offset}#{req}")]
+        for i in range(0, len(items)-1, 2)
+    ]
+    if len(items) % 2 != 0:
+        btn.append([InlineKeyboardButton(text=str(items[-1]).title() if tag_type != 'q' else str(items[-1]).upper(), callback_data=f"ts#{tag_type}#{items[-1]}#{key}#{offset}#{req}")])
+    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
+    return btn
 
+# ====================================================================
+# 📝 SEARCH HANDLERS
+# ====================================================================
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_search(client, message):
     if message.text.startswith("/"):
@@ -106,12 +119,10 @@ async def pm_search(client, message):
     if await is_premium(message.from_user.id, client):
         s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
         await auto_filter(client, message, s)
-
     else:
         if stg and stg.get('PM_SEARCH'):
             s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
             await auto_filter(client, message, s)
-            
         else:
             clean_search, _, _, _, _ = parse_query(message.text)
             files, n_offset, total = await get_search_results(clean_search)
@@ -132,11 +143,9 @@ async def pm_search(client, message):
                     )
                 except Exception:
                     await message.reply_text(
-                        f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n'
-                        f'<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
+                        f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', 
                         reply_markup=reply_markup
                     )
-            
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def group_search(client, message):
@@ -147,21 +156,15 @@ async def group_search(client, message):
         if not user_id:
             await message.reply("<b>⚠️ ɪ ᴀᴍ ɴᴏᴛ ᴡᴏʀᴋɪɴɢ ꜰᴏʀ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴs!</b>")
             return
-        try:
-            await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
-        except:
-            pass
+        try: await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
+        except: pass
         if message.chat.id == SUPPORT_GROUP:
-            try:
-                await client.send_chat_action(chat_id, enums.ChatAction.TYPING)
-            except:
-                pass
+            try: await client.send_chat_action(chat_id, enums.ChatAction.TYPING)
+            except: pass
             clean_search, _, _, _, _ = parse_query(message.text)
             files, offset, total = await get_search_results(clean_search)
             if files:
-                btn = [[
-                    InlineKeyboardButton("Here", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)
-                ]]
+                btn = [[InlineKeyboardButton("Here", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)]]
                 await message.reply_text(f'<b>📊 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.</b>', reply_markup=InlineKeyboardMarkup(btn))
             return
             
@@ -232,12 +235,15 @@ async def next_page(bot, query):
     search = BUTTONS.get(key)
     cap = CAP.get(key)
     if not search:
-        await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
-        return
+        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
 
     clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
     files, n_offset, total = await get_search_results(clean_search, offset=offset, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-    available_tags = await get_available_tags(clean_search)
+    
+    available_tags = temp.FILES.get(f"tags_{key}")
+    if not available_tags:
+        available_tags = await get_available_tags(clean_search)
+        temp.FILES[f"tags_{key}"] = available_tags
 
     try:
         n_offset = int(n_offset)
@@ -262,88 +268,84 @@ async def next_page(bot, query):
     sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
     btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
 
-    if 0 < offset <= MAX_BTN:
-        off_set = 0
-    elif offset == 0:
-        off_set = None
-    else:
-        off_set = offset - MAX_BTN
+    if 0 < offset <= MAX_BTN: b_offset = 0
+    elif offset == 0: b_offset = None
+    else: b_offset = offset - MAX_BTN
         
     if n_offset == 0:
-        btn.append(
-            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}", style=enums.ButtonStyle.PRIMARY),
-             InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")]
-        )
-    elif off_set is None:
-        btn.append(
-            [InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")])
+    elif b_offset is None:
+        btn.append([InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
     else:
-        btn.append(
-            [
-                InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}", style=enums.ButtonStyle.PRIMARY),
-                InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-                InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)
-            ]
-        )
-    #btn.append(
-    #    [InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")]
-    #)
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
+                    
     await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
 
-@Client.on_callback_query(filters.regex(r"^languages"))
-async def languages_(client: Client, query: CallbackQuery):
-    _, key, req, offset = query.data.split("#")
+
+# ====================================================================
+# 🎛️ DYNAMIC FILTER MENUS (Shows ONLY Available Tags)
+# ====================================================================
+@Client.on_callback_query(filters.regex(r"^(languages|quality|years|seasons)"))
+async def dynamic_menus(client: Client, query: CallbackQuery):
+    action, key, req, offset = query.data.split("#")
     if int(req) != query.from_user.id:
         return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    btn = [
-        [InlineKeyboardButton(text=LANGUAGES[i].title(), callback_data=f"lang_search#{LANGUAGES[i]}#{key}#{offset}#{req}"),
-         InlineKeyboardButton(text=LANGUAGES[i+1].title(), callback_data=f"lang_search#{LANGUAGES[i+1]}#{key}#{offset}#{req}")]
-        for i in range(0, len(LANGUAGES)-1, 2)
-    ]
-    if len(LANGUAGES) % 2 != 0:
-        btn.append([InlineKeyboardButton(text=LANGUAGES[-1].title(), callback_data=f"lang_search#{LANGUAGES[-1]}#{key}#{offset}#{req}")])
         
-    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])  
-    await query.message.edit_text("<b>ɪɴ ᴡʜɪᴄʜ ʟᴀɴɢᴜᴀɢᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>", link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn))
+    available_tags = temp.FILES.get(f"tags_{key}", {})
+    
+    if action == "languages":
+        items = available_tags.get('languages', LANGUAGES)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʟᴀɴɢᴜᴀɢᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'l'
+    elif action == "quality":
+        items = available_tags.get('qualities', QUALITY)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ǫᴜᴀʟɪᴛʏ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'q'
+    elif action == "years":
+        items = sorted(available_tags.get('years', []), reverse=True)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʏᴇᴀʀ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'y'
+    elif action == "seasons":
+        items = sorted(available_tags.get('seasons', []))
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ sᴇᴀsᴏɴ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 's'
 
-@Client.on_callback_query(filters.regex(r"^quality"))
-async def quality(client: Client, query: CallbackQuery):
-    _, key, req, offset = query.data.split("#")
-    if int(req) != query.from_user.id:
-        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    btn = [
-        [InlineKeyboardButton(text=QUALITY[i].upper(), callback_data=f"qual_search#{QUALITY[i]}#{key}#{offset}#{req}"),
-         InlineKeyboardButton(text=QUALITY[i+1].upper(), callback_data=f"qual_search#{QUALITY[i+1]}#{key}#{offset}#{req}")]
-        for i in range(0, len(QUALITY)-1, 2)
-    ]
-    if len(QUALITY) % 2 != 0:
-        btn.append([InlineKeyboardButton(text=QUALITY[-1].upper(), callback_data=f"qual_search#{QUALITY[-1]}#{key}#{offset}#{req}")])
-        
-    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])  
-    await query.message.edit_text("<b>ɪɴ ᴡʜɪᴄʜ ǫᴜᴀʟɪᴛʏ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>", link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn))
+    if not items:
+        return await query.answer("sᴏʀʀʏ ɴᴏ ᴏᴘᴛɪᴏɴs ᴀᴠᴀɪʟᴀʙʟᴇ!", show_alert=True)
 
-@Client.on_callback_query(filters.regex(r"^lang_search"))
-async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
-    _, lang, key, offset, req = query.data.split("#")
+    btn = create_menu_buttons(items, tag_type, key, offset, req)
+    await query.message.edit_text(msg_text, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn))
+
+# ====================================================================
+# ⚡ THE GENERIC ULTRA-FAST TAG SEARCH HANDLER
+# ====================================================================
+@Client.on_callback_query(filters.regex(r"^ts#"))
+async def generic_tag_search(client: Client, query: CallbackQuery):
+    _, tag_type, val, key, offset, req = query.data.split("#")
     if int(req) != query.from_user.id:
         return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
 
     search = BUTTONS.get(key)
     cap = CAP.get(key)
     if not search:
-        await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
-        return 
+        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
 
-    clean_search, _, req_qual, req_year, req_season = parse_query(search)
-    req_lang = lang # Override parsed lang with user selection
+    clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
     
-    files, l_offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-    available_tags = await get_available_tags(clean_search)
+    if tag_type == 'l': req_lang = val
+    elif tag_type == 'q': req_qual = val
+    elif tag_type == 'y': req_year = val
+    elif tag_type == 's': req_season = val
+    
+    files, t_offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
+    available_tags = temp.FILES.get(f"tags_{key}", {})
     
     if not files:
-        await query.answer(f"sᴏʀʀʏ '{lang.title()}' ʟᴀɴɢᴜᴀɢᴇ ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
-        return
+        return await query.answer(f"sᴏʀʀʏ '{val.title()}' ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
         
     temp.FILES[key] = files
     settings = await get_settings(query.message.chat.id)
@@ -359,49 +361,50 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
         
     is_prem = await is_premium(query.from_user.id, client)
     sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
+    
     btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
     
-    if l_offset != "":
-        btn.append(
-            [InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"lang_next#{req}#{key}#{lang}#{l_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
+    if t_offset != "":
+        btn.append([InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"tn#{tag_type}#{val}#{t_offset}#{offset}#{req}#{key}", style=enums.ButtonStyle.PRIMARY)])
     btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
     await query.message.edit_text(cap + files_link + del_msg, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
 
-@Client.on_callback_query(filters.regex(r"^lang_next"))
-async def lang_next_page(bot, query):
-    ident, req, key, lang, l_offset, offset = query.data.split("#")
+
+@Client.on_callback_query(filters.regex(r"^tn#"))
+async def generic_tag_next_page(bot, query):
+    _, tag_type, val, t_offset, offset, req, key = query.data.split("#")
     if int(req) != query.from_user.id:
         return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    try:
-        l_offset = int(l_offset)
-    except:
-        l_offset = 0
+    try: t_offset = int(t_offset)
+    except: t_offset = 0
+    
     search = BUTTONS.get(key)
     cap = CAP.get(key)
     settings = await get_settings(query.message.chat.id)
     del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
     if not search:
-        await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
-        return
+        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
         
-    clean_search, _, req_qual, req_year, req_season = parse_query(search)
-    req_lang = lang
-    files, n_offset, total = await get_search_results(clean_search, offset=l_offset, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-    available_tags = await get_available_tags(clean_search)
+    clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
     
-    if not files:
-        return
+    if tag_type == 'l': req_lang = val
+    elif tag_type == 'q': req_qual = val
+    elif tag_type == 'y': req_year = val
+    elif tag_type == 's': req_season = val
+    
+    files, n_offset, total = await get_search_results(clean_search, offset=t_offset, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
+    available_tags = temp.FILES.get(f"tags_{key}", {})
+    
+    if not files: return
     temp.FILES[key] = files
-    try:
-        n_offset = int(n_offset)
-    except:
-        n_offset = 0
+    try: n_offset = int(n_offset)
+    except: n_offset = 0
+    
     files_link = ''
     if settings['links']:
         btn = []
-        for file_num, file in enumerate(files, start=l_offset+1):
+        for file_num, file in enumerate(files, start=t_offset+1):
             files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
     else:
         btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f'file#{file["_id"]}')] for file in files]
@@ -410,140 +413,28 @@ async def lang_next_page(bot, query):
     sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
     btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
     
-    if 0 < l_offset <= MAX_BTN:
-        b_offset = 0
-    elif l_offset == 0:
-        b_offset = None
-    else:
-        b_offset = l_offset - MAX_BTN
+    if 0 < t_offset <= MAX_BTN: b_offset = 0
+    elif t_offset == 0: b_offset = None
+    else: b_offset = t_offset - MAX_BTN
+        
     if n_offset == 0:
-        btn.append(
-            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"lang_next#{req}#{key}#{lang}#{b_offset}#{offset}", style=enums.ButtonStyle.PRIMARY),
-             InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"lang_next#{req}#{key}#{lang}#{n_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"tn#{tag_type}#{val}#{b_offset}#{offset}#{req}#{key}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(t_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")])
     elif b_offset is None:
-        btn.append(
-            [InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"lang_next#{req}#{key}#{lang}#{n_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
+        btn.append([InlineKeyboardButton(f"{math.ceil(int(t_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"tn#{tag_type}#{val}#{n_offset}#{offset}#{req}#{key}", style=enums.ButtonStyle.PRIMARY)])
     else:
-        btn.append(
-            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"lang_next#{req}#{key}#{lang}#{b_offset}#{offset}", style=enums.ButtonStyle.PRIMARY),
-             InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"lang_next#{req}#{key}#{lang}#{n_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"tn#{tag_type}#{val}#{b_offset}#{offset}#{req}#{key}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(t_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"tn#{tag_type}#{val}#{n_offset}#{offset}#{req}#{key}", style=enums.ButtonStyle.PRIMARY)])
+                    
     btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
     await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
 
-@Client.on_callback_query(filters.regex(r"^qual_search"))
-async def quality_search(client: Client, query: CallbackQuery):
-    _, qual, key, offset, req = query.data.split("#")
-    if int(req) != query.from_user.id:
-        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    search = BUTTONS.get(key)
-    cap = CAP.get(key)
-    if not search:
-        await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
-        return
-        
-    clean_search, req_lang, _, req_year, req_season = parse_query(search)
-    req_qual = qual
-    files, l_offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-    available_tags = await get_available_tags(clean_search)
-    
-    if not files:
-        await query.answer(f"sᴏʀʀʏ '{qual.upper()}' ǫᴜᴀʟɪᴛʏ ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
-        return
-    temp.FILES[key] = files
-    settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
-    files_link = ''
-    if settings['links']:
-        btn = []
-        for file_num, file in enumerate(files, start=1):
-            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
-    else:
-        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f'file#{file["_id"]}')] for file in files]
-        
-    is_prem = await is_premium(query.from_user.id, client)
-    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
-    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
-    
-    if l_offset != "":
-        btn.append(
-            [InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"qual_next#{req}#{key}#{qual}#{l_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
-    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
-    await query.message.edit_text(cap + files_link + del_msg, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
 
-@Client.on_callback_query(filters.regex(r"^qual_next"))
-async def quality_next_page(bot, query):
-    ident, req, key, qual, l_offset, offset = query.data.split("#")
-    if int(req) != query.from_user.id:
-        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    try:
-        l_offset = int(l_offset)
-    except:
-        l_offset = 0
-    search = BUTTONS.get(key)
-    cap = CAP.get(key)
-    settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
-    if not search:
-        await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
-        return
-        
-    clean_search, req_lang, _, req_year, req_season = parse_query(search)
-    req_qual = qual
-    files, n_offset, total = await get_search_results(clean_search, offset=l_offset, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-    available_tags = await get_available_tags(clean_search)
-    
-    if not files:
-        return
-    temp.FILES[key] = files
-    try:
-        n_offset = int(n_offset)
-    except:
-        n_offset = 0
-    files_link = ''
-    if settings['links']:
-        btn = []
-        for file_num, file in enumerate(files, start=l_offset+1):
-            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
-    else:
-        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f'file#{file["_id"]}')] for file in files]
-        
-    is_prem = await is_premium(query.from_user.id, bot)
-    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
-    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
-    
-    if 0 < l_offset <= MAX_BTN:
-        b_offset = 0
-    elif l_offset == 0:
-        b_offset = None
-    else:
-        b_offset = l_offset - MAX_BTN
-    if n_offset == 0:
-        btn.append(
-            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"qual_next#{req}#{key}#{qual}#{b_offset}#{offset}", style=enums.ButtonStyle.PRIMARY),
-             InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")]
-        )
-    elif b_offset is None:
-        btn.append(
-            [InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"qual_next#{req}#{key}#{qual}#{n_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
-    else:
-        btn.append(
-            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"qual_next#{req}#{key}#{qual}#{b_offset}#{offset}", style=enums.ButtonStyle.PRIMARY),
-             InlineKeyboardButton(f"{math.ceil(int(l_offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"qual_next#{req}#{key}#{qual}#{n_offset}#{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
-    btn.append([InlineKeyboardButton(text="⪻ ʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴘᴀɢᴇ", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
-    await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
-
+# ====================================================================
+# 🚀 CORE FILTER & SPOLL LOGIC
+# ====================================================================
 @Client.on_callback_query(filters.regex(r"^spolling"))
 async def advantage_spoll_choker(bot, query):
     data = query.data.split('#')
@@ -565,36 +456,148 @@ async def advantage_spoll_choker(bot, query):
     
     if files:
         k = (search, files, offset, total_results)
-        if not query.message:
-            return await query.answer("ᴍᴇssᴀɢᴇ ᴇxᴘɪʀᴇᴅ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
+        if not query.message: return await query.answer("ᴍᴇssᴀɢᴇ ᴇxᴘɪʀᴇᴅ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
         await auto_filter(bot, query, s, spoll=k)
     else:
-        k = await query.message.edit(
-            text=f"<b>👋 ʜᴇʟʟᴏ {query.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ɪɴ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ. 😔</b>",
-            link_preview_options=LinkPreviewOptions(is_disabled=True)
-        )
+        k = await query.message.edit(text=f"<b>👋 ʜᴇʟʟᴏ {query.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ɪɴ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ. 😔</b>", link_preview_options=LinkPreviewOptions(is_disabled=True))
         asyncio.create_task(bot.send_message(LOG_CHANNEL, f"<b>#No_Result</b>\n★ <b>Requester:</b> {query.from_user.mention}\n★ <b>Content:</b> {search}"))
-        
         await asyncio.sleep(60)
         await k.delete()
+        try: await query.message.reply_to_message.delete()
+        except: pass
+
+async def auto_filter(client, msg, s, spoll=False):
+    if not spoll:
+        message = msg
+        settings = await get_settings(message.chat.id)
+        search = message.text
+        clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
+        files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
+        if not files:
+            if settings["spell_check"]: return await advantage_spell_chok(message, s)
+            else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
+    else:
+        settings = await get_settings(msg.message.chat.id)
+        message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
+        search, files, offset, total_results = spoll
+        clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
+
+    if not message or message is None:
+        if isinstance(msg, CallbackQuery): await msg.answer("ᴏʟᴅ ᴍᴇssᴀɢᴇ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
+        return await s.edit("<b>❌ ᴇʀʀᴏʀ: ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ.</b>")
+
+    req = message.from_user.id if message.from_user else 0
+    try: key = f"{message.chat.id}-{message.id}"
+    except AttributeError: key = f"{msg.message.chat.id}-{msg.message.id}"
+ 
+    temp.FILES[key] = files
+    BUTTONS[key] = search
+    
+    # ⚡ EXTREME SPEED CACHE: Only fetch once per search!
+    available_tags = temp.FILES.get(f"tags_{key}")
+    if not available_tags:
+        available_tags = await get_available_tags(clean_search)
+        temp.FILES[f"tags_{key}"] = available_tags
+
+    files_link = ""
+    if settings['links']:
+        btn = []
+        for file_num, file in enumerate(files, start=1):
+            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
+    else:
+        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f'file#{file["_id"]}')] for file in files]   
+    
+    is_prem = await is_premium(message.from_user.id, client)
+    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}', req, message.chat.id) if settings['shortlink'] else ""
+    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
+
+    if offset != "":
+        btn.append([InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)])
+
+    imdb = await get_poster(clean_search, file=(files[0])['file_name']) if settings["imdb"] else None
+    TEMPLATE = settings['template']
+    if imdb:
+        cap = TEMPLATE.format(
+            query=clean_search, title=imdb['title'], kind=imdb['kind'], votes=imdb['votes'],
+            tmdb_id=imdb["tmdb_id"], runtime=imdb["runtime"], release_date=imdb['release_date'],
+            year=imdb['year'], genres=imdb['genres'], poster=imdb['poster'], plot=imdb['plot'],
+            rating=imdb['rating'], url=imdb['url'], languages=imdb['languages'], countries=imdb['countries'], **locals()
+        )
+    else: cap = f"<b>💭 ʜᴇʏ {message.from_user.mention},\n♻️ ʜᴇʀᴇ ɪ ꜰᴏᴜɴᴅ ꜰᴏʀ ʏᴏᴜʀ sᴇᴀʀᴄʜ {search}...</b>"
+    CAP[key] = cap
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
+    
+    if imdb and imdb.get('poster'):
+        await s.delete()
         try:
-            await query.message.reply_to_message.delete()
-        except:
-            pass
+            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
+            if settings["auto_delete"]:
+                await asyncio.sleep(DELETE_TIME)
+                await k.delete()
+                try: await message.delete()
+                except: pass
+        except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
+            poster = imdb.get('poster').replace('.jpg', "._V1_UX360.jpg")
+            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
+            if settings["auto_delete"]:
+                await asyncio.sleep(DELETE_TIME)
+                await k.delete()
+                try: await message.delete()
+                except: pass
+        except Exception as e:
+            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, quote=True)
+            if settings["auto_delete"]:
+                await asyncio.sleep(DELETE_TIME)
+                await k.delete()
+                try: await message.delete()
+                except: pass
+    else:
+        k = await s.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
+        if settings["auto_delete"]:
+            await asyncio.sleep(DELETE_TIME)
+            await k.delete()
+            try: await message.delete()
+            except: pass
+
+async def advantage_spell_chok(message, s):
+    search = message.text
+    google_search = search.replace(" ", "+")
+    user_id = message.from_user.id if message.from_user else 0
+    btn = [[InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs", callback_data='instructions'), InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ", url=f"https://www.google.com/search?q={google_search}")],[InlineKeyboardButton("🛸 ʀᴇǫᴜᴇsᴛ ᴍᴏᴠɪᴇ", callback_data=f"request_msg_{user_id}")]]
+
+    try: movies = await get_poster(search, bulk=True)
+    except: movies = None
+        
+    if not movies:
+        all_titles = await db.get_all_movie_titles()
+        matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
+        if matches:
+            db_btns = [[InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")] for match in matches]
+            db_btns.extend(btn)
+            return await s.edit_text(text=f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ᴅɪʀᴇᴄᴛʟʏ.\nᴅɪᴅ ʏᴏᴜ ᴍᴇᴀɴ ᴏɴᴇ ᴏꜰ ᴛʜᴇsᴇ ꜰʀᴏᴍ ᴍʏ ʟɪʙʀᴀʀʏ? 👇</b>", reply_markup=InlineKeyboardMarkup(db_btns), link_preview_options=LinkPreviewOptions(is_disabled=True))
+
+        n = await s.edit_text(text=script.NOT_FILE_TXT.format(message.from_user.mention, search), reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True))
+        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"<b>#No_Result</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Search:</b> {search}"))
+        await asyncio.sleep(60)
+        await n.delete()
+        try: await message.delete()
+        except: pass
+        return
+
+    buttons = [[InlineKeyboardButton(text=f"🎬 {movie.get('title')}", callback_data=f"spolling#{movie['id']}#{user_id}")] for movie in movies]
+    buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
+    suggestion_msg = await s.edit_text(text=f"<b>👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\nɪ ꜰᴏᴜɴᴅ sᴏᴍᴇ sɪᴍɪʟᴀʀ ᴛɪᴛʟᴇs. sᴇʟᴇᴄᴛ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ: 👇</b>", reply_markup=InlineKeyboardMarkup(buttons), link_preview_options=LinkPreviewOptions(is_disabled=True))
+    await asyncio.sleep(300)
+    try:
+        await suggestion_msg.delete()
+        await message.delete()
+    except: pass
+
 
 # ====================================================================
-# 🛡️ THE NEW LOCK NOTIFICATION ALERT
+# 🗃️ BAKI SAARI OLD CALLBACKS (Unchanged)
 # ====================================================================
-@Client.on_callback_query(filters.regex(r"^locked#"))
-async def locked_filter_cb(client, query):
-    _, filter_type, filter_val = query.data.split("#")
-    msg = f"✅ {filter_type} is locked to {filter_val} by your search query!"
-    await query.answer(msg, show_alert=True)
-
-@Client.on_callback_query(filters.regex(r"^(years|seasons)#"))
-async def coming_soon_cb(client, query):
-    await query.answer("🚧 This selection menu is coming soon! For now, please type it in your search (e.g. S01).", show_alert=True)
-
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
@@ -611,8 +614,15 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.reply_to_message.delete()
         except:
             pass
+            
+    elif query.data == "confirm_delete_all":
+        if query.from_user.id not in ADMINS:
+            return await query.answer("⚠️ ᴏᴡɴᴇʀs ᴏɴʟʏ!", show_alert=True)
+        await query.message.edit("<b>🗑 ᴡɪᴘɪɴɢ ᴅᴀᴛᴀʙᴀsᴇ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
+        deleted_count = await delete_all_files()
+        await query.message.edit(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴡɪᴘᴇᴅ ᴇɴᴛɪʀᴇ ᴅᴀᴛᴀʙᴀsᴇ!\n\n🗑 ᴛᴏᴛᴀʟ ꜰɪʟᴇs ʀᴇᴍᴏᴠᴇᴅ: <code>{deleted_count}</code>\n🚀 ɴᴏᴡ ʏᴏᴜ ᴄᴀɴ sᴛᴀʀᴛ ᴀ ꜰʀᴇsʜ ɪɴᴅᴇxɪɴɢ.</b>")
   
-    if query.data.startswith("file"):
+    elif query.data.startswith("file"):
         ident, file_id = query.data.split("#")
         try:
             user = query.message.reply_to_message.from_user.id
@@ -732,7 +742,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('🧑‍💻 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
             InlineKeyboardButton('👨‍🚒 ʜᴇʟᴘ', callback_data='help'),
-            #InlineKeyboardButton('🔎 ɪɴʟɪɴᴇ', switch_inline_query_current_chat=''),
             InlineKeyboardButton('📚 ᴀʙᴏᴜᴛ', callback_data='about')
         ],[
             InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
@@ -1293,197 +1302,3 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴋɪᴄᴋᴇᴅ ᴅᴇʟᴇᴛᴇᴅ <code>{len(users_id)}</code> ᴀᴄᴄᴏᴜɴᴛs.</b>")
         else:
             await query.message.reply('<b>⚠️ ɴᴏ ᴅᴇʟᴇᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛs ᴛᴏ ᴋɪᴄᴋ.</b>')
-
-
-async def auto_filter(client, msg, s, spoll=False):
-    if not spoll:
-        message = msg
-        settings = await get_settings(message.chat.id)
-        search = message.text
-        clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
-        files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
-        if not files:
-            if settings["spell_check"]:
-                return await advantage_spell_chok(message, s)
-            else:
-                return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
-    else:
-        settings = await get_settings(msg.message.chat.id)
-        message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
-        search, files, offset, total_results = spoll
-        clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
-
-    if not message or message is None:
-        if isinstance(msg, CallbackQuery):
-            await msg.answer("ᴏʟᴅ ᴍᴇssᴀɢᴇ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
-        return await s.edit("<b>❌ ᴇʀʀᴏʀ: ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ.</b>")
-
-    req = message.from_user.id if message.from_user else 0
-    
-    try:
-        chat_id = message.chat.id
-        msg_id = message.id
-        key = f"{chat_id}-{msg_id}"
-    except AttributeError:
-        key = f"{msg.message.chat.id}-{msg.message.id}"
- 
-    temp.FILES[key] = files
-    BUTTONS[key] = search # Saved original query for paginations to remember the tags!
-    
-    # Check DB for exactly what is available for this title
-    available_tags = await get_available_tags(clean_search)
-
-    files_link = ""
-    if settings['links']:
-        btn = []
-        for file_num, file in enumerate(files, start=1):
-            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
-    else:
-        btn = [[
-            InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f'file#{file["_id"]}')
-        ]
-            for file in files
-        ]   
-    
-    is_prem = await is_premium(message.from_user.id, client)
-    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{message.chat.id}_{key}', req, message.chat.id) if settings['shortlink'] else ""
-    
-    # 🎛️ Inject Smart Dynamic Buttons!
-    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, req_lang, req_qual, req_year, req_season, available_tags)
-
-    if offset != "":
-        btn.append(
-            [InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
-             InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{offset}", style=enums.ButtonStyle.PRIMARY)]
-        )
-
-    imdb = await get_poster(clean_search, file=(files[0])['file_name']) if settings["imdb"] else None
-    TEMPLATE = settings['template']
-    if imdb:
-        cap = TEMPLATE.format(
-            query=clean_search,
-            title=imdb['title'],
-            kind=imdb['kind'],
-            votes=imdb['votes'],
-            tmdb_id=imdb["tmdb_id"],
-            runtime=imdb["runtime"],
-            release_date=imdb['release_date'],
-            year=imdb['year'],
-            genres=imdb['genres'],
-            poster=imdb['poster'],
-            plot=imdb['plot'],
-            rating=imdb['rating'],
-            url=imdb['url'],
-            languages=imdb['languages'],
-            countries=imdb['countries'],
-            **locals()
-        )
-    else:
-        cap = f"<b>💭 ʜᴇʏ {message.from_user.mention},\n♻️ ʜᴇʀᴇ ɪ ꜰᴏᴜɴᴅ ꜰᴏʀ ʏᴏᴜʀ sᴇᴀʀᴄʜ {search}...</b>"
-    CAP[key] = cap
-    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
-    
-    if imdb and imdb.get('poster'):
-        await s.delete()
-        try:
-            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
-            if settings["auto_delete"]:
-                await asyncio.sleep(DELETE_TIME)
-                await k.delete()
-                try:
-                    await message.delete()
-                except:
-                    pass
-        except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
-            pic = imdb.get('poster')
-            poster = pic.replace('.jpg', "._V1_UX360.jpg")
-            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
-            if settings["auto_delete"]:
-                await asyncio.sleep(DELETE_TIME)
-                await k.delete()
-                try:
-                    await message.delete()
-                except:
-                    pass
-        except Exception as e:
-            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, quote=True)
-            if settings["auto_delete"]:
-                await asyncio.sleep(DELETE_TIME)
-                await k.delete()
-                try:
-                    await message.delete()
-                except:
-                    pass
-    else:
-        k = await s.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
-        if settings["auto_delete"]:
-            await asyncio.sleep(DELETE_TIME)
-            await k.delete()
-            try:
-                await message.delete()
-            except:
-                pass
-
-async def advantage_spell_chok(message, s):
-    search = message.text
-    google_search = search.replace(" ", "+")
-    user_id = message.from_user.id if message.from_user else 0
-    
-    btn = [[
-        InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs", callback_data='instructions'),
-        InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ", url=f"https://www.google.com/search?q={google_search}")
-    ],[
-        InlineKeyboardButton("🛸 ʀᴇǫᴜᴇsᴛ ᴍᴏᴠɪᴇ", callback_data=f"request_msg_{user_id}")
-    ]]
-
-    try:
-        movies = await get_poster(search, bulk=True)
-    except:
-        movies = None
-        
-    if not movies:
-        all_titles = await db.get_all_movie_titles()
-        matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
-        
-        if matches:
-            db_btns = [[
-                InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")
-            ] for match in matches]
-            db_btns.extend(btn)
-            
-            return await s.edit_text(
-                text=f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ᴅɪʀᴇᴄᴛʟʏ.\nᴅɪᴅ ʏᴏᴜ ᴍᴇᴀɴ ᴏɴᴇ ᴏꜰ ᴛʜᴇsᴇ ꜰʀᴏᴍ ᴍʏ ʟɪʙʀᴀʀʏ? 👇</b>",
-                reply_markup=InlineKeyboardMarkup(db_btns),
-                link_preview_options=LinkPreviewOptions(is_disabled=True)
-            )
-
-        n = await s.edit_text(
-            text=script.NOT_FILE_TXT.format(message.from_user.mention, search), 
-            reply_markup=InlineKeyboardMarkup(btn),
-            link_preview_options=LinkPreviewOptions(is_disabled=True)
-        )
-        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"<b>#No_Result</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Search:</b> {search}"))
-        await asyncio.sleep(60)
-        await n.delete()
-        try: await message.delete()
-        except: pass
-        return
-
-    buttons = [[
-        InlineKeyboardButton(text=f"🎬 {movie.get('title')}", callback_data=f"spolling#{movie['id']}#{user_id}")
-    ] for movie in movies]
-    
-    buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
-    
-    suggestion_msg = await s.edit_text(
-        text=f"<b>👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\nɪ ꜰᴏᴜɴᴅ sᴏᴍᴇ sɪᴍɪʟᴀʀ ᴛɪᴛʟᴇs. sᴇʟᴇᴄᴛ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ: 👇</b>",
-        reply_markup=InlineKeyboardMarkup(buttons),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
-    )
-    
-    await asyncio.sleep(300)
-    try:
-        await suggestion_msg.delete()
-        await message.delete()
-    except:
-        pass
