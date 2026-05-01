@@ -12,12 +12,11 @@ from pyrogram.types import WebAppInfo, PreCheckoutQuery, Message, LabeledPrice, 
 from pyrogram import Client, filters, enums
 from utils import is_premium, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_readable_time, get_poster, temp, get_settings, save_group_settings
 from database.users_chats_db import db
-from database.ia_filterdb import get_search_results, delete_files, db_count_documents, second_db_count_documents, get_available_tags
+from database.ia_filterdb import get_search_results, delete_files, delete_all_files, db_count_documents, second_db_count_documents, get_available_tags
 from plugins.commands import get_grp_stg
 
 BUTTONS = {}
 CAP = {}
-
 
 def parse_query(search_text):
     raw_search = search_text.lower()
@@ -188,9 +187,154 @@ async def group_search(client, message):
         try: await message.delete()
         except: pass
 
+@Client.on_callback_query(filters.regex(r"^next"))
+async def next_page(bot, query):
+    ident, req, key, offset = query.data.split("_")
+    if int(req) not in [query.from_user.id, 0]:
+        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
+    try: offset = int(offset)
+    except: offset = 0
+    
+    search = BUTTONS.get(key)
+    cap = CAP.get(key)
+    if not search: return await query.answer(f"⚠️ Request Expired!", show_alert=True)
+
+    tags = get_tags(search, key)
+    files, n_offset, total = await get_search_results(tags['clean_search'], offset=offset, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
+    
+    available_tags = temp.FILES.get(f"tags_{key}")
+    if not available_tags:
+        available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
+        temp.FILES[f"tags_{key}"] = available_tags
+    
+    if not files: return
+    temp.FILES[key] = files
+    try: n_offset = int(n_offset)
+    except: n_offset = 0
+
+    settings = await get_settings(query.message.chat.id)
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
+    
+    files_link = ''
+    if settings['links']:
+        for file_num, file in enumerate(files, start=offset+1):
+            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
+        btn = []
+    else:
+        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f"file#{file['_id']}")] for file in files]
+        
+    is_prem = await is_premium(query.from_user.id, bot)
+    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
+    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, tags, available_tags)
+
+    if 0 < offset <= MAX_BTN: b_offset = 0
+    elif offset == 0: b_offset = None
+    else: b_offset = offset - MAX_BTN
+        
+    if n_offset == 0:
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")])
+    elif b_offset is None:
+        btn.append([InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
+    else:
+        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
+                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
+                    
+    await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
+
+
 # ====================================================================
-# 🚀 CORE FILTER LOGIC
+@Client.on_callback_query(filters.regex(r"^(languages|quality|years|seasons)#"))
+async def dynamic_menus(client: Client, query: CallbackQuery):
+    action, key, req, offset = query.data.split("#")
+    if int(req) != query.from_user.id:
+        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
+        
+    available_tags = temp.FILES.get(f"tags_{key}", {})
+    
+    if action == "languages":
+        items = available_tags.get('languages', LANGUAGES)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʟᴀɴɢᴜᴀɢᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'l'
+    elif action == "quality":
+        items = available_tags.get('qualities', QUALITY)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ǫᴜᴀʟɪᴛʏ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'q'
+    elif action == "years":
+        items = sorted(available_tags.get('years', []), reverse=True)
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʏᴇᴀʀ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 'y'
+    elif action == "seasons":
+        items = sorted(available_tags.get('seasons', []))
+        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ sᴇᴀsᴏɴ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
+        tag_type = 's'
+
+    if not items:
+        return await query.answer("sᴏʀʀʏ, ɴᴏ ᴏᴘᴛɪᴏɴs ᴀᴠᴀɪʟᴀʙʟᴇ!", show_alert=True)
+
+    btn = create_menu_buttons(items, tag_type, key, offset, req)
+    await query.message.edit_text(msg_text, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn))
+
+@Client.on_callback_query(filters.regex(r"^ts#"))
+async def generic_tag_search(client: Client, query: CallbackQuery):
+    _, tag_type, val, key, offset, req = query.data.split("#")
+    if int(req) != query.from_user.id: return await query.answer("⚠️ Not for you!", show_alert=True)
+
+    search = BUTTONS.get(key)
+    cap = CAP.get(key)
+    if not search: return await query.answer("⚠️ Request Expired!", show_alert=True)
+
+    # State Management for Soft Tags
+    st = temp.FILES.get(f"st_{key}", {})
+    if val == "ALL":
+        if tag_type in st: del st[tag_type] # Clear the filter
+    else:
+        st[tag_type] = val
+    temp.FILES[f"st_{key}"] = st
+    
+    tags = get_tags(search, key)
+    files, t_offset, total_results = await get_search_results(tags['clean_search'], offset=0, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
+    
+    # ⚡ RE-FETCH CACHE BASED ON NEW FILTER SELECTION ⚡
+    available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
+    temp.FILES[f"tags_{key}"] = available_tags
+    
+    if not files: return await query.answer(f"sᴏʀʀʏ '{val.title()}' ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
+        
+    temp.FILES[key] = files
+    settings = await get_settings(query.message.chat.id)
+    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
+    files_link = ''
+
+    if settings['links']:
+        btn = []
+        for file_num, file in enumerate(files, start=1):
+            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
+    else:
+        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f"file#{file['_id']}")] for file in files]
+        
+    is_prem = await is_premium(query.from_user.id, client)
+    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
+    
+    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, tags, available_tags)
+    
+    if t_offset != "":
+        btn.append([InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
+                    InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{t_offset}", style=enums.ButtonStyle.PRIMARY)])
+    
+    await query.message.edit_text(cap + files_link + del_msg, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
+
+
 # ====================================================================
+# 🚀 CORE FILTER & SPOLL LOGIC
+# ====================================================================
+@Client.on_callback_query(filters.regex(r"^locked#"))
+async def locked_filter_cb(client, query):
+    _, filter_type, filter_val = query.data.split("#")
+    await query.answer(f"🔒 {filter_type} is explicitly locked to {filter_val} by your search query!", show_alert=True)
+
 @Client.on_callback_query(filters.regex(r"^spolling"))
 async def advantage_spoll_choker(bot, query):
     data = query.data.split('#')
@@ -245,11 +389,12 @@ async def auto_filter(client, msg, s, spoll=False):
     try: key = f"{message.chat.id}-{message.id}"
     except AttributeError: key = f"{msg.message.chat.id}-{msg.message.id}"
  
-    temp.FILES[f"st_{key}"] = {} 
+    temp.FILES[f"st_{key}"] = {} # Clear soft tags on new search
     BUTTONS[key] = search
     tags = get_tags(search, key)
     
-    available_tags = await get_available_tags(tags['clean_search'])
+    # ⚡ EXTREME SPEED CACHE WITH CURRENT FILTERS!
+    available_tags = await get_available_tags(tags['clean_search'], req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     temp.FILES[f"tags_{key}"] = available_tags
 
     files_link = ""
@@ -348,137 +493,8 @@ async def advantage_spell_chok(message, s):
     except: pass
 
 # ====================================================================
-# 🗂️ PAGINATION & DYNAMIC MENU HANDLERS
+# 🗃️ BAKI SAARI OLD CALLBACKS (Unchanged)
 # ====================================================================
-@Client.on_callback_query(filters.regex(r"^next"))
-async def next_page(bot, query):
-    ident, req, key, offset = query.data.split("_")
-    if int(req) not in [query.from_user.id, 0]: return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-    try: offset = int(offset)
-    except: offset = 0
-    
-    search = BUTTONS.get(key)
-    cap = CAP.get(key)
-    if not search: return await query.answer(f"⚠️ Request Expired!", show_alert=True)
-
-    tags = get_tags(search, key)
-    files, n_offset, total = await get_search_results(tags['clean_search'], offset=offset, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
-    available_tags = temp.FILES.get(f"tags_{key}", {})
-    
-    if not files: return
-    temp.FILES[key] = files
-    try: n_offset = int(n_offset)
-    except: n_offset = 0
-
-    settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
-    
-    files_link = ''
-    if settings['links']:
-        for file_num, file in enumerate(files, start=offset+1):
-            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
-        btn = []
-    else:
-        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f"file#{file['_id']}")] for file in files]
-        
-    is_prem = await is_premium(query.from_user.id, bot)
-    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
-    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, tags, available_tags)
-
-    if 0 < offset <= MAX_BTN: b_offset = 0
-    elif offset == 0: b_offset = None
-    else: b_offset = offset - MAX_BTN
-        
-    if n_offset == 0:
-        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
-                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons")])
-    elif b_offset is None:
-        btn.append([InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
-    else:
-        btn.append([InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{b_offset}", style=enums.ButtonStyle.PRIMARY),
-                    InlineKeyboardButton(f"{math.ceil(int(offset) / MAX_BTN) + 1}/{math.ceil(total / MAX_BTN)}", callback_data="buttons"),
-                    InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{n_offset}", style=enums.ButtonStyle.PRIMARY)])
-                    
-    await query.message.edit_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
-
-@Client.on_callback_query(filters.regex(r"^(languages|quality|years|seasons)#"))
-async def dynamic_menus(client: Client, query: CallbackQuery):
-    action, key, req, offset = query.data.split("#")
-    if int(req) != query.from_user.id: return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-        
-    available_tags = temp.FILES.get(f"tags_{key}", {})
-    
-    if action == "languages":
-        items = available_tags.get('languages', LANGUAGES)
-        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʟᴀɴɢᴜᴀɢᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
-        tag_type = 'l'
-    elif action == "quality":
-        items = available_tags.get('qualities', QUALITY)
-        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ǫᴜᴀʟɪᴛʏ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
-        tag_type = 'q'
-    elif action == "years":
-        items = sorted(available_tags.get('years', []), reverse=True)
-        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ ʏᴇᴀʀ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
-        tag_type = 'y'
-    elif action == "seasons":
-        items = sorted(available_tags.get('seasons', []))
-        msg_text = "<b>ɪɴ ᴡʜɪᴄʜ sᴇᴀsᴏɴ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ, sᴇʟᴇᴄᴛ ʜᴇʀᴇ 👇</b>"
-        tag_type = 's'
-
-    if not items: return await query.answer("sᴏʀʀʏ, ɴᴏ ᴏᴘᴛɪᴏɴs ᴀᴠᴀɪʟᴀʙʟᴇ!", show_alert=True)
-
-    btn = create_menu_buttons(items, tag_type, key, offset, req)
-    await query.message.edit_text(msg_text, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn))
-
-@Client.on_callback_query(filters.regex(r"^ts#"))
-async def generic_tag_search(client: Client, query: CallbackQuery):
-    _, tag_type, val, key, offset, req = query.data.split("#")
-    if int(req) != query.from_user.id: return await query.answer("⚠️ Not for you!", show_alert=True)
-
-    search = BUTTONS.get(key)
-    cap = CAP.get(key)
-    if not search: return await query.answer("⚠️ Request Expired!", show_alert=True)
-
-    st = temp.FILES.get(f"st_{key}", {})
-    if val == "ALL":
-        if tag_type in st: del st[tag_type]
-    else: st[tag_type] = val
-    temp.FILES[f"st_{key}"] = st
-    
-    tags = get_tags(search, key)
-    files, t_offset, total_results = await get_search_results(tags['clean_search'], offset=0, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
-    available_tags = temp.FILES.get(f"tags_{key}", {})
-    
-    if not files: return await query.answer(f"sᴏʀʀʏ '{val.title()}' ꜰɪʟᴇs ɴᴏᴛ ꜰᴏᴜɴᴅ 😕", show_alert=1)
-        
-    temp.FILES[key] = files
-    settings = await get_settings(query.message.chat.id)
-    del_msg = f"\n\n<b><blockquote>⚠️ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀꜰᴛᴇʀ <code>{get_readable_time(DELETE_TIME)}</code> ᴛᴏ ᴀᴠᴏɪᴅ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs</blockquote></b>" if settings["auto_delete"] else ''
-    files_link = ''
-
-    if settings['links']:
-        btn = []
-        for file_num, file in enumerate(files, start=1):
-            files_link += f"""<b>\n\n{file_num}. <a href=https://t.me/{temp.U_NAME}?start=file_{query.message.chat.id}_{file['_id']}>[{get_size(file['file_size'])}] {file['file_name']}</a></b>"""
-    else:
-        btn = [[InlineKeyboardButton(text=f"{get_size(file['file_size'])} - {file['file_name']}", callback_data=f"file#{file['_id']}")] for file in files]
-        
-    is_prem = await is_premium(query.from_user.id, client)
-    sl_url = await get_shortlink(f'https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}', query.from_user.id, query.message.chat.id) if settings['shortlink'] else ""
-    
-    btn = insert_dynamic_buttons(btn, settings, is_prem, sl_url, key, req, offset, tags, available_tags)
-    
-    if t_offset != "":
-        btn.append([InlineKeyboardButton(text=f"1/{math.ceil(int(total_results) / MAX_BTN)}", callback_data="buttons"),
-                    InlineKeyboardButton(text="ɴᴇxᴛ »", callback_data=f"next_{req}_{key}_{t_offset}", style=enums.ButtonStyle.PRIMARY)])
-    
-    await query.message.edit_text(cap + files_link + del_msg, link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
-
-@Client.on_callback_query(filters.regex(r"^locked#"))
-async def locked_filter_cb(client, query):
-    _, filter_type, filter_val = query.data.split("#")
-    await query.answer(f"🔒 {filter_type} is explicitly locked to {filter_val} by your search query!", show_alert=True)
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):

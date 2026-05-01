@@ -117,7 +117,6 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None
     if req_year:
         and_filters.append({'$or': [{'year': req_year}, {'file_name': re.compile(rf"\b{req_year}\b", re.IGNORECASE)}]})
     if req_season:
-        # Fallback regex maps 'S01' to find 'S01', 'S1', or 'Season 1' in old files
         season_num = int(req_season[1:]) 
         and_filters.append({'$or': [{'season': req_season}, {'file_name': re.compile(rf"\b(?:s|season\s*)0?{season_num}\b", re.IGNORECASE)}]})
 
@@ -143,9 +142,8 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None
           
     return files, next_offset, total_results
 
-# ✅ PRO DEVELOPER UPGRADE: Fetch ONLY available tags for a search query
-async def get_available_tags(query):
-    """Fetch ONLY the available tags for a specific search query (Dynamic Filtering)"""
+async def get_available_tags(query, req_lang=None, req_qual=None, req_year=None, req_season=None):
+    """Fetch ONLY the available tags for the EXACT current filter combination!"""
     query = str(query).strip()
     filter_obj = {}
 
@@ -164,7 +162,23 @@ async def get_available_tags(query):
         else:
             filter_obj = {'file_name': regex}
 
-    # MongoDB 'distinct' automatically fetches unique available values for this exact search!
+    and_filters = []
+    if req_lang:
+        and_filters.append({'$or': [{'languages': req_lang}, {'file_name': re.compile(rf"\b{req_lang}\b", re.IGNORECASE)}]})
+    if req_qual:
+        and_filters.append({'$or': [{'qualities': req_qual}, {'file_name': re.compile(rf"\b{req_qual}\b", re.IGNORECASE)}]})
+    if req_year:
+        and_filters.append({'$or': [{'year': req_year}, {'file_name': re.compile(rf"\b{req_year}\b", re.IGNORECASE)}]})
+    if req_season:
+        season_num = int(req_season[1:]) 
+        and_filters.append({'$or': [{'season': req_season}, {'file_name': re.compile(rf"\b(?:s|season\s*)0?{season_num}\b", re.IGNORECASE)}]})
+
+    if and_filters:
+        if filter_obj:
+            filter_obj = {'$and': [filter_obj] + and_filters}
+        else:
+            filter_obj = {'$and': and_filters}
+
     langs = collection.distinct("languages", filter_obj)
     quals = collection.distinct("qualities", filter_obj)
     years = collection.distinct("year", filter_obj)
@@ -176,7 +190,6 @@ async def get_available_tags(query):
         years.extend(second_collection.distinct("year", filter_obj))
         seasons.extend(second_collection.distinct("season", filter_obj))
 
-    # Remove duplicates and None values
     return {
         'languages': list(set([x for x in langs if x])),
         'qualities': list(set([x for x in quals if x])),
@@ -211,6 +224,14 @@ async def delete_files(query):
     if result2:
         total_deleted += result2.deleted_count
     
+    return total_deleted
+
+async def delete_all_files():
+    res1 = collection.delete_many({})
+    total_deleted = res1.deleted_count
+    if SECOND_FILES_DATABASE_URL:
+        res2 = second_collection.delete_many({})
+        total_deleted += res2.deleted_count
     return total_deleted
 
 async def get_file_details(query):
