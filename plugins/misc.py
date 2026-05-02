@@ -21,6 +21,17 @@ async def showid(client, message):
         elif target.from_user:
             return await message.reply_text(f"👤 <b>ᴜsᴇʀ:</b> {target.from_user.mention}\n🆔 <b>ɪᴅ:</b> <code>{target.from_user.id}</code>")
 
+    # Case 2: Mention or Username (e.g., /id @username)
+    elif len(message.command) > 1:
+        try:
+            input_data = message.command[1]
+            user = await client.get_users(input_data)
+            return await message.reply_text(f"👤 <b>ᴜsᴇʀ:</b> {user.mention}\n🆔 <b>ɪᴅ:</b> <code>{user.id}</code>")
+        except Exception as e:
+            return await message.reply_text(f"❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>")
+
+    # Case 3: Default (Chat IDs)
+    chat_type = message.chat.type
     if chat_type == enums.ChatType.PRIVATE:
         await message.reply_text(f'👤 <b>ʏᴏᴜʀ ɪᴅ:</b> <code>{message.from_user.id}</code>')
     elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
@@ -83,10 +94,7 @@ async def who_is(client, message):
 
     if len(message.command) > 1:
         input_data = message.command[1]
-        if input_data.isnumeric():
-            from_user_id = int(input_data)
-        else:
-            from_user_id = input_data
+        from_user_id = int(input_data) if input_data.isnumeric() else input_data
     elif message.reply_to_message:
         from_user_id = message.reply_to_message.from_user.id
     else:
@@ -123,44 +131,9 @@ async def who_is(client, message):
 
     if from_user.photo:
         local_user_photo = await client.download_media(message=from_user.photo.big_file_id)
-        await message.reply_photo(
-            photo=local_user_photo,
-            caption=message_out_str,
-            quote=True
-        )
+        await message.reply_photo(photo=local_user_photo, caption=message_out_str, quote=True)
         if os.path.exists(local_user_photo):
             os.remove(local_user_photo)
-    else:
-        await message.reply_text(text=message_out_str, quote=True)
-        
-    await status_message.delete()
-
-    message_out_str = f"✨ <b>ᴜsᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ</b>\n\n"
-    message_out_str += f"➲ <b>ꜰɪʀsᴛ ɴᴀᴍᴇ:</b> {from_user.first_name}\n"
-    message_out_str += f"➲ <b>ʟᴀsᴛ ɴᴀᴍᴇ:</b> {from_user.last_name or 'ɴᴏɴᴇ'}\n"
-    message_out_str += f"➲ <b>ᴛᴇʟᴇɢʀᴀᴍ ɪᴅ:</b> <code>{from_user.id}</code>\n"
-    message_out_str += f"➲ <b>ᴜsᴇʀɴᴀᴍᴇ:</b> @{from_user.username if from_user.username else 'ɴᴏɴᴇ'}\n"
-    message_out_str += f"➲ <b>ᴅᴄ ɪᴅ:</b> <code>{from_user.dc_id or 'ɴ/ᴀ'}</code>\n"
-    message_out_str += f"➲ <b>sᴛᴀᴛᴜs:</b> <code>{last_online(from_user)}</code>\n"
-    message_out_str += f"➲ <b>ᴜsᴇʀ ʟɪɴᴋ:</b> <a href='tg://user?id={from_user.id}'><b>ᴄʟɪᴄᴋ ʜᴇʀᴇ</b></a>\n"
-
-    if message.chat.type in [enums.ChatType.SUPERGROUP, enums.ChatType.GROUP]:
-        try:
-            chat_member = await message.chat.get_member(from_user.id)
-            if chat_member.joined_date:
-                joined_date = chat_member.joined_date.strftime('%Y-%m-%d %H:%M')
-                message_out_str += f"➲ <b>ᴊᴏɪɴᴇᴅ ʜᴇʀᴇ:</b> <code>{joined_date}</code>\n"
-        except UserNotParticipant:
-            pass
-
-    if from_user.photo:
-        local_user_photo = await client.download_media(message=from_user.photo.big_file_id)
-        await message.reply_photo(
-            photo=local_user_photo,
-            caption=message_out_str,
-            quote=True
-        )
-        os.remove(local_user_photo)
     else:
         await message.reply_text(text=message_out_str, quote=True)
         
@@ -180,5 +153,6 @@ def last_online(from_user):
     if from_user.status == enums.UserStatus.LONG_AGO:
         return "💤 ᴀ ʟᴏɴɢ ᴛɪᴍᴇ ᴀɢᴏ"
     if from_user.status == enums.UserStatus.OFFLINE:
-        return from_user.last_online_date.strftime("%d %b, %H:%M")
+        if from_user.last_online_date:
+            return from_user.last_online_date.strftime("%d %b, %H:%M")
     return "ᴜɴᴋɴᴏᴡɴ"

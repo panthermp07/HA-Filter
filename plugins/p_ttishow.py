@@ -37,7 +37,7 @@ async def welcome(bot, message):
                 mention = message.new_chat_member.user.mention,
                 title = message.chat.title
             )
-            await bot.send_message(chat_id=message.chat.id, text=welcome_msg)
+            await bot.send_message(chat_id=message.chat.id, text=welcome_msg, disable_web_page_preview=True)
 
 
 @Client.on_message(filters.command('restart') & filters.user(ADMINS))
