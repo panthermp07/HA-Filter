@@ -36,9 +36,7 @@ ADMINS = environ.get('ADMINS', '')
 INDEX_CHANNELS = [int(index_channels) if index_channels.startswith("-") else index_channels for index_channels in environ.get('INDEX_CHANNELS', '').split()]
 LOG_CHANNEL = environ.get('LOG_CHANNEL', '')
 SUPPORT_GROUP = environ.get('SUPPORT_GROUP', '')
-
-# 🆕 Added from public repo
-UPDATES_SEND_CHANNEL = environ.get('UPDATES_SEND_CHANNEL', '')
+UPDATES_SEND_CHANNEL = environ.get('UPDATES_SEND_CHANNEL', '-1003982751488')
 
 # MONGODB INFORMATION
 DATA_DATABASE_URL = environ.get('DATA_DATABASE_URL', "")
