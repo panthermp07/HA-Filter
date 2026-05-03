@@ -3,6 +3,7 @@ import re
 import logging
 from os import environ
 from Script import script
+
 logger = logging.getLogger(__name__)
 
 def is_enabled(type, value):
@@ -19,7 +20,7 @@ def is_valid_ip(ip):
     ip_pattern = r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
     return re.match(ip_pattern, ip) is not None
 
-# Bot information
+# BOT INFORMATION
 API_ID = environ.get('API_ID', '')
 API_HASH = environ.get('API_HASH', '')
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
@@ -36,7 +37,10 @@ INDEX_CHANNELS = [int(index_channels) if index_channels.startswith("-") else ind
 LOG_CHANNEL = environ.get('LOG_CHANNEL', '')
 SUPPORT_GROUP = environ.get('SUPPORT_GROUP', '')
 
-# MongoDB information
+# 🆕 Added from public repo
+UPDATES_SEND_CHANNEL = environ.get('UPDATES_SEND_CHANNEL', '')
+
+# MONGODB INFORMATION
 DATA_DATABASE_URL = environ.get('DATA_DATABASE_URL', "")
 FILES_DATABASE_URL = environ.get('FILES_DATABASE_URL', "")
 SECOND_FILES_DATABASE_URL = environ.get('SECOND_FILES_DATABASE_URL', "")
@@ -57,10 +61,10 @@ DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
 
-#Massive Global Language Tags Array
+# Massive Global Language Tags Array
 LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi english telugu tamil kannada malayalam bengali marathi punjabi gujrati odia bhojpuri assamese urdu korean japanese chinese french spanish german russian arabic turkish portuguese thai dual multi org dubbed esub').split()]
-
 QUALITY = [quality.lower() for quality in environ.get('QUALITY', '240p 360p 480p 576p 720p 1080p 1440p 2160p').split()]
+
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
 SHORTLINK_URL = environ.get("SHORTLINK_URL", "")
@@ -70,7 +74,7 @@ WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
 INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
 PM_FILE_DELETE_TIME = int(environ.get('PM_FILE_DELETE_TIME', '3600'))
 
-# boolean settings
+# Boolean settings
 USE_CAPTION_FILTER = is_enabled('USE_CAPTION_FILTER', False)
 IS_VERIFY = is_enabled('IS_VERIFY', True)
 AUTO_DELETE = is_enabled('AUTO_DELETE', True)
@@ -82,19 +86,22 @@ IMDB = is_enabled('IMDB', False)
 SPELL_CHECK = is_enabled("SPELL_CHECK", True)
 SHORTLINK = is_enabled('SHORTLINK', False)
 
-# for stream
+# For stream
 IS_STREAM = is_enabled('IS_STREAM', True)
 BIN_CHANNEL = environ.get("BIN_CHANNEL", "")
 URL = environ.get("URL", "")
 
-#start command reactions
+# Start command reactions
 REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗 😍 👍 🎅 😐 🥰 🤩 😱 🤣 😘 👏 😛 😈 🎉 ⚡️ 🫡 🤓 😎 🏆 🔥 🤭 🌚 🆒 👻 😁').split()]
 
-# for Premium 
+# ==========================================
+# PREMIUM SETTINGS (UPI & 🆕 STARS)
+# ==========================================
 IS_PREMIUM = is_enabled('IS_PREMIUM', True)
 OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
 PREMIUM_NOTIFY_CHANNEL = environ.get('PREMIUM_NOTIFY_CHANNEL', '')
 
+# Your custom UPI Integration
 PRE_DAY_AMOUNT = int(environ.get('PRE_DAY_AMOUNT', '1')) 
 UPI_ID = environ.get("UPI_ID", "")
 UPI_NAME = environ.get("UPI_NAME", "")
@@ -142,6 +149,13 @@ if len(SUPPORT_GROUP) == 0:
     exit()
 else:
     SUPPORT_GROUP = int(SUPPORT_GROUP)
+
+# 🆕 Added Public Repo's Validation here cleanly
+if len(UPDATES_SEND_CHANNEL) == 0:
+    logger.info('UPDATES_SEND_CHANNEL is missing')
+    UPDATES_SEND_CHANNEL = None
+else:
+    UPDATES_SEND_CHANNEL = int(UPDATES_SEND_CHANNEL)
 
 if len(DATA_DATABASE_URL) == 0:
     logger.error('DATA_DATABASE_URL is missing, exiting now')

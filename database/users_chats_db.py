@@ -14,6 +14,7 @@ files_db = files_db_client[DATABASE_NAME]
 data_db_client = AsyncIOMotorClient(DATA_DATABASE_URL)
 data_db = data_db_client[DATABASE_NAME]
 
+second_files_db = None
 if SECOND_FILES_DATABASE_URL:
     second_files_db_client = AsyncIOMotorClient(SECOND_FILES_DATABASE_URL)
     second_files_db = second_files_db_client[DATABASE_NAME]
@@ -119,7 +120,6 @@ class Database:
     async def delete_chat(self, grp_id):
         await self.grp.delete_many({'id': int(grp_id)})
 
-    # --- SUDO MANAGEMENT (FIXED ASYNC) ---
     async def add_sudo(self, user_id):
         if not await self.sudo.find_one({'id': int(user_id)}):
             await self.sudo.insert_one({'id': int(user_id), 'added_at': datetime.now()})
@@ -140,7 +140,6 @@ class Database:
         user = await self.sudo.find_one({'id': int(user_id)})
         return bool(user)
 
-    # --- MISC LOGIC (FIXED ASYNC) ---
     async def find_join_req(self, id):
         user = await self.req.find_one({'id': id})
         return bool(user)
@@ -187,6 +186,7 @@ class Database:
         user = await self.col.find_one({'id':int(user_id)})
         if user:
             info = user.get('verify_status', self.default_verify)
+            # Smart Auto-Expiry Logic retained
             if 'expire_time' not in info:
                 verified_time = info.get('verified_time', 0)
                 expire_time = verified_time + VERIFY_EXPIRE
@@ -208,7 +208,7 @@ class Database:
         return res['dataSize']
    
     async def get_second_files_db_size(self):
-        if SECOND_FILES_DATABASE_URL:
+        if second_files_db is not None:
             res = await second_files_db.command("dbstats")
             return res['dataSize']
         return 0

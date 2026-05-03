@@ -11,12 +11,14 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from web import web_app
 from database.users_chats_db import db
+from database.ia_filterdb import setup_database
 from utils import temp, check_premium
 from info import (
     URL, LOG_CHANNEL, API_ID, API_HASH, BOT_TOKEN, 
     PORT, ADMINS, TIME_ZONE, VERIFICATION_NOTIFY_CHANNEL, BOT_ID
 )
 
+# Using your robust logging setup
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -26,6 +28,7 @@ logging.basicConfig(
     ]
 )
 logging.getLogger('pyrogram').setLevel(logging.ERROR)
+logging.getLogger('aiohttp').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 try:
@@ -49,7 +52,7 @@ class Bot(Client):
         self.add_handler(MessageHandler(self._listener_handler), group=-1)
 
     async def _listener_handler(self, client: Client, message: types.Message):
-        if not message.from_user:
+        if not message.chat or not message.from_user:
             return
         
         listener_id = (message.chat.id, message.from_user.id)
@@ -78,6 +81,10 @@ class Bot(Client):
             self.listeners.pop(listener_id, None)
 
     async def start(self, **kwargs):
+        logger.info('Setting up your database, please wait a moment...')
+        await setup_database()
+        logger.info('Successfully setup the database!')
+        
         await super().start()
         temp.START_TIME = time.time()
         
@@ -112,7 +119,7 @@ class Bot(Client):
         # Premium check & Background Tasks
         asyncio.create_task(check_premium(self))
         
-        # --- ELITE AUTOMATION SCHEDULER ---
+        # --- ELITE AUTOMATION SCHEDULER (Retained your code) ---
         scheduler = AsyncIOScheduler(timezone=TIME_ZONE)
         
         # 1. Midnight Report (11:59 PM)
@@ -127,7 +134,8 @@ class Bot(Client):
         try:
             await self.send_message(chat_id=LOG_CHANNEL, text=f"<b>{me.mention} Is Online Now! 🚀</b>")
         except Exception as e:
-            logger.warning(f"Could not send start message to LOG_CHANNEL: {e}")
+            logger.error("Make sure bot is admin in LOG_CHANNEL, exiting now.")
+            exit()
 
         for admin in ADMINS:
             try:
@@ -135,7 +143,7 @@ class Bot(Client):
             except:
                 continue
 
-        logger.info(f"@{me.username} Started Successfully ✓")
+        logger.info(f"Bot [@{me.username}] and webapp [{URL}] started successfully ✓")
 
     async def stop(self, **kwargs):
         await super().stop()

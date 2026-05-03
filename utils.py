@@ -9,9 +9,10 @@ from pyrogram import enums
 from datetime import datetime
 from shortzy import Shortzy
 from database.users_chats_db import db
-from pyrogram.types import InlineKeyboardButton
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
 from pyrogram.errors import UserNotParticipant, FloodWait
-from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY, SHORTLINK_URL, SHORTLINK_API
+from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY, SHORTLINK_URL, SHORTLINK_API, USE_CAPTION_FILTER, UPDATES_SEND_CHANNEL, FILMS_LINK
+from Script import script
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,48 @@ class temp(object):
     SETTINGS = {}
     VERIFICATIONS = {}
     FILES = {}
+    GET_ALL_FILES = {}
     USERS_CANCEL = False
     GROUPS_CANCEL = False
     BOT = None
     PREMIUM = {}
+
+async def send_update(title, year):
+    if not UPDATES_SEND_CHANNEL:
+        return
+    data = await get_poster(f"{title} {year}")
+    if not data:
+        return
+    caption = script.NEW_ADDED_TEMPLATE.format(
+        title=data['title'],
+        kind=data['kind'],
+        votes=data['votes'],
+        tmdb_id=data["tmdb_id"],
+        runtime=data["runtime"],
+        release_date=data['release_date'],
+        year=data['year'],
+        genres=data['genres'],
+        plot=data['plot'],
+        rating=data['rating'],
+        url=data['url'],
+        languages=data['languages'],
+        countries=data['countries']
+    )
+    btn = [[
+        InlineKeyboardButton('📥 ʀᴇǫᴜᴇsᴛ ꜰʀᴏᴍ ʜᴇʀᴇ 📥', url=FILMS_LINK)
+    ]]
+    if data.get('poster'):
+        await temp.BOT.send_photo(chat_id=UPDATES_SEND_CHANNEL, photo=data.get('poster'), caption=caption, reply_markup=InlineKeyboardMarkup(btn))
+    else:
+        await temp.BOT.send_message(chat_id=UPDATES_SEND_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True))
+
+async def handle_next_back(data, offset=0, max_results=0):
+    out_data = data[offset:][:max_results]
+    total_results = len(data)
+    next_offset = offset + max_results
+    if next_offset >= total_results:
+        next_offset = 0
+    return out_data, next_offset, total_results
 
 async def is_subscribed(bot, query, grp_id=None):
     btn = []
@@ -101,7 +140,6 @@ def upload_image(file_path):
     else:
         return None
 
-
 def list_to_str(k):
     if not k:
         return "N/A"
@@ -110,21 +148,17 @@ def list_to_str(k):
     else:
         return ", ".join(str(i) for i in k)
 
-
 async def get_poster(query, bulk=False, id=False, file=None):
     TMDB_BASE = "https://api.themoviedb.org/3"
-
     year = None
     title = query
 
     if not id:
         query = query.strip()
-
         year_match = re.findall(r"[1-2]\d{3}$", query)
         if year_match:
             year = year_match[0]
             title = query.replace(year, "").strip()
-
         elif file:
             file_year = re.findall(r"[1-2]\d{3}", file)
             if file_year:
@@ -135,9 +169,7 @@ async def get_poster(query, bulk=False, id=False, file=None):
             "api_key": TMDB_API_KEY,
             "query": title
         }
-
         res = requests.get(url, params=params).json()
-
         results = [
             r for r in res.get("results", [])
             if r.get("media_type") in ["movie", "tv"]
@@ -152,7 +184,6 @@ async def get_poster(query, bulk=False, id=False, file=None):
                 release = r.get("release_date") or r.get("first_air_date")
                 if release and release.startswith(str(year)):
                     filtered.append(r)
-
             if filtered:
                 results = filtered
 
@@ -173,7 +204,6 @@ async def get_poster(query, bulk=False, id=False, file=None):
 
     else:
         tmdb_id = query
-
         movie_test = requests.get(
             f"{TMDB_BASE}/movie/{tmdb_id}",
             params={"api_key": TMDB_API_KEY}
@@ -196,15 +226,12 @@ async def get_poster(query, bulk=False, id=False, file=None):
         ).json()
 
     title = data.get("title") or data.get("name")
-
     poster = None
     if data.get("poster_path"):
         poster = f"https://image.tmdb.org/t/p/original{data['poster_path']}"
 
     release_date = data.get("release_date") or data.get("first_air_date")
-
     genres = list_to_str([g["name"] for g in data.get("genres", [])])
-
     runtime = None
     if media_type == "movie":
         runtime = data.get("runtime")
@@ -212,7 +239,6 @@ async def get_poster(query, bulk=False, id=False, file=None):
         runtime = list_to_str(data.get("episode_run_time"))
 
     plot = data.get("overview")
-
     rating = data.get("vote_average")
     votes = data.get("vote_count")
     languages = list_to_str([l["english_name"] for l in data.get("spoken_languages", [])])
@@ -258,7 +284,6 @@ async def update_verify_status(user_id, verify_token="", is_verified=False, link
     temp.VERIFICATIONS[user_id] = current
     await db.update_verify_status(user_id, current)
 
-    
 async def is_premium(user_id, bot):
     if not IS_PREMIUM:
         return True
@@ -276,7 +301,6 @@ async def is_premium(user_id, bot):
         return True
     else:
         return False
-
 
 async def check_premium(bot):
     while True:
@@ -300,7 +324,6 @@ async def check_premium(bot):
                     await db.update_plan(p['id'], mp)
         
         await asyncio.sleep(1200)
-
 
 async def broadcast_messages(user_id, message, pin):
     try:

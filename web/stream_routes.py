@@ -36,8 +36,8 @@ async def webapp_route_handler(request):
 async def api_search_handler(request):
     query = request.query.get('q', '').strip()
     offset = int(request.query.get('offset', 0))
-  
-    files, next_offset, total_results = await get_search_results(query, offset=offset)
+
+    files, next_offset, total_results = await get_search_results(query, offset=offset, max_results=MAX_BTN)
     
     formatted_files = []
     if files:

@@ -10,8 +10,11 @@ aiofiles
 speedtest-cli
 uvloop
 requests
+httpx
 pytz
 qrcode
 Pillow
 psutil
 apscheduler
+yt-dlp
+parse-torrent-title

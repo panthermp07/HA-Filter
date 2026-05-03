@@ -2,9 +2,11 @@ import os
 import asyncio
 from datetime import datetime
 from speedtest import Speedtest, ConfigRetrievalError, SpeedtestBestServerFailure
+import yt_dlp
+import httpx
 
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyParameters
 from pyrogram.errors import UserNotParticipant
 
 from utils import get_size, temp
@@ -85,9 +87,6 @@ async def speedtest(client, message):
     await message.reply_photo(photo=photo, caption=text)
     await msg.delete()
 
-    await message.reply_photo(photo=photo, caption=text)
-    await msg.delete()
-
 @Client.on_message(filters.command("info"))
 async def who_is(client, message):
     status_message = await message.reply_text("<b>🔍 ꜰᴇᴛᴄʜɪɴɢ ᴜsᴇʀ ᴅᴀᴛᴀ...</b>")
@@ -156,3 +155,64 @@ def last_online(from_user):
         if from_user.last_online_date:
             return from_user.last_online_date.strftime("%d %b, %H:%M")
     return "ᴜɴᴋɴᴏᴡɴ"
+
+@Client.on_message(filters.command('download'))
+async def download_video(client, message):
+    if len(message.command) > 1:
+        link = message.command[1]
+    else:
+        return await message.reply("<b>💡 ᴜsᴀɢᴇ:</b> <code>/download video-url</code>")
+
+    status_msg = await message.reply("<b>⏳ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴠɪᴅᴇᴏ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...</b>")
+
+    user_id = message.from_user.id
+    downloaded_file = None
+    thumbnail_file = None
+
+    try:
+        os.makedirs("yt_dlp_downloads", exist_ok=True)
+
+        ydl_opts = {
+            'outtmpl': f'yt_dlp_downloads/{user_id}_%(title)s.%(ext)s',
+            'format': 'best',
+            'quiet': True,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(link, download=True)
+            title = info.get('title', 'Video')
+            duration = info.get('duration', 0)
+            thumbnail_url = info.get('thumbnail', None)
+            downloaded_file = ydl.prepare_filename(info)
+
+        if thumbnail_url:
+            thumbnail_file = f"yt_dlp_downloads/{user_id}_thumb.jpg"
+            async with httpx.AsyncClient() as http:
+                response = await http.get(thumbnail_url)
+                with open(thumbnail_file, 'wb') as f:
+                    f.write(response.content)
+
+        await status_msg.edit("<b>📤 ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ ᴛᴇʟᴇɢʀᴀᴍ...</b>")
+
+        await client.send_video(
+            chat_id=message.chat.id,
+            video=downloaded_file,
+            caption=f"🎬 <b>{title}</b>\n\n🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
+            duration=duration,
+            thumb=thumbnail_file,
+            reply_parameters=ReplyParameters(message_id=message.id),
+        )
+
+        await status_msg.delete()
+
+    except yt_dlp.utils.DownloadError as e:
+        await status_msg.edit(f"<b>❌ ᴅᴏᴡɴʟᴏᴀᴅ ꜰᴀɪʟᴇᴅ:</b>\n<code>{str(e)}</code>")
+
+    except Exception as e:
+        await status_msg.edit(f"<b>❌ ᴇʀʀᴏʀ:</b>\n<code>{str(e)}</code>")
+
+    finally:
+        if downloaded_file and os.path.exists(downloaded_file):
+            os.remove(downloaded_file)
+        if thumbnail_file and os.path.exists(thumbnail_file):
+            os.remove(thumbnail_file)
