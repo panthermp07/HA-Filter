@@ -20,6 +20,7 @@ from plugins.commands import get_grp_stg
 BUTTONS = {}
 CAP = {}
 
+# --- 🚀 FAST IMDB SPELL SUGGEST API ---
 async def get_spell_suggest(query):
     query = query.lower().strip()
     if not query:
@@ -414,14 +415,20 @@ async def auto_filter(client, msg, s, spoll=False):
                 return await advantage_spell_chok(client, message, s)
             else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
     else:
-        settings = await get_settings(msg.message.chat.id)
-        message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
+        # ✨ Handle both Button Clicks and Zero-Click Auto-Correct properly
+        if hasattr(msg, "message"): # CallbackQuery
+            settings = await get_settings(msg.message.chat.id)
+            message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
+        else: # Direct text Message
+            settings = await get_settings(msg.chat.id)
+            message = msg
+            
         search, files, offset, total_results = spoll
         clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
 
     if not message or message is None:
-        if isinstance(msg, CallbackQuery): await msg.answer("ᴏʟᴅ ᴍᴇssᴀɢᴇ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
-        return await s.edit("<b>❌ ᴇʀʀᴏʀ: ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ.</b>")
+        if hasattr(msg, "answer"): await msg.answer("ᴏʟᴅ ᴍᴇꜱꜱᴀɢᴇ! ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
+        return await s.edit("<b>❌ ᴇʀʀᴏʀ: ᴏʀɪɢɪɴᴀʟ ᴍᴇꜱꜱᴀɢᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ.</b>")
 
     req = message.from_user.id if message.from_user else 0
     try: key = f"{message.chat.id}-{message.id}"
@@ -498,7 +505,7 @@ async def auto_filter(client, msg, s, spoll=False):
             try: await message.delete()
             except: pass
 
-# --- 🚀 ZERO-CLICK AUTO-CORRECT IMPLEMENTATION ---
+# --- 🚀 ZERO-CLICK AUTO-CORRECT & SUGGESTIONS ---
 async def advantage_spell_chok(client, message, s):
     search = message.text
     google_search = search.replace(" ", "+")
@@ -516,7 +523,6 @@ async def advantage_spell_chok(client, message, s):
             clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", raw_title, flags=re.IGNORECASE)
             clean_search = re.sub(r"\s+", " ", clean_search).strip()
             
-            # 🔥 FIXED: Removed chat_id and filter=True
             files, offset, total_results = await get_search_results(clean_search)
             
             if files:
@@ -548,7 +554,6 @@ async def advantage_spell_chok(client, message, s):
         clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", best_match, flags=re.IGNORECASE)
         clean_search = re.sub(r"\s+", " ", clean_search).strip()
         
-        # 🔥 FIXED: Removed chat_id and filter=True
         files, offset, total_results = await get_search_results(clean_search)
         
         if files:
