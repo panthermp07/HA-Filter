@@ -21,7 +21,6 @@ BUTTONS = {}
 CAP = {}
 SPELL_CHECK = {}
 
-# --- 🚀 FAST IMDB SPELL SUGGEST API ---
 async def get_spell_suggest(query):
     query = query.lower().strip()
     if not query:
@@ -377,24 +376,32 @@ async def locked_filter_cb(client, query):
 @Client.on_callback_query(filters.regex(r"^spolling"))
 async def advantage_spoll_choker(bot, query):
     data = query.data.split('#')
-    user = int(data[2])
-    if user != 0 and query.from_user.id != user:
-        return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
-
-    if data[1] == "dbmatch": search = query.message.reply_markup.inline_keyboard[0][0].text.replace("✨ ", "")
+    
+    if data[1] == "dbmatch":
+        user = int(data[2])
+        if user != 0 and query.from_user.id != user:
+            return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
+        search = data[3]
     else:
-        movie = await get_poster(data[1], id=True)
-        search = movie.get('title')
+        user = int(data[1])
+        if user != 0 and query.from_user.id != user:
+            return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)
+        index = int(data[2])
+        movies = SPELL_CHECK.get(query.message.id)
+        if not movies:
+            return await query.answer("⚠️ Request Expired! Please search again.", show_alert=True)
+        search = movies[index]
+
+    if not search:
+        return await query.answer("⚠️ Error! Please search again.", show_alert=True)
 
     s = await query.message.edit_text(f"<b><i>🔍 <code>{search}</code> ᴄʜᴇᴄᴋɪɴɢ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ...</i></b>")
-    await query.answer('')
     
     clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
     files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
     
     if files:
         k = (search, files, offset, total_results)
-        if not query.message: return await query.answer("ᴍᴇssᴀɢᴇ ᴇxᴘɪʀᴇᴅ! sᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
         await auto_filter(bot, query, s, spoll=k)
     else:
         k = await query.message.edit(text=f"<b>👋 ʜᴇʟʟᴏ {query.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ɪɴ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ. 😔</b>", link_preview_options=LinkPreviewOptions(is_disabled=True))
@@ -534,7 +541,7 @@ async def advantage_spell_chok(client, message, s):
         # ✨ AUTO-CORRECTION LOGIC END
         
         movielist = [m['title'] for m in movies[:5]]
-        SPELL_CHECK[message.id] = movielist
+        SPELL_CHECK[s.id] = movielist
         buttons = [[InlineKeyboardButton(text=movie.strip(), callback_data=f"spolling#{user_id}#{k}")] for k, movie in enumerate(movielist)]
         buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏꜱᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
         

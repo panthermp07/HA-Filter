@@ -1,26 +1,26 @@
+import re
+import logging
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from info import ADMINS, LOG_CHANNEL
-import logging
 
 @Client.on_message(filters.command("request"))
 async def request_movie(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("<b>🛸 ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴍᴏᴠɪᴇ ɴᴀᴍᴇ!\n\n➲ ᴇx:</b> <code>/request Avengers</code>")
+        return await message.reply_text("<b>🛸 ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴍᴏᴠɪᴇ ɴᴀᴍᴇ!\n\n➲ ᴇx:</b> <code>/request Avengers</code>")
     
     movie_name = message.text.split(None, 1)[1]
     user = message.from_user
     
     admin_log = (
-        f"<b>🛰 ɴᴇᴡ ᴍᴏᴠɪᴇ ʀᴇǫᴜᴇsᴛ</b>\n\n"
+        f"<b>🛰 ɴᴇᴡ ᴍᴏᴠɪᴇ ʀᴇǫᴜᴇꜱᴛ</b>\n\n"
         f"➲ <b>ᴍᴏᴠɪᴇ:</b> <code>{movie_name}</code>\n"
-        f"➲ <b>ᴜsᴇʀ:</b> {user.mention}\n"
+        f"➲ <b>ᴜꜱᴇʀ:</b> {user.mention}\n"
         f"➲ <b>ɪᴅ:</b> <code>{user.id}</code>"
     )
 
-    safe_movie_name = movie_name[:40] 
     btn = [[
-        InlineKeyboardButton("✅ ᴍᴀʀᴋ ᴀᴠᴀɪʟᴀʙʟᴇ", callback_data=f"req_done_{user.id}_{safe_movie_name}")
+        InlineKeyboardButton("✅ ᴍᴀʀᴋ ᴀᴠᴀɪʟᴀʙʟᴇ", callback_data=f"reqdone_{user.id}")
     ]]
     
     try:
@@ -30,29 +30,35 @@ async def request_movie(client, message):
             reply_markup=InlineKeyboardMarkup(btn)
         )
         await message.reply_text(
-            f"<b>✅ ᴅᴏɴᴇ {user.first_name}!\n\nʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ꜰᴏʀ '<code>{movie_name}</code>' ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴏᴜʀ ᴀᴅᴍɪɴs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!</b>"
+            f"<b>✅ ᴅᴏɴᴇ {user.first_name}!\n\nʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ ꜰᴏʀ '<code>{movie_name}</code>' ʜᴀꜱ ʙᴇᴇɴ ꜱᴇɴᴛ ᴛᴏ ᴏᴜʀ ᴀᴅᴍɪɴꜱ. ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ!</b>"
         )
     except Exception as e:
         logging.error(e)
-        await message.reply_text("<b>❌ ᴀᴅᴍɪɴ ʟᴏɢ ᴄʜᴀɴɴᴇʟ ɴᴏᴛ ꜰᴏᴜɴᴅ! ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.</b>")
+        await message.reply_text("<b>❌ ᴀᴅᴍɪɴ ʟᴏɢ ᴄʜᴀɴɴᴇʟ ɴᴏᴛ ꜰᴏᴜɴᴅ! ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ.</b>")
 
-@Client.on_callback_query(filters.regex(r"^req_done_"))
+@Client.on_callback_query(filters.regex(r"^reqdone_"))
 async def handle_request_done(client, query):
-    data = query.data.split("_", 3)
-    user_id = int(data[2])
-    movie = data[3] if len(data) > 3 else "ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ"
+    if query.from_user.id not in ADMINS:
+        return await query.answer("⚠️ ᴏɴʟʏ ᴀᴅᴍɪɴꜱ ᴄᴀɴ ᴍᴀʀᴋ ʀᴇǫᴜᴇꜱᴛꜱ ᴀꜱ ᴅᴏɴᴇ!", show_alert=True)
+
+    user_id = int(query.data.split("_")[1])
+    
+    try:
+        movie = re.search(r"ᴍᴏᴠɪᴇ:\s+(.+)", query.message.text).group(1)
+    except:
+        movie = "ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ"
 
     try:
         await client.send_message(
             chat_id=user_id, 
-            text=f"<b>✨ ʜᴇʏ! ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛᴇᴅ ᴍᴏᴠɪᴇ '<code>{movie}</code>' ɪs ɴᴏᴡ ᴀᴠᴀɪʟᴀʙʟᴇ ɪɴ ᴛʜᴇ ʙᴏᴛ! 🚀\n\nsᴇᴀʀᴄʜ ɴᴏᴡ ᴀɴᴅ ᴇɴᴊᴏʏ!</b>"
+            text=f"<b>✨ ʜᴇʏ! ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛᴇᴅ ᴍᴏᴠɪᴇ '<code>{movie}</code>' ɪꜱ ɴᴏᴡ ᴀᴠᴀɪʟᴀʙʟᴇ ɪɴ ᴛʜᴇ ʙᴏᴛ! 🚀\n\nꜱᴇᴀʀᴄʜ ɴᴏᴡ ᴀɴᴅ ᴇɴᴊᴏʏ!</b>"
         )
-        await query.answer("✅ ᴜsᴇʀ ʜᴀs ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ!", show_alert=True)
+        await query.answer("✅ ᴜꜱᴇʀ ʜᴀꜱ ʙᴇᴇɴ ɴᴏᴛɪꜰɪᴇᴅ!", show_alert=True)
         await query.edit_message_text(
-            text=f"{query.message.text.html}\n\n✅ <b>sᴛᴀᴛᴜs: ᴄᴏᴍᴘʟᴇᴛᴇᴅ ʙʏ {query.from_user.mention}</b>"
+            text=f"{query.message.text.html}\n\n✅ <b>ꜱᴛᴀᴛᴜꜱ: ᴄᴏᴍᴘʟᴇᴛᴇᴅ ʙʏ {query.from_user.mention}</b>"
         )
     except Exception as e:
-        await query.answer("⚠️ ᴇʀʀᴏʀ: ᴜsᴇʀ ʙʟᴏᴄᴋᴇᴅ ʙᴏᴛ ᴏʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!", show_alert=True)
+        await query.answer("⚠️ ᴇʀʀᴏʀ: ᴜꜱᴇʀ ʙʟᴏᴄᴋᴇᴅ ʙᴏᴛ ᴏʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!", show_alert=True)
         await query.edit_message_text(
-            text=f"{query.message.text.html}\n\n❌ <b>sᴛᴀᴛᴜs: ꜰᴀɪʟᴇᴅ ᴛᴏ ɴᴏᴛɪꜰʏ (ʙʟᴏᴄᴋᴇᴅ)</b>"
+            text=f"{query.message.text.html}\n\n❌ <b>ꜱᴛᴀᴛᴜꜱ: ꜰᴀɪʟᴇᴅ ᴛᴏ ɴᴏᴛɪꜰʏ (ʙʟᴏᴄᴋᴇᴅ)</b>"
         )
