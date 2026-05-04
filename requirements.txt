@@ -18,3 +18,6 @@ psutil
 apscheduler
 yt-dlp
 parse-torrent-title
+cinemagoer
+Flask
+gunicorn

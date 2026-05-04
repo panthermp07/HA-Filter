@@ -1,5 +1,7 @@
 import asyncio
 import re
+import aiohttp
+import json
 from time import time as time_now
 import math, os
 import qrcode, random
@@ -17,6 +19,40 @@ from plugins.commands import get_grp_stg
 
 BUTTONS = {}
 CAP = {}
+
+async def get_spell_suggest(query):
+    query = query.lower().strip()
+    if not query:
+        return []
+    first_letter = query[0]
+    url = f"https://sg.media-imdb.com/suggests/{first_letter}/{query}.json"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return []
+                text = await response.text()
+                match = re.search(r'imdb\$.*?\((.*)\)$', text, re.DOTALL)
+                if match:
+                    json_data = match.group(1)
+                    data = json.loads(json_data)
+                    suggestions = []
+                    for item in data.get('d', []):
+                        if 'id' in item and str(item['id']).startswith('tt'):
+                            title = item.get('l')
+                            year = item.get('y', '')
+                            movie_id = item.get('id')
+                            year_str = f" - {year}" if year else ""
+                            suggestions.append({
+                                "title": f"{title}{year_str}",
+                                "raw_title": title, # ✨ NEEDED FOR AUTO-CORRECTION
+                                "id": movie_id
+                            })
+                    return suggestions
+    except Exception as e:
+        print(f"Error in IMDB spell suggest: {e}")
+    return []
 
 def parse_query(search_text):
     raw_search = search_text.lower()
@@ -200,7 +236,6 @@ async def next_page(bot, query):
 
     tags = get_tags(search, key)
     
-    # ⚡ FAST CACHE BYPASS: "Back to main page" ⚡
     if ident == "b2main" and temp.FILES.get(key):
         files = temp.FILES.get(key)
         total = temp.FILES.get(f"total_{key}", 0)
@@ -301,7 +336,6 @@ async def generic_tag_search(client: Client, query: CallbackQuery):
     tags = get_tags(search, key)
     files, t_offset, total_results = await get_search_results(tags['clean_search'], offset=0, req_lang=tags['req_lang'], req_qual=tags['req_qual'], req_year=tags['req_year'], req_season=tags['req_season'])
     
-    # Cache total results 
     temp.FILES[key] = files
     temp.FILES[f"total_{key}"] = total_results
     
@@ -376,7 +410,8 @@ async def auto_filter(client, msg, s, spoll=False):
         clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
         files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
         if not files:
-            if settings["spell_check"]: return await advantage_spell_chok(message, s)
+            if settings["spell_check"]:
+                return await advantage_spell_chok(client, message, s)
             else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
     else:
         settings = await get_settings(msg.message.chat.id)
@@ -396,7 +431,6 @@ async def auto_filter(client, msg, s, spoll=False):
     BUTTONS[key] = search
     tags = get_tags(search, key)
     
-    # ⚡ CACHE RESULTS FOR FAST BACK ⚡
     temp.FILES[key] = files
     temp.FILES[f"total_{key}"] = total_results
     
@@ -464,39 +498,75 @@ async def auto_filter(client, msg, s, spoll=False):
             try: await message.delete()
             except: pass
 
-async def advantage_spell_chok(message, s):
+# --- 🚀 REPLACED: NEW SPELL SUGGESTER IMPLEMENTATION WITH AUTO-CORRECT ---
+async def advantage_spell_chok(client, message, s):
     search = message.text
     google_search = search.replace(" ", "+")
     user_id = message.from_user.id if message.from_user else 0
-    btn = [[InlineKeyboardButton("⚠️ ɪɴsᴛʀᴜᴄᴛɪᴏɴs", callback_data='instructions'), InlineKeyboardButton("🔎 sᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ", url=f"https://www.google.com/search?q={google_search}")],[InlineKeyboardButton("🛸 ʀᴇǫᴜᴇsᴛ ᴍᴏᴠɪᴇ", callback_data=f"request_msg_{user_id}")]]
+    btn = [[InlineKeyboardButton("⚠️ ɪɴꜱᴛʀᴜᴄᴛɪᴏɴꜱ", callback_data='instructions'), InlineKeyboardButton("🔎 ꜱᴇᴀʀᴄʜ ɢᴏᴏɢʟᴇ", url=f"https://www.google.com/search?q={google_search}")],[InlineKeyboardButton("🛸 ʀᴇǫᴜᴇꜱᴛ ᴍᴏᴠɪᴇ", callback_data=f"request_msg_{user_id}")]]
 
-    try: movies = await get_poster(search, bulk=True)
-    except: movies = None
+    movies = await get_spell_suggest(search)
         
-    if not movies:
-        all_titles = await db.get_all_movie_titles()
-        matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
-        if matches:
-            db_btns = [[InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")] for match in matches]
-            db_btns.extend(btn)
-            return await s.edit_text(text=f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ᴅɪʀᴇᴄᴛʟʏ.\nᴅɪᴅ ʏᴏᴜ ᴍᴇᴀɴ ᴏɴᴇ ᴏꜰ ᴛʜᴇsᴇ ꜰʀᴏᴍ ᴍʏ ʟɪʙʀᴀʀʏ? 👇</b>", reply_markup=InlineKeyboardMarkup(db_btns), link_preview_options=LinkPreviewOptions(is_disabled=True))
-
-        n = await s.edit_text(text=script.NOT_FILE_TXT.format(message.from_user.mention, search), reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True))
-        asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"<b>#No_Result</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Search:</b> {search}"))
-        await asyncio.sleep(60)
-        await n.delete()
-        try: await message.delete()
+    if movies:
+        # ✨ AUTO-CORRECTION LOGIC START
+        for movie in movies:
+            raw_title = movie.get("raw_title")
+            if not raw_title: continue
+            
+            clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", raw_title, flags=re.IGNORECASE)
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
+            
+            # Check DB silently
+            files, offset, total_results = await get_search_results(message.chat.id, clean_search, offset=0, filter=True)
+            
+            if files:
+                await s.edit_text(f"<b>[ ⚠️ ᴡʀᴏɴɢ ꜱᴘᴇʟʟɪɴɢ ᴅᴇᴛᴇᴄᴛᴇᴅ ]</b>\n\n✨ <i>ᴀᴜᴛᴏ-ᴄᴏʀʀᴇᴄᴛɪɴɢ ᴀɴᴅ ꜱᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:</i> <b>{raw_title}</b>...")
+                await asyncio.sleep(1.5)
+                spoll_data = (raw_title, files, offset, total_results)
+                return await auto_filter(client, message, s, spoll=spoll_data)
+        # ✨ AUTO-CORRECTION LOGIC END
+        
+        movielist = [m['title'] for m in movies[:5]]
+        SPELL_CHECK[message.id] = movielist
+        buttons = [[InlineKeyboardButton(text=movie.strip(), callback_data=f"spolling#{user_id}#{k}")] for k, movie in enumerate(movielist)]
+        buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏꜱᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
+        
+        suggestion_msg = await s.edit_text(text=f"<b>👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\nɪ ꜰᴏᴜɴᴅ ꜱᴏᴍᴇ ꜱɪᴍɪʟᴀʀ ᴛɪᴛʟᴇꜱ. ꜱᴇʟᴇᴄᴛ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ: 👇</b>", reply_markup=InlineKeyboardMarkup(buttons), link_preview_options=LinkPreviewOptions(is_disabled=True))
+        await asyncio.sleep(300)
+        try:
+            await suggestion_msg.delete()
+            await message.delete()
         except: pass
         return
 
-    buttons = [[InlineKeyboardButton(text=f"🎬 {movie.get('title')}", callback_data=f"spolling#{movie['id']}#{user_id}")] for movie in movies]
-    buttons.append([InlineKeyboardButton("🚫 ᴄʟᴏsᴇ 🚫", callback_data="close_data", style=enums.ButtonStyle.DANGER)])
-    suggestion_msg = await s.edit_text(text=f"<b>👋 ʜᴇʟʟᴏ {message.from_user.mention},\n\nɪ ꜰᴏᴜɴᴅ sᴏᴍᴇ sɪᴍɪʟᴀʀ ᴛɪᴛʟᴇs. sᴇʟᴇᴄᴛ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ: 👇</b>", reply_markup=InlineKeyboardMarkup(buttons), link_preview_options=LinkPreviewOptions(is_disabled=True))
-    await asyncio.sleep(300)
-    try:
-        await suggestion_msg.delete()
-        await message.delete()
+    # If IMDB doesn't have it, try DB Fuzzy match
+    all_titles = await db.get_all_movie_titles()
+    matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
+    if matches:
+        # ✨ FUZZY MATCH AUTO-CORRECTION START
+        best_match = matches[0][0]
+        clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", best_match, flags=re.IGNORECASE)
+        clean_search = re.sub(r"\s+", " ", clean_search).strip()
+        files, offset, total_results = await get_search_results(message.chat.id, clean_search, offset=0, filter=True)
+        
+        if files:
+            await s.edit_text(f"<b>[ ⚠️ ᴡʀᴏɴɢ ꜱᴘᴇʟʟɪɴɢ ᴅᴇᴛᴇᴄᴛᴇᴅ ]</b>\n\n✨ <i>ᴀᴜᴛᴏ-ᴄᴏʀʀᴇᴄᴛɪɴɢ ᴛᴏ ɴᴇᴀʀᴇꜱᴛ ᴍᴀᴛᴄʜ:</i> <b>{best_match}</b>...")
+            await asyncio.sleep(1.5)
+            spoll_data = (best_match, files, offset, total_results)
+            return await auto_filter(client, message, s, spoll=spoll_data)
+        # ✨ FUZZY MATCH AUTO-CORRECTION END
+        
+        db_btns = [[InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")] for match in matches]
+        db_btns.extend(btn)
+        return await s.edit_text(text=f"<b>👋 ʜᴇʏ {message.from_user.mention},\n\nɪ ᴄᴏᴜʟᴅɴ'ᴛ ꜰɪɴᴅ '{search}' ᴅɪʀᴇᴄᴛʟʏ.\nᴅɪᴅ ʏᴏᴜ ᴍᴇᴀɴ ᴏɴᴇ ᴏꜰ ᴛʜᴇꜱᴇ ꜰʀᴏᴍ ᴍʏ ʟɪʙʀᴀʀʏ? 👇</b>", reply_markup=InlineKeyboardMarkup(db_btns), link_preview_options=LinkPreviewOptions(is_disabled=True))
+
+    n = await s.edit_text(text=script.NOT_FILE_TXT.format(message.from_user.mention, search), reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True))
+    asyncio.create_task(temp.BOT.send_message(LOG_CHANNEL, f"<b>#No_Result</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Search:</b> {search}"))
+    await asyncio.sleep(60)
+    await n.delete()
+    try: await message.delete()
     except: pass
+    return
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
