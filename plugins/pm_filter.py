@@ -19,6 +19,7 @@ from plugins.commands import get_grp_stg
 
 BUTTONS = {}
 CAP = {}
+SPELL_CHECK = {}
 
 # --- 🚀 FAST IMDB SPELL SUGGEST API ---
 async def get_spell_suggest(query):
