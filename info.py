@@ -27,7 +27,7 @@ BOT_TOKEN = environ.get('BOT_TOKEN', '')
 PORT = int(environ.get('PORT', '8080'))
 
 # Upload your images to "postimages.org" and get direct link
-PICS = (environ.get('PICS', 'https://h.uguu.se/pMQmsSas.jpg https://h.uguu.se/pyLTKiJR.jpg https://h.uguu.se/xmVHOQzL.jpg https://d.uguu.se/iRcsSFvn.jpg')).split()
+PICS = (environ.get('PICS', 'https://i.ibb.co/gFRnRvwy/photo-2026-05-04-10-32-00-7635982760254898208.jpg')).split()
 
 # Bot Admins
 ADMINS = environ.get('ADMINS', '')

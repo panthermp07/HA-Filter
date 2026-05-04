@@ -498,7 +498,7 @@ async def auto_filter(client, msg, s, spoll=False):
             try: await message.delete()
             except: pass
 
-# --- 🚀 REPLACED: NEW SPELL SUGGESTER IMPLEMENTATION WITH AUTO-CORRECT ---
+# --- 🚀 ZERO-CLICK AUTO-CORRECT IMPLEMENTATION ---
 async def advantage_spell_chok(client, message, s):
     search = message.text
     google_search = search.replace(" ", "+")
@@ -516,8 +516,8 @@ async def advantage_spell_chok(client, message, s):
             clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", raw_title, flags=re.IGNORECASE)
             clean_search = re.sub(r"\s+", " ", clean_search).strip()
             
-            # Check DB silently
-            files, offset, total_results = await get_search_results(message.chat.id, clean_search, offset=0, filter=True)
+            # 🔥 FIXED: Removed chat_id and filter=True
+            files, offset, total_results = await get_search_results(clean_search)
             
             if files:
                 await s.edit_text(f"<b>[ ⚠️ ᴡʀᴏɴɢ ꜱᴘᴇʟʟɪɴɢ ᴅᴇᴛᴇᴄᴛᴇᴅ ]</b>\n\n✨ <i>ᴀᴜᴛᴏ-ᴄᴏʀʀᴇᴄᴛɪɴɢ ᴀɴᴅ ꜱᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:</i> <b>{raw_title}</b>...")
@@ -547,7 +547,9 @@ async def advantage_spell_chok(client, message, s):
         best_match = matches[0][0]
         clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", best_match, flags=re.IGNORECASE)
         clean_search = re.sub(r"\s+", " ", clean_search).strip()
-        files, offset, total_results = await get_search_results(message.chat.id, clean_search, offset=0, filter=True)
+        
+        # 🔥 FIXED: Removed chat_id and filter=True
+        files, offset, total_results = await get_search_results(clean_search)
         
         if files:
             await s.edit_text(f"<b>[ ⚠️ ᴡʀᴏɴɢ ꜱᴘᴇʟʟɪɴɢ ᴅᴇᴛᴇᴄᴛᴇᴅ ]</b>\n\n✨ <i>ᴀᴜᴛᴏ-ᴄᴏʀʀᴇᴄᴛɪɴɢ ᴛᴏ ɴᴇᴀʀᴇꜱᴛ ᴍᴀᴛᴄʜ:</i> <b>{best_match}</b>...")
