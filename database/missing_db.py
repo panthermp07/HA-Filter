@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from info import DATABASE_URL, DATABASE_NAME
+from info import SECOND_FILES_DATABASE_URL, DATABASE_NAME
 
-client = AsyncIOMotorClient(DATABASE_URL)
+client = AsyncIOMotorClient(SECOND_FILES_DATABASE_URL)
 db = client[DATABASE_NAME]
 missing_col = db['missing_files']
 
