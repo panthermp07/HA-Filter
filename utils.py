@@ -354,13 +354,13 @@ async def broadcast_messages(user_id, message, pin):
         m = await message.copy(chat_id=user_id)
         if pin:
             await m.pin(both_sides=True)
-        return "sᴜᴄᴄᴇss"
+        return "Success" # ✅ FIXED: Normal text instead of stylish text
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await broadcast_messages(user_id, message, pin)
     except Exception as e:
         await db.delete_user(int(user_id))
-        return "ᴇʀʀᴏʀ"
+        return "Error" # ✅ FIXED: Normal text instead of stylish text
 
 async def groups_broadcast_messages(chat_id, message, pin):
     try:
@@ -370,13 +370,13 @@ async def groups_broadcast_messages(chat_id, message, pin):
                 await k.pin()
             except:
                 pass
-        return "sᴜᴄᴄᴇss"
+        return "Success"
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await groups_broadcast_messages(chat_id, message, pin)
     except Exception as e:
         await db.delete_chat(chat_id)
-        return "ᴇʀʀᴏʀ"
+        return "Error"
 
 async def get_settings(group_id):
     settings = temp.SETTINGS.get(group_id)

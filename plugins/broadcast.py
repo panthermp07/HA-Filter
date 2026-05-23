@@ -57,10 +57,11 @@ async def users_broadcast(bot, message):
             if len(tasks) >= 20:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for sts in results:
-                    if sts == 'Success':
-                        success += 1
-                    else:
+                    # ✅ FIX: Ab yeh kisi bhi success value aur exception ko properly handle karega
+                    if isinstance(sts, Exception) or sts in [False, 'Error', 'Failed', None]:
                         failed += 1
+                    else:
+                        success += 1
                 tasks.clear()
                 await asyncio.sleep(1) # Limit Bypass
                 
@@ -77,10 +78,11 @@ async def users_broadcast(bot, message):
         if tasks:
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for sts in results:
-                if sts == 'Success':
-                    success += 1
-                else:
+                # ✅ FIX
+                if isinstance(sts, Exception) or sts in [False, 'Error', 'Failed', None]:
                     failed += 1
+                else:
+                    success += 1
 
         time_taken = get_readable_time(time.time() - start_time)
         await b_sts.edit(f"<b>🎉 ᴜsᴇʀs ʙʀᴏᴀᴅᴄᴀsᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!</b>\n⏱ <b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ ɪɴ:</b> {time_taken}\n\n👥 <b>ᴛᴏᴛᴀʟ ᴜsᴇʀs:</b> <code>{total_users}</code>\n✅ <b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ:</b> <code>{done} / {total_users}</code>\n🚀 <b>sᴜᴄᴄᴇss:</b> <code>{success}</code>\n❌ <b>ꜰᴀɪʟᴇᴅ:</b> <code>{failed}</code>")
@@ -123,10 +125,11 @@ async def groups_broadcast(bot, message):
             if len(tasks) >= 20:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for sts in results:
-                    if sts == 'Success':
-                        success += 1
-                    else:
+                    # ✅ FIX
+                    if isinstance(sts, Exception) or sts in [False, 'Error', 'Failed', None]:
                         failed += 1
+                    else:
+                        success += 1
                 tasks.clear()
                 await asyncio.sleep(1)
                 
@@ -137,14 +140,15 @@ async def groups_broadcast(bot, message):
                         last_update = time.time()
                     except:
                         pass
-                        
+                    
         if tasks:
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for sts in results:
-                if sts == 'Success':
-                    success += 1
-                else:
+                # ✅ FIX
+                if isinstance(sts, Exception) or sts in [False, 'Error', 'Failed', None]:
                     failed += 1
+                else:
+                    success += 1
 
         time_taken = get_readable_time(time.time() - start_time)
         await b_sts.edit(f"<b>🎉 ɢʀᴏᴜᴘs ʙʀᴏᴀᴅᴄᴀsᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!</b>\n⏱ <b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ ɪɴ:</b> {time_taken}\n\n👥 <b>ᴛᴏᴛᴀʟ ɢʀᴏᴜᴘs:</b> <code>{total_chats}</code>\n✅ <b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ:</b> <code>{done} / {total_chats}</code>\n🚀 <b>sᴜᴄᴄᴇss:</b> <code>{success}</code>\n❌ <b>ꜰᴀɪʟᴇᴅ:</b> <code>{failed}</code>")
