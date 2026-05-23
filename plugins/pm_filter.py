@@ -2,24 +2,41 @@ import asyncio
 import re
 import aiohttp
 import json
-from time import time as time_now
 import math, os
 import qrcode, random
 from thefuzz import process
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
 from datetime import datetime, timedelta
-from info import IS_PREMIUM, PICS, TUTORIAL, SHORTLINK_API, SHORTLINK_URL, OWNER_USERNAME, RECEIPT_SEND_USERNAME, UPI_ID, UPI_NAME, PRE_DAY_AMOUNT, SECOND_FILES_DATABASE_URL, ADMINS, URL, MAX_BTN, BIN_CHANNEL, IS_STREAM, DELETE_TIME, FILMS_LINK, LOG_CHANNEL, SUPPORT_GROUP, SUPPORT_LINK, UPDATES_LINK, LANGUAGES, QUALITY, PREMIUM_NOTIFY_CHANNEL, REACTIONS
-from pyrogram.types import WebAppInfo, PreCheckoutQuery, Message, LabeledPrice, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto, LinkPreviewOptions
+from info import (
+    IS_PREMIUM, PICS, TUTORIAL, SHORTLINK_API, SHORTLINK_URL, OWNER_USERNAME, 
+    RECEIPT_SEND_USERNAME, UPI_ID, UPI_NAME, PRE_DAY_AMOUNT, SECOND_FILES_DATABASE_URL, 
+    ADMINS, URL, MAX_BTN, BIN_CHANNEL, IS_STREAM, DELETE_TIME, FILMS_LINK, 
+    LOG_CHANNEL, SUPPORT_GROUP, SUPPORT_LINK, UPDATES_LINK, LANGUAGES, QUALITY, 
+    PREMIUM_NOTIFY_CHANNEL, REACTIONS
+)
+from pyrogram.types import (
+    WebAppInfo, Message, InlineKeyboardMarkup, InlineKeyboardButton, 
+    CallbackQuery, InputMediaPhoto, LinkPreviewOptions, ReplyParameters
+)
 from pyrogram import Client, filters, enums
-from utils import is_premium, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_readable_time, get_poster, temp, get_settings, save_group_settings
+from utils import (
+    is_premium, get_size, is_subscribed, is_check_admin, get_wish, 
+    get_shortlink, get_readable_time, get_poster, temp, get_settings, 
+    save_group_settings, get_plan_name
+)
 from database.users_chats_db import db
-from database.ia_filterdb import get_search_results, delete_files, delete_all_files, db_count_documents, second_db_count_documents, get_available_tags
+from database.ia_filterdb import (
+    get_search_results, delete_files, delete_all_files, 
+    db_count_documents, second_db_count_documents, get_available_tags
+)
 from plugins.commands import get_grp_stg
 
 BUTTONS = {}
 CAP = {}
 SPELL_CHECK = {}
+QUERY_CACHE = {}
+
 
 async def get_spell_suggest(query):
     query = query.lower().strip()
@@ -150,6 +167,11 @@ def create_menu_buttons(items, tag_type, key, offset, req):
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_search(client, message):
     if message.text.startswith("/"): return
+    
+    # 🆕 Maintenance Check
+    if message.from_user.id not in ADMINS and await db.get_repair_mode():
+        return await message.reply_text("⚠️ <b>Sᴏʀʀʏ ꜰᴏʀ ᴛʜᴇ ɪɴᴄᴏɴᴠᴇɴɪᴇɴᴄᴇ, ᴡᴇ ᴀʀᴇ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ. ᴡᴇ'ʟʟ ʙᴇ ʙᴀᴄᴋ sᴏᴏɴ!</b>")
+        
     try: await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     except: pass
     try: await message.react(emoji=random.choice(REACTIONS), big=True)
@@ -157,39 +179,57 @@ async def pm_search(client, message):
 
     stg = await db.get_bot_sttgs()
     if await is_premium(message.from_user.id, client):
-        s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
+        if not stg.get('AUTO_FILTER', True): return await message.reply_text('<b>❌ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ɪs ᴅɪsᴀʙʟᴇᴅ!</b>')
+        s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
         await auto_filter(client, message, s)
     else:
-        if stg and stg.get('PM_SEARCH'):
-            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", quote=True)
+        if stg and stg.get('PM_SEARCH', True):
+            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
             await auto_filter(client, message, s)
         else:
             clean_search, _, _, _, _ = parse_query(message.text)
-            files, n_offset, total = await get_search_results(clean_search)
+            cache_key = clean_search.lower()
+            if cache_key in QUERY_CACHE: files, n_offset, total = QUERY_CACHE[cache_key]
+            else:
+                files, n_offset, total = await get_search_results(clean_search)
+                QUERY_CACHE[cache_key] = (files, n_offset, total)
+
             if int(total) != 0:
                 btn = [[InlineKeyboardButton("🗂 ᴄʟɪᴄᴋ ʜᴇʀᴇ 🗂", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)],
                        [InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium", style=enums.ButtonStyle.SUCCESS)]]
-                try: await message.reply_text(f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', reply_markup=InlineKeyboardMarkup(btn), effect_id=5104841245755180586)
-                except: await message.reply_text(f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ 👇</i></b>\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', reply_markup=InlineKeyboardMarkup(btn))
+                await message.reply_text(f'<b><i>🤗 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ 👇</i></b>\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴍᴀɪɴ ɢʀᴏᴜᴘ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴘᴍ!</b>', reply_markup=InlineKeyboardMarkup(btn), effect_id=5104841245755180586)
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def group_search(client, message):
-    chat_id = message.chat.id
     user_id = message.from_user.id if message and message.from_user else 0
+    
+    # 🆕 Maintenance Check
+    if user_id not in ADMINS and await db.get_repair_mode():
+        k = await message.reply_text("⚠️ <b>Sᴏʀʀʏ ꜰᴏʀ ᴛʜᴇ ɪɴᴄᴏɴᴠᴇɴɪᴇɴᴄᴇ, ᴡᴇ ᴀʀᴇ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ. ᴡᴇ'ʟʟ ʙᴇ ʙᴀᴄᴋ sᴏᴏɴ!</b>")
+        await asyncio.sleep(10)
+        await k.delete()
+        try: await message.delete()
+        except: pass
+        return
+
     stg = await db.get_bot_sttgs()
-    if stg and stg.get('AUTO_FILTER'):
-        if not user_id:
-            return await message.reply("<b>⚠️ ɪ ᴀᴍ ɴᴏᴛ ᴡᴏʀᴋɪɴɢ ꜰᴏʀ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴs!</b>")
+    if stg.get('AUTO_FILTER', True):
+        if not user_id: return await message.reply("<b>⚠️ ɪ ᴀᴍ ɴᴏᴛ ᴡᴏʀᴋɪɴɢ ꜰᴏʀ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴs!</b>")
         try: await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
         except: pass
         
         if message.chat.id == SUPPORT_GROUP:
             clean_search, _, _, _, _ = parse_query(message.text)
-            files, offset, total = await get_search_results(clean_search)
+            cache_key = clean_search.lower()
+            if cache_key in QUERY_CACHE: files, offset, total = QUERY_CACHE[cache_key]
+            else:
+                files, offset, total = await get_search_results(clean_search)
+                QUERY_CACHE[cache_key] = (files, offset, total)
+                
             if files: await message.reply_text(f'<b>📊 ᴛᴏᴛᴀʟ <code>{total}</code> ʀᴇsᴜʟᴛs ꜰᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.</b>', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Here", url=FILMS_LINK, style=enums.ButtonStyle.PRIMARY)]]))
             return
             
-        if message.text.startswith("/"): return
+        if message.text.startswith("/") or re.findall(r'https?://\S+|www\.\S+|t\.me/\S+|@\w+', message.text): return
         elif '@admin' in message.text.lower() or '@admins' in message.text.lower():
             if await is_check_admin(client, message.chat.id, message.from_user.id): return
             admins = []
@@ -204,17 +244,12 @@ async def group_search(client, message):
             hidden_mentions = (f'[\u2064](tg://user?id={uid})' for uid in admins)
             return await message.reply_text('<b>✅ ʀᴇᴘᴏʀᴛ sᴇɴᴛ!</b>' + ''.join(hidden_mentions))
             
-        elif re.findall(r'https?://\S+|www\.\S+|t\.me/\S+|@\w+', message.text):
-            if await is_check_admin(client, message.chat.id, message.from_user.id): return
-            await message.delete()
-            return await message.reply('<b>⚠️ ʟɪɴᴋs ᴀʀᴇ ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ ʜᴇʀᴇ!</b>')
-        
         elif '#request' in message.text.lower():
             if message.from_user.id in ADMINS: return
             await client.send_message(LOG_CHANNEL, f"<b>#Request</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Group:</b> {message.chat.title}\n\n★ <b>Message:</b> {re.sub(r'#request', '', message.text.lower())}")
             return await message.reply_text("<b>✅ ʀᴇǫᴜᴇsᴛ sᴇɴᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ!</b>")
         else:
-            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>")
+            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
             await auto_filter(client, message, s)
     else:
         k = await message.reply_text('<b>❌ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ɪs ᴏꜰꜰ!</b>')
@@ -417,13 +452,20 @@ async def auto_filter(client, msg, s, spoll=False):
         settings = await get_settings(message.chat.id)
         search = message.text
         clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
-        files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
+        
+        # ✨ Cache checking for Speed
+        cache_key = f"{clean_search}_{req_lang}_{req_qual}_{req_year}_{req_season}".lower()
+        if cache_key in QUERY_CACHE:
+            files, offset, total_results = QUERY_CACHE[cache_key]
+        else:
+            files, offset, total_results = await get_search_results(clean_search, req_lang=req_lang, req_qual=req_qual, req_year=req_year, req_season=req_season)
+            QUERY_CACHE[cache_key] = (files, offset, total_results)
+            
         if not files:
             if settings["spell_check"]:
                 return await advantage_spell_chok(client, message, s)
             else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
     else:
-        # ✨ Handle both Button Clicks and Zero-Click Auto-Correct properly
         if hasattr(msg, "message"): # CallbackQuery
             settings = await get_settings(msg.message.chat.id)
             message = msg.message.reply_to_message if msg.message.reply_to_message else msg.message
@@ -433,6 +475,10 @@ async def auto_filter(client, msg, s, spoll=False):
             
         search, files, offset, total_results = spoll
         clean_search, req_lang, req_qual, req_year, req_season = parse_query(search)
+        
+        cache_key = f"{clean_search}_{req_lang}_{req_qual}_{req_year}_{req_season}".lower()
+        if cache_key not in QUERY_CACHE:
+            QUERY_CACHE[cache_key] = (files, offset, total_results)
 
     if not message or message is None:
         if hasattr(msg, "answer"): await msg.answer("ᴏʟᴅ ᴍᴇꜱꜱᴀɢᴇ! ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
@@ -484,7 +530,7 @@ async def auto_filter(client, msg, s, spoll=False):
     if imdb and imdb.get('poster'):
         await s.delete()
         try:
-            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
+            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
@@ -492,14 +538,14 @@ async def auto_filter(client, msg, s, spoll=False):
                 except: pass
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             poster = imdb.get('poster').replace('.jpg', "._V1_UX360.jpg")
-            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, quote=True)
+            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
                 try: await message.delete()
                 except: pass
         except Exception as e:
-            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, quote=True)
+            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
@@ -523,7 +569,6 @@ async def advantage_spell_chok(client, message, s):
     movies = await get_spell_suggest(search)
         
     if movies:
-        # ✨ AUTO-CORRECTION LOGIC START
         for movie in movies:
             raw_title = movie.get("raw_title")
             if not raw_title: continue
@@ -538,7 +583,6 @@ async def advantage_spell_chok(client, message, s):
                 await asyncio.sleep(1.5)
                 spoll_data = (raw_title, files, offset, total_results)
                 return await auto_filter(client, message, s, spoll=spoll_data)
-        # ✨ AUTO-CORRECTION LOGIC END
         
         movielist = [m['title'] for m in movies[:5]]
         SPELL_CHECK[s.id] = movielist
@@ -553,11 +597,9 @@ async def advantage_spell_chok(client, message, s):
         except: pass
         return
 
-    # If IMDB doesn't have it, try DB Fuzzy match
     all_titles = await db.get_all_movie_titles()
     matches = process.extractBests(search, all_titles, score_cutoff=60, limit=5)
     if matches:
-        # ✨ FUZZY MATCH AUTO-CORRECTION START
         best_match = matches[0][0]
         clean_search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", best_match, flags=re.IGNORECASE)
         clean_search = re.sub(r"\s+", " ", clean_search).strip()
@@ -569,7 +611,6 @@ async def advantage_spell_chok(client, message, s):
             await asyncio.sleep(1.5)
             spoll_data = (best_match, files, offset, total_results)
             return await auto_filter(client, message, s, spoll=spoll_data)
-        # ✨ FUZZY MATCH AUTO-CORRECTION END
         
         db_btns = [[InlineKeyboardButton(text=f"✨ {match[0]}", callback_data=f"spolling#dbmatch#{user_id}#{match[0][:20]}")] for match in matches]
         db_btns.extend(btn)
@@ -717,10 +758,38 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await q.delete()
             await query.message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>")
 
-    
+    # ✨ NEW PUBLIC UPDATE INTEGRATION: WebApp Payment Validation
+    elif query.data.startswith("accept_payment"):
+        _, id, days = query.data.split("-")
+        id = int(id)
+        days = int(days)
+        user = await client.get_users(id)
+        mp = await db.get_plan(id)
+        ex = datetime.now() + timedelta(days=days)
+        mp['expire'] = ex
+        plan = get_plan_name(days)
+        mp['plan'] = plan
+        mp['premium'] = True
+        await db.update_plan(id, mp)
+        await query.message.edit(f"<b>✅ ɢɪᴠᴇɴ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ {user.mention}\n⏳ ᴇxᴘɪʀᴇ: <code>{ex.strftime('%Y.%m.%d %H:%M:%S')}</code></b>")
+        try:
+            await client.send_message(user.id, f"<b>🎉 ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ! [{plan}]\n\n⏳ ᴇxᴘɪʀᴇs: <code>{ex.strftime('%Y.%m.%d %H:%M:%S')}</code></b>")
+        except:
+            pass
+
+    elif query.data.startswith("reject_payment"):
+        _, id, days = query.data.split("-")
+        id = int(id)
+        user = await client.get_users(id)
+        await query.message.edit(f"<b>❌ {user.mention}'s ᴘᴀʏᴍᴇɴᴛ ᴡᴀs ʀᴇᴊᴇᴄᴛᴇᴅ!!</b>")
+        try:
+            await client.send_message(user.id, f"<b>❌ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ᴡᴀs ʀᴇᴊᴇᴄᴛᴇᴅ!\n\n📞 ᴄᴏɴᴛᴀᴄᴛ: @{OWNER_USERNAME}</b>")
+        except:
+            pass
+
     elif query.data == "start":
         buttons = [[
-            InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ +", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
+            InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ +", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
         ],[
             InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
             InlineKeyboardButton('🧑‍💻 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
@@ -756,7 +825,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "stats":
         if query.from_user.id not in ADMINS:
             return await query.answer("⚠️ ᴀᴅᴍɪɴs ᴏɴʟʏ!", show_alert=True)
-        files = db_count_documents()
+        files = await db_count_documents()
         users = await db.total_users_count()
         chats = await db.total_chat_count()
         prm = await db.get_premium_count()
@@ -765,7 +834,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
         if SECOND_FILES_DATABASE_URL:
             secnd_files_db_used_size = get_size(await db.get_second_files_db_size())
-            secnd_files = second_db_count_documents()
+            secnd_files = await second_db_count_documents()
         else:
             secnd_files_db_used_size = '-'
             secnd_files = '-'
@@ -1049,7 +1118,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         
         try:
             from shortzy import Shortzy
-            from info import LOG_CHANNEL
             import logging
             
             shortzy = Shortzy(api_key=api_key, base_site=shortener_url)
@@ -1183,24 +1251,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ident, key, req = query.data.split("#")
         if int(req) != query.from_user.id:
             return await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴅᴏɴ'ᴛ ᴄʟɪᴄᴋ ᴏᴛʜᴇʀs ʀᴇsᴜʟᴛs!", show_alert=True)        
-        files = temp.FILES.get(key)
+        files = temp.GET_ALL_FILES.get(key)
         if not files:
             await query.answer(f"⚠️ ʜᴇʟʟᴏ {query.from_user.first_name},\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴇᴡ ʀᴇǫᴜᴇsᴛ!", show_alert=True)
             return        
         await query.answer(url=f"https://t.me/{temp.U_NAME}?start=all_{query.message.chat.id}_{key}")
-
-    elif query.data == "clear_normal_fsub":
-        await db.update_bot_sttgs('FORCE_SUB_CHANNELS', "")
-        await query.message.edit("<b>✅ ɴᴏʀᴍᴀʟ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴄʟᴇᴀʀᴇᴅ.</b>")
-
-    elif query.data == "clear_request_fsub":
-        await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', "")
-        await query.message.edit("<b>✅ ʀᴇǫᴜᴇsᴛ ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs ᴄʟᴇᴀʀᴇᴅ.</b>")
-        
-    elif query.data == "clear_all_fsub":
-        await db.update_bot_sttgs('FORCE_SUB_CHANNELS', "")
-        await db.update_bot_sttgs('REQUEST_FORCE_SUB_CHANNELS', "")
-        await query.message.edit("<b>🗑️ ᴀʟʟ ꜰsᴜʙ sᴇᴛᴛɪɴɢs ʜᴀᴠᴇ ʙᴇᴇɴ ᴄʟᴇᴀʀᴇᴅ.</b>")
 
     elif query.data == "unmute_all_members":
         if not await is_check_admin(client, query.message.chat.id, query.from_user.id):
@@ -1274,7 +1329,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         try:
             async for member in client.get_chat_members(query.message.chat.id):
                 if member.user.is_deleted:
-                    users_id.append(member.user.id)
+                    users_id.append(member. user.id)
             for user_id in users_id:
                 await client.ban_chat_member(query.message.chat.id, user_id, datetime.now() + timedelta(seconds=30))
         except Exception as e:

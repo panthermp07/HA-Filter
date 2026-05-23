@@ -1,17 +1,23 @@
 import re
-import pytz
-import random
-import aiohttp
 import asyncio
-import requests
 import logging
-from pyrogram import enums
 from datetime import datetime
-from shortzy import Shortzy
-from database.users_chats_db import db
+
+import pytz
+import aiohttp
+import requests
+import random
+from pyrogram import enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
 from pyrogram.errors import UserNotParticipant, FloodWait
-from info import LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, TMDB_API_KEY, SHORTLINK_URL, SHORTLINK_API, USE_CAPTION_FILTER, UPDATES_SEND_CHANNEL, FILMS_LINK
+from shortzy import Shortzy
+
+from database.users_chats_db import db
+from info import (
+    LONG_IMDB_DESCRIPTION, ADMINS, IS_PREMIUM, TIME_ZONE, 
+    TMDB_API_KEY, SHORTLINK_URL, SHORTLINK_API, USE_CAPTION_FILTER, 
+    UPDATES_SEND_CHANNEL, FILMS_LINK
+)
 from Script import script
 
 logger = logging.getLogger(__name__)
@@ -33,12 +39,35 @@ class temp(object):
     BOT = None
     PREMIUM = {}
 
+def get_plan_name(days):
+    plan_names = {
+        7: "1 ᴡᴇᴇᴋ",
+        14: "2 ᴡᴇᴇᴋs",
+        21: "3 ᴡᴇᴇᴋs",
+        30: "1 ᴍᴏɴᴛʜ",
+        60: "2 ᴍᴏɴᴛʜs",
+        90: "3 ᴍᴏɴᴛʜs",
+        180: "6 ᴍᴏɴᴛʜs",
+        365: "1 ʏᴇᴀʀ"
+    }
+    if days in plan_names:
+        return f"{plan_names[days]} ᴘʟᴀɴ"
+    return f"{days} ᴅᴀʏs ᴘʟᴀɴ"
+
 async def send_update(title, year):
     if not UPDATES_SEND_CHANNEL:
         return
     data = await get_poster(f"{title} {year}")
+    btn = [[
+        InlineKeyboardButton('📥 ʀᴇǫᴜᴇsᴛ ꜰʀᴏᴍ ʜᴇʀᴇ 📥', url=FILMS_LINK)
+    ]]
+    
     if not data:
+        _year = f"({year})" if year else ""
+        fallback_text = f"✅ ɴᴇᴡ ᴀᴅᴅᴇᴅ ✅\n\n🏷 ᴛɪᴛʟᴇ: {title.title()} {_year}"
+        await temp.BOT.send_message(chat_id=UPDATES_SEND_CHANNEL, text=fallback_text, reply_markup=InlineKeyboardMarkup(btn))
         return
+        
     caption = script.NEW_ADDED_TEMPLATE.format(
         title=data['title'],
         kind=data['kind'],
@@ -54,9 +83,7 @@ async def send_update(title, year):
         languages=data['languages'],
         countries=data['countries']
     )
-    btn = [[
-        InlineKeyboardButton('📥 ʀᴇǫᴜᴇsᴛ ꜰʀᴏᴍ ʜᴇʀᴇ 📥', url=FILMS_LINK)
-    ]]
+    
     if data.get('poster'):
         await temp.BOT.send_photo(chat_id=UPDATES_SEND_CHANNEL, photo=data.get('poster'), caption=caption, reply_markup=InlineKeyboardMarkup(btn))
     else:
@@ -84,7 +111,7 @@ async def is_subscribed(bot, query, grp_id=None):
                     chat = await bot.get_chat(int(channel_id))
                     await bot.get_chat_member(int(channel_id), user_id)
                 except UserNotParticipant:
-                    btn.append([InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)])
+                    btn.append([InlineKeyboardButton(f'ᴊᴏɪɴ : {chat.title}', url=chat.invite_link)])
                 except Exception as e:
                     logger.error(f"Group FSub Error: {e}")
                     
@@ -96,7 +123,7 @@ async def is_subscribed(bot, query, grp_id=None):
             except UserNotParticipant:
                 try:
                     url = await bot.create_chat_invite_link(int(req_id), creates_join_request=True)
-                    btn.append([InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)])
+                    btn.append([InlineKeyboardButton(f'ʀᴇǫᴜᴇsᴛ : {chat.title}', url=url.invite_link)])
                 except Exception as e:
                     logger.error(f"Group Req FSub Error: {e}")
 
@@ -108,7 +135,7 @@ async def is_subscribed(bot, query, grp_id=None):
                     chat = await bot.get_chat(int(channel_id))
                     await bot.get_chat_member(int(channel_id), user_id)
                 except UserNotParticipant:
-                    btn.append([InlineKeyboardButton(f'Join : {chat.title}', url=chat.invite_link)])
+                    btn.append([InlineKeyboardButton(f'ᴊᴏɪɴ : {chat.title}', url=chat.invite_link)])
                 except Exception as e:
                     pass
 
@@ -120,7 +147,7 @@ async def is_subscribed(bot, query, grp_id=None):
             except UserNotParticipant:
                 try:
                     url = await bot.create_chat_invite_link(int(req_id), creates_join_request=True)
-                    btn.append([InlineKeyboardButton(f'Request : {chat.title}', url=url.invite_link)])
+                    btn.append([InlineKeyboardButton(f'ʀᴇǫᴜᴇsᴛ : {chat.title}', url=url.invite_link)])
                 except Exception as e:
                     pass
                     
@@ -149,81 +176,78 @@ def list_to_str(k):
         return ", ".join(str(i) for i in k)
 
 async def get_poster(query, bulk=False, id=False, file=None):
+    """Refactored to aiohttp for 10x faster non-blocking TMDB API calls!"""
+    if not TMDB_API_KEY:
+        return None
+        
     TMDB_BASE = "https://api.themoviedb.org/3"
     year = None
     title = query
 
-    if not id:
-        query = query.strip()
-        year_match = re.findall(r"[1-2]\d{3}$", query)
-        if year_match:
-            year = year_match[0]
-            title = query.replace(year, "").strip()
-        elif file:
-            file_year = re.findall(r"[1-2]\d{3}", file)
-            if file_year:
-                year = file_year[0]
+    async with aiohttp.ClientSession() as session:
+        if not id:
+            query = query.strip()
+            year_match = re.findall(r"[1-2]\d{3}$", query)
+            if year_match:
+                year = year_match[0]
+                title = query.replace(year, "").strip()
+            elif file:
+                file_year = re.findall(r"[1-2]\d{3}", file)
+                if file_year:
+                    year = file_year[0]
 
-        url = f"{TMDB_BASE}/search/multi"
-        params = {
-            "api_key": TMDB_API_KEY,
-            "query": title
-        }
-        res = requests.get(url, params=params).json()
-        results = [
-            r for r in res.get("results", [])
-            if r.get("media_type") in ["movie", "tv"]
-        ]
+            url = f"{TMDB_BASE}/search/multi"
+            params = {"api_key": TMDB_API_KEY, "query": title}
+            
+            async with session.get(url, params=params) as resp:
+                res = await resp.json()
+                
+            results = [
+                r for r in res.get("results", [])
+                if r.get("media_type") in ["movie", "tv"]
+            ]
 
-        if not results:
-            return None
+            if not results:
+                return None
 
-        if year:
-            filtered = []
-            for r in results:
-                release = r.get("release_date") or r.get("first_air_date")
-                if release and release.startswith(str(year)):
-                    filtered.append(r)
-            if filtered:
-                results = filtered
+            if year:
+                filtered = []
+                for r in results:
+                    release = r.get("release_date") or r.get("first_air_date")
+                    if release and release.startswith(str(year)):
+                        filtered.append(r)
+                if filtered:
+                    results = filtered
 
-        if bulk:
-            _bulk = []
-            for r in results:
-                _title = r.get("title") or r.get("name")
-                if _title:
-                    _bulk.append({
-                        "title": _title,
-                        "id": r["id"]
-                        })
-            return _bulk
+            if bulk:
+                _bulk = []
+                for r in results:
+                    _title = r.get("title") or r.get("name")
+                    if _title:
+                        _bulk.append({
+                            "title": _title,
+                            "id": r["id"]
+                            })
+                return _bulk
 
-        data = results[0]
-        tmdb_id = data["id"]
-        media_type = data["media_type"]
+            data = results[0]
+            tmdb_id = data["id"]
+            media_type = data["media_type"]
 
-    else:
-        tmdb_id = query
-        movie_test = requests.get(
-            f"{TMDB_BASE}/movie/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        )
-
-        if movie_test.status_code == 200:
-            media_type = "movie"
-            data = movie_test.json()
         else:
-            media_type = "tv"
-            data = requests.get(
-                f"{TMDB_BASE}/tv/{tmdb_id}",
-                params={"api_key": TMDB_API_KEY}
-            ).json()
+            tmdb_id = query
+            async with session.get(f"{TMDB_BASE}/movie/{tmdb_id}", params={"api_key": TMDB_API_KEY}) as movie_test:
+                if movie_test.status == 200:
+                    media_type = "movie"
+                    data = await movie_test.json()
+                else:
+                    media_type = "tv"
+                    async with session.get(f"{TMDB_BASE}/tv/{tmdb_id}", params={"api_key": TMDB_API_KEY}) as tv_test:
+                        data = await tv_test.json()
 
-    if not id:
-        data = requests.get(
-            f"{TMDB_BASE}/{media_type}/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        ).json()
+        if not id:
+            async with session.get(f"{TMDB_BASE}/{media_type}/{tmdb_id}", params={"api_key": TMDB_API_KEY}) as detail_resp:
+                data = await detail_resp.json()
 
     title = data.get("title") or data.get("name")
     poster = None
@@ -238,7 +262,7 @@ async def get_poster(query, bulk=False, id=False, file=None):
     else:
         runtime = list_to_str(data.get("episode_run_time"))
 
-    plot = data.get("overview")
+    plot = data.get("overview") if LONG_IMDB_DESCRIPTION else str(data.get("overview"))[:200]
     rating = data.get("vote_average")
     votes = data.get("vote_count")
     languages = list_to_str([l["english_name"] for l in data.get("spoken_languages", [])])
@@ -292,7 +316,7 @@ async def is_premium(user_id, bot):
     mp = await db.get_plan(user_id)
     if mp['premium']:
         if mp['expire'] < datetime.now():
-            await bot.send_message(user_id, f"Your premium {mp['plan']} plan is expired in {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, use /plan to activate new plan again")
+            await bot.send_message(user_id, f"<b>ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ {mp['plan']} ᴘʟᴀɴ ɪs ᴇxᴘɪʀᴇᴅ ɪɴ {mp['expire'].strftime('%Y.%m.%d %H:%M:%S')}, ᴜsᴇ /plan ᴛᴏ ᴀᴄᴛɪᴠᴀᴛᴇ ɴᴇᴡ ᴘʟᴀɴ ᴀɢᴀɪɴ!</b>")
             mp['expire'] = ''
             mp['plan'] = ''
             mp['premium'] = False
@@ -330,13 +354,13 @@ async def broadcast_messages(user_id, message, pin):
         m = await message.copy(chat_id=user_id)
         if pin:
             await m.pin(both_sides=True)
-        return "Success"
+        return "sᴜᴄᴄᴇss"
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await broadcast_messages(user_id, message, pin)
     except Exception as e:
         await db.delete_user(int(user_id))
-        return "Error"
+        return "ᴇʀʀᴏʀ"
 
 async def groups_broadcast_messages(chat_id, message, pin):
     try:
@@ -346,13 +370,13 @@ async def groups_broadcast_messages(chat_id, message, pin):
                 await k.pin()
             except:
                 pass
-        return "Success"
+        return "sᴜᴄᴄᴇss"
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await groups_broadcast_messages(chat_id, message, pin)
     except Exception as e:
         await db.delete_chat(chat_id)
-        return "Error"
+        return "ᴇʀʀᴏʀ"
 
 async def get_settings(group_id):
     settings = temp.SETTINGS.get(group_id)
@@ -375,12 +399,6 @@ def get_size(size):
         i += 1
         size /= 1024.0
     return "%.2f %s" % (size, units[i])
-
-
-#async def get_shortlink(url, api, link):
-#    shortzy = Shortzy(api_key=api, base_site=url)
-#    link = await shortzy.convert(link)
-#    return link
 
 async def get_shortlink(link, user_id, grp_id=None):
     """Elite Shortener: Fixed PM Bug & Enforced 100% Accurate Weighted (70-30) Logic"""

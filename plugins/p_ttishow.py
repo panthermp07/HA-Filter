@@ -17,15 +17,15 @@ async def welcome(bot, message):
     if message.new_chat_member and not message.old_chat_member:
         if message.new_chat_member.user.id == temp.ME:
             buttons = [[
-                InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ', url=UPDATES_LINK),
-                InlineKeyboardButton('ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
+                InlineKeyboardButton('📢 ᴜᴘᴅᴀᴛᴇs', url=UPDATES_LINK),
+                InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
             ]]
-            reply_markup=InlineKeyboardMarkup(buttons)
+            reply_markup = InlineKeyboardMarkup(buttons)
             user = message.from_user.mention if message.from_user else "ᴅᴇᴀʀ"
             await bot.send_photo(
                 chat_id=message.chat.id, 
                 photo=random.choice(PICS), 
-                caption=f"👋 ʜᴇʟʟᴏ {user},\n\nᴛʜᴀɴᴋ ʏᴏᴜ ꜰᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ <b>'{message.chat.title}'</b> ɢʀᴏᴜᴘ! ᴅᴏɴ'ᴛ ꜰᴏʀɢᴇᴛ ᴛᴏ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ. ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴋɴᴏᴡ ᴍᴏʀᴇ, ᴀsᴋ ɪɴ ᴛʜᴇ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ. 😘</b>", 
+                caption=f"<b>👋 ʜᴇʟʟᴏ {user},\n\nᴛʜᴀɴᴋ ʏᴏᴜ ꜰᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ <i>'{message.chat.title}'</i> ɢʀᴏᴜᴘ! ᴅᴏɴ'ᴛ ꜰᴏʀɢᴇᴛ ᴛᴏ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ. ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴋɴᴏᴡ ᴍᴏʀᴇ, ᴀsᴋ ɪɴ ᴛʜᴇ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ. 😘</b>", 
                 reply_markup=reply_markup
             )
             
@@ -51,7 +51,7 @@ async def welcome(bot, message):
 
 @Client.on_message(filters.command('restart') & filters.user(ADMINS))
 async def restart_bot(bot, message):
-    msg = await message.reply("<b>⏳ ʀᴇsᴛᴀʀᴛɪɴɢ...</b>")
+    msg = await message.reply("<b>⏳ ʀᴇsᴛᴀʀᴛɪɴɢ ɪɴꜰɪɴɪᴛʏ sʏsᴛᴇᴍs...</b>")
     with open('restart.txt', 'w+') as file:
         file.write(f"{msg.chat.id}\n{msg.id}")
     os.execl(sys.executable, sys.executable, "bot.py")
@@ -67,7 +67,7 @@ async def leave_a_chat(bot, message):
         chat = message.text.split(None, 2)[1]
     else:
         chat = message.command[1]
-        reason = "No reason provided."
+        reason = "ɴᴏ ʀᴇᴀsᴏɴ ᴘʀᴏᴠɪᴅᴇᴅ."
     try:
         chat = int(chat)
     except:
@@ -75,16 +75,16 @@ async def leave_a_chat(bot, message):
         
     try:
         buttons = [[
-            InlineKeyboardButton('sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK)
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK)
         ]]
-        reply_markup=InlineKeyboardMarkup(buttons)
+        reply_markup = InlineKeyboardMarkup(buttons)
         await bot.send_message(
             chat_id=chat,
-            text=f"<b>👋 ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅs,\n\nᴍʏ ᴏᴡɴᴇʀ ʜᴀs ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ᴛʜɪs ɢʀᴏᴜᴘ, sᴏ ɪ ᴍᴜsᴛ ɢᴏ! ɪꜰ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ, ᴄᴏɴᴛᴀᴄᴛ ᴍʏ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.\n\nʀᴇᴀsᴏɴ: <code>{reason}</code></b>",
+            text=f"<b>👋 ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅs,\n\nᴍʏ ᴏᴡɴᴇʀ ʜᴀs ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ᴛʜɪs ɢʀᴏᴜᴘ, sᴏ ɪ ᴍᴜsᴛ ɢᴏ! ɪꜰ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ, ᴄᴏɴᴛᴀᴄᴛ ᴍʏ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.\n\n📝 ʀᴇᴀsᴏɴ: <code>{reason}</code></b>",
             reply_markup=reply_markup,
         )
         await bot.leave_chat(chat)
-        await message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ʟᴇꜰᴛ ꜰʀᴏᴍ ᴛʜɪs ɢʀᴏᴜᴘ: <code>{chat}</code></b>")
+        await message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ʟᴇꜰᴛ ꜰʀᴏᴍ ᴛʜɪs ɢʀᴏᴜᴘ:\n🆔 <code>{chat}</code></b>")
     except Exception as e:
         await message.reply(f'<b>❌ ᴇʀʀᴏʀ:</b> <code>{e}</code>')
 
@@ -99,7 +99,7 @@ async def disable_chat(bot, message):
         chat = message.text.split(None, 2)[1]
     else:
         chat = message.command[1]
-        reason = "No reason provided."
+        reason = "ɴᴏ ʀᴇᴀsᴏɴ ᴘʀᴏᴠɪᴅᴇᴅ."
     try:
         chat_ = int(chat)
     except:
@@ -109,7 +109,7 @@ async def disable_chat(bot, message):
     if not cha_t:
         return await message.reply("<b>❌ ᴄʜᴀᴛ ɴᴏᴛ ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ</b>")
     if cha_t.get('is_disabled'):
-        return await message.reply(f"<b>⚠️ ᴛʜɪs ᴄʜᴀᴛ ɪs ᴀʟʀᴇᴀᴅʏ ᴅɪsᴀʙʟᴇᴅ.\nʀᴇᴀsᴏɴ: <code>{cha_t.get('reason')}</code></b>")
+        return await message.reply(f"<b>⚠️ ᴛʜɪs ᴄʜᴀᴛ ɪs ᴀʟʀᴇᴀᴅʏ ᴅɪsᴀʙʟᴇᴅ.\n📝 ʀᴇᴀsᴏɴ: <code>{cha_t.get('reason')}</code></b>")
         
     await db.disable_chat(int(chat_), reason)
     if int(chat_) not in temp.BANNED_CHATS:
@@ -118,17 +118,17 @@ async def disable_chat(bot, message):
     await message.reply('<b>✅ ᴄʜᴀᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴅɪsᴀʙʟᴇᴅ</b>')
     try:
         buttons = [[
-            InlineKeyboardButton('sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK)
+            InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url=SUPPORT_LINK)
         ]]
-        reply_markup=InlineKeyboardMarkup(buttons)
+        reply_markup = InlineKeyboardMarkup(buttons)
         await bot.send_message(
             chat_id=chat_, 
-            text=f"<b>👋 ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅs,\n\nᴍʏ ᴏᴡɴᴇʀ ʜᴀs ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ᴛʜɪs ɢʀᴏᴜᴘ, sᴏ ɪ ᴍᴜsᴛ ɢᴏ! ɪꜰ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ, ᴄᴏɴᴛᴀᴄᴛ ᴍʏ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.\n\nʀᴇᴀsᴏɴ: <code>{reason}</code></b>",
+            text=f"<b>👋 ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅs,\n\nᴍʏ ᴏᴡɴᴇʀ ʜᴀs ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ᴛʜɪs ɢʀᴏᴜᴘ, sᴏ ɪ ᴍᴜsᴛ ɢᴏ! ɪꜰ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ, ᴄᴏɴᴛᴀᴄᴛ ᴍʏ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.\n\n📝 ʀᴇᴀsᴏɴ: <code>{reason}</code></b>",
             reply_markup=reply_markup
         )
         await bot.leave_chat(chat_)
     except Exception as e:
-        await message.reply(f"<b>❌ ᴇʀʀᴏʀ:</b> <code>{e}</code>")
+        await message.reply(f"<b>❌ ᴇʀʀᴏʀ ᴡʜɪʟᴇ ʟᴇᴀᴠɪɴɢ:</b> <code>{e}</code>")
 
 @Client.on_message(filters.command('unban_grp') & filters.user(ADMINS))
 async def re_enable_chat(bot, message):
@@ -140,7 +140,7 @@ async def re_enable_chat(bot, message):
     except:
         return await message.reply('<b>❌ ɢɪᴠᴇ ᴍᴇ ᴀ ᴠᴀʟɪᴅ ᴄʜᴀᴛ ɪᴅ</b>')
         
-    sts = await db.get_chat(int(chat))
+    sts = await db.get_chat(int(chat_))
     if not sts:
         return await message.reply("<b>❌ ᴄʜᴀᴛ ɴᴏᴛ ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ</b>")
     if not sts.get('is_disabled'):
@@ -149,7 +149,7 @@ async def re_enable_chat(bot, message):
     await db.re_enable_chat(int(chat_))
     if int(chat_) in temp.BANNED_CHATS:
         temp.BANNED_CHATS.remove(int(chat_))
-    await message.reply("<b>✅ ᴄʜᴀᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ ʀᴇ-ᴇɴᴀʙʟᴇᴅ</b>")
+    await message.reply("<b>✅ ᴄʜᴀᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ ʀᴇ-ᴇɴᴀʙʟᴇᴅ!</b>")
 
 @Client.on_message(filters.command('invite_link') & filters.user(ADMINS))
 async def gen_invite_link(bot, message):
@@ -164,8 +164,8 @@ async def gen_invite_link(bot, message):
     try:
         link = await bot.create_chat_invite_link(chat)
     except Exception as e:
-        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ:</b> <code>{e}</code>')
-    await message.reply(f'<b>✅ ʜᴇʀᴇ ɪs ʏᴏᴜʀ ɪɴᴠɪᴛᴇ ʟɪɴᴋ:</b>\n{link.invite_link}')
+        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ ɢᴇɴᴇʀᴀᴛɪɴɢ ʟɪɴᴋ:</b> <code>{e}</code>')
+    await message.reply(f'<b>✅ ʜᴇʀᴇ ɪs ʏᴏᴜʀ ɪɴᴠɪᴛᴇ ʟɪɴᴋ:</b>\n\n🔗 {link.invite_link}')
 
 @Client.on_message(filters.command('ban_user') & filters.user(ADMINS))
 async def ban_a_user(bot, message):
@@ -178,7 +178,7 @@ async def ban_a_user(bot, message):
         chat = message.text.split(None, 2)[1]
     else:
         chat = message.command[1]
-        reason = "No reason provided."
+        reason = "ɴᴏ ʀᴇᴀsᴏɴ ᴘʀᴏᴠɪᴅᴇᴅ."
     try:
         chat = int(chat)
     except:
@@ -187,14 +187,14 @@ async def ban_a_user(bot, message):
     try:
         k = await bot.get_users(chat)
     except Exception as e:
-        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ:</b> <code>{e}</code>')
+        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ ꜰɪɴᴅɪɴɢ ᴜsᴇʀ:</b> <code>{e}</code>')
         
     if k.id in ADMINS:
         return await message.reply('<b>⚠️ ʏᴏᴜ ᴄᴀɴɴᴏᴛ ʙᴀɴ ᴀɴ ᴀᴅᴍɪɴ!</b>')
         
     jar = await db.get_ban_status(k.id)
     if jar.get('is_banned'):
-        return await message.reply(f"<b>⚠️ {k.mention} ɪs ᴀʟʀᴇᴀᴅʏ ʙᴀɴɴᴇᴅ.\nʀᴇᴀsᴏɴ: <code>{jar.get('ban_reason')}</code></b>")
+        return await message.reply(f"<b>⚠️ {k.mention} ɪs ᴀʟʀᴇᴀᴅʏ ʙᴀɴɴᴇᴅ.\n📝 ʀᴇᴀsᴏɴ: <code>{jar.get('ban_reason')}</code></b>")
         
     await db.ban_user(k.id, reason)
     if k.id not in temp.BANNED_USERS:
@@ -219,7 +219,7 @@ async def unban_a_user(bot, message):
     try:
         k = await bot.get_users(chat)
     except Exception as e:
-        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ:</b> <code>{e}</code>')
+        return await message.reply(f'<b>❌ ᴇʀʀᴏʀ ꜰɪɴᴅɪɴɢ ᴜsᴇʀ:</b> <code>{e}</code>')
         
     jar = await db.get_ban_status(k.id)
     if not jar.get('is_banned'):
@@ -232,41 +232,41 @@ async def unban_a_user(bot, message):
     
 @Client.on_message(filters.command('users') & filters.user(ADMINS))
 async def list_users(bot, message):
-    raju = await message.reply('<b>⏳ ɢᴇᴛᴛɪɴɢ ʟɪsᴛ ᴏꜰ ᴜsᴇʀs...</b>')
+    raju = await message.reply('<b>⏳ ꜰᴇᴛᴄʜɪɴɢ ᴜsᴇʀ ᴅᴀᴛᴀʙᴀsᴇ...</b>')
     users = await db.get_all_users()
-    out = "<b>👥 ᴜsᴇʀs sᴀᴠᴇᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ:</b>\n\n"
+    out = "<b>👥 ᴜsᴇʀs ɪɴ ɪɴꜰɪɴɪᴛʏ ᴅᴀᴛᴀʙᴀsᴇ:</b>\n\n"
     for user in users:
         out += f"👤 <b>ɴᴀᴍᴇ:</b> {user['name']}\n🆔 <b>ɪᴅ:</b> <code>{user['id']}</code>"
         if user.get('ban_status', {}).get('is_banned'):
-            out += ' <b>(Banned)</b>'
+            out += ' <b>(🚫 ʙᴀɴɴᴇᴅ)</b>'
         if user.get('verify_status', {}).get('is_verified'):
-            out += ' <b>(Verified)</b>'
+            out += ' <b>(✅ ᴠᴇʀɪꜰɪᴇᴅ)</b>'
         out += '\n\n'
     try:
         await raju.edit_text(out)
     except MessageTooLong:
         with open('users.txt', 'w+', encoding="utf-8") as outfile:
             outfile.write(out)
-        await message.reply_document('users.txt', caption="<b>📋 ʟɪsᴛ ᴏꜰ ᴜsᴇʀs</b>")
+        await message.reply_document('users.txt', caption="<b>📋 ɪɴꜰɪɴɪᴛʏ ᴜsᴇʀs ʟɪsᴛ</b>")
         await raju.delete()
         os.remove('users.txt')
 
 @Client.on_message(filters.command('chats') & filters.user(ADMINS))
 async def list_chats(bot, message):
-    raju = await message.reply('<b>⏳ ɢᴇᴛᴛɪɴɢ ʟɪsᴛ ᴏꜰ ᴄʜᴀᴛs...</b>')
+    raju = await message.reply('<b>⏳ ꜰᴇᴛᴄʜɪɴɢ ᴄʜᴀᴛ ᴅᴀᴛᴀʙᴀsᴇ...</b>')
     chats = await db.get_all_chats()
-    out = "<b>👥 ᴄʜᴀᴛs sᴀᴠᴇᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ:</b>\n\n"
+    out = "<b>👥 ᴄʜᴀᴛs ɪɴ ɪɴꜰɪɴɪᴛʏ ᴅᴀᴛᴀʙᴀsᴇ:</b>\n\n"
     for chat in chats:
         out += f"🗣️ <b>ᴛɪᴛʟᴇ:</b> {chat['title']}\n🆔 <b>ɪᴅ:</b> <code>{chat['id']}</code>"
         if chat.get('chat_status', {}).get('is_disabled'):
-            out += ' <b>(Disabled)</b>'
+            out += ' <b>(🚫 ᴅɪsᴀʙʟᴇᴅ)</b>'
         out += '\n\n'
     try:
         await raju.edit_text(out)
     except MessageTooLong:
         with open('chats.txt', 'w+', encoding="utf-8") as outfile:
             outfile.write(out)
-        await message.reply_document('chats.txt', caption="<b>📋 ʟɪsᴛ ᴏꜰ ᴄʜᴀᴛs</b>")
+        await message.reply_document('chats.txt', caption="<b>📋 ɪɴꜰɪɴɪᴛʏ ᴄʜᴀᴛs ʟɪsᴛ</b>")
         await raju.delete()
         os.remove('chats.txt')
 
@@ -277,7 +277,6 @@ async def join_reqs(client, message: ChatJoinRequest):
         try:
             req_channel_id = int(stg.get('REQUEST_FORCE_SUB_CHANNELS'))
             if message.chat.id == req_channel_id:
-                # Need to use await since find_join_req is async
                 if not await db.find_join_req(message.from_user.id):
                     await db.add_join_req(message.from_user.id)
         except Exception as e:
@@ -286,4 +285,4 @@ async def join_reqs(client, message: ChatJoinRequest):
 @Client.on_message(filters.command("delreq") & filters.private & filters.user(ADMINS))
 async def del_requests(client, message):
     await db.del_join_req()
-    await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ᴀʟʟ ᴊᴏɪɴ ʀᴇǫᴜᴇsᴛs!</b>')
+    await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄʟᴇᴀʀᴇᴅ ᴀʟʟ ᴘᴇɴᴅɪɴɢ ᴊᴏɪɴ ʀᴇǫᴜᴇsᴛs!</b>')

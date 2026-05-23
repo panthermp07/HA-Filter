@@ -18,7 +18,6 @@ from info import (
     PORT, ADMINS, TIME_ZONE, VERIFICATION_NOTIFY_CHANNEL, BOT_ID
 )
 
-# Using your robust logging setup
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -45,8 +44,8 @@ class Bot(Client):
             api_hash=API_HASH,
             bot_token=BOT_TOKEN,
             plugins={"root": "plugins"},
-            workers=50,
-            sleep_threshold=30
+            workers=50,             # Faster updates processing
+            sleep_threshold=30      # Auto-handle flood waits up to 30s
         )
         self.listeners = {}
         self.add_handler(MessageHandler(self._listener_handler), group=-1)
@@ -81,9 +80,9 @@ class Bot(Client):
             self.listeners.pop(listener_id, None)
 
     async def start(self, **kwargs):
-        logger.info('Setting up your database, please wait a moment...')
+        logger.info('sᴇᴛᴛɪɴɢ ᴜᴘ ʏᴏᴜʀ ᴅᴀᴛᴀʙᴀsᴇ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴀ ᴍᴏᴍᴇɴᴛ...')
         await setup_database()
-        logger.info('Successfully setup the database!')
+        logger.info('sᴜᴄᴄᴇssꜰᴜʟʟʏ sᴇᴛᴜᴘ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ! ✅')
         
         await super().start()
         temp.START_TIME = time.time()
@@ -99,7 +98,7 @@ class Bot(Client):
             try:
                 with open("restart.txt") as file:
                     chat_id, msg_id = map(int, file.read().split())
-                await self.edit_message_text(chat_id=chat_id, message_id=msg_id, text='**Restarted Successfully! ✅**')
+                await self.edit_message_text(chat_id=chat_id, message_id=msg_id, text='<b>ʀᴇsᴛᴀʀᴛᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ! ✅</b>')
                 os.remove('restart.txt')
             except Exception as e:
                 logger.debug(f"Restart file error: {e}")
@@ -116,10 +115,10 @@ class Bot(Client):
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         await site.start()
 
-        # Premium check & Background Tasks
+        # Premium check Background Task
         asyncio.create_task(check_premium(self))
         
-        # --- ELITE AUTOMATION SCHEDULER (Retained your code) ---
+        # --- ELITE AUTOMATION SCHEDULER ---
         scheduler = AsyncIOScheduler(timezone=TIME_ZONE)
         
         # 1. Midnight Report (11:59 PM)
@@ -129,10 +128,10 @@ class Bot(Client):
         scheduler.add_job(self.cleanup_old_analytics, "cron", day_of_week='sun', hour=0, minute=0)
         
         scheduler.start()
-        logger.info("Elite Automation Scheduler Started ✓")
+        logger.info("ᴇʟɪᴛᴇ ᴀᴜᴛᴏᴍᴀᴛɪᴏɴ sᴄʜᴇᴅᴜʟᴇʀ sᴛᴀʀᴛᴇᴅ ✓")
 
         try:
-            await self.send_message(chat_id=LOG_CHANNEL, text=f"<b>{me.mention} Is Online Now! 🚀</b>")
+            await self.send_message(chat_id=LOG_CHANNEL, text=f"<b>{me.mention} ɪs ᴏɴʟɪɴᴇ ɴᴏᴡ! 🚀</b>")
         except Exception as e:
             logger.error("Make sure bot is admin in LOG_CHANNEL, exiting now.")
             exit()
@@ -147,7 +146,7 @@ class Bot(Client):
 
     async def stop(self, **kwargs):
         await super().stop()
-        logger.info("Bot Stopped! Bye...")
+        logger.info("ʙᴏᴛ sᴛᴏᴘᴘᴇᴅ! ʙʏᴇ...")
 
     async def send_daily_report(self):
         all_sh = await db.get_all_shorteners()

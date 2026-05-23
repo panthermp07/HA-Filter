@@ -37,8 +37,11 @@ INDEX_CHANNELS = [int(index_channels) if index_channels.startswith("-") else ind
 LOG_CHANNEL = environ.get('LOG_CHANNEL', '')
 SUPPORT_GROUP = environ.get('SUPPORT_GROUP', '')
 UPDATES_SEND_CHANNEL = environ.get('UPDATES_SEND_CHANNEL', '-1003982751488')
+VERIFICATION_NOTIFY_CHANNEL = environ.get('VERIFICATION_NOTIFY_CHANNEL', '')
 
-# MONGODB INFORMATION
+# ==========================================
+# 3. MONGODB INFORMATION
+# ==========================================
 DATA_DATABASE_URL = environ.get('DATA_DATABASE_URL', "")
 FILES_DATABASE_URL = environ.get('FILES_DATABASE_URL', "")
 SECOND_FILES_DATABASE_URL = environ.get('SECOND_FILES_DATABASE_URL', "")
@@ -51,26 +54,29 @@ UPDATES_LINK = environ.get('UPDATES_LINK', 'https://t.me/infinity_botzz')
 FILMS_LINK = environ.get('FILMS_LINK', 'https://t.me/infinity_botzz')
 TUTORIAL = environ.get("TUTORIAL", "https://t.me/infinity_botzz")
 VERIFY_TUTORIAL = environ.get("VERIFY_TUTORIAL", "https://t.me/infinity_botzz")
-VERIFICATION_NOTIFY_CHANNEL = environ.get('VERIFICATION_NOTIFY_CHANNEL', '')
 
 # Bot settings
 TIME_ZONE = environ.get('TIME_ZONE', 'Asia/Kolkata')
 DELETE_TIME = int(environ.get('DELETE_TIME', 3600))
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 MAX_BTN = int(environ.get('MAX_BTN', 8))
+PM_FILE_DELETE_TIME = int(environ.get('PM_FILE_DELETE_TIME', '3600'))
+VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400))
 
-# Massive Global Language Tags Array
+# Massive Global Language & Quality Tags Array
 LANGUAGES = [language.lower() for language in environ.get('LANGUAGES', 'hindi english telugu tamil kannada malayalam bengali marathi punjabi gujrati odia bhojpuri assamese urdu korean japanese chinese french spanish german russian arabic turkish portuguese thai dual multi org dubbed esub').split()]
 QUALITY = [quality.lower() for quality in environ.get('QUALITY', '240p 360p 480p 576p 720p 1080p 1440p 2160p').split()]
+INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
 
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
 FILE_CAPTION = environ.get("FILE_CAPTION", script.FILE_CAPTION)
+WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
+
 SHORTLINK_URL = environ.get("SHORTLINK_URL", "")
 SHORTLINK_API = environ.get("SHORTLINK_API", "")
-VERIFY_EXPIRE = int(environ.get('VERIFY_EXPIRE', 86400))
-WELCOME_TEXT = environ.get("WELCOME_TEXT", script.WELCOME_TEXT)
-INDEX_EXTENSIONS = [extensions.lower() for extensions in environ.get('INDEX_EXTENSIONS', 'mp4 mkv').split()]
-PM_FILE_DELETE_TIME = int(environ.get('PM_FILE_DELETE_TIME', '3600'))
+
+# TMDB API
+TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
 
 # Boolean settings
 USE_CAPTION_FILTER = is_enabled('USE_CAPTION_FILTER', False)
@@ -83,33 +89,47 @@ LINK_MODE = is_enabled("LINK_MODE", True)
 IMDB = is_enabled('IMDB', False)
 SPELL_CHECK = is_enabled("SPELL_CHECK", True)
 SHORTLINK = is_enabled('SHORTLINK', False)
-
-# For stream
 IS_STREAM = is_enabled('IS_STREAM', True)
+
+# Streaming Configuration
 BIN_CHANNEL = environ.get("BIN_CHANNEL", "")
 URL = environ.get("URL", "")
 
-# Start command reactions
+# ==========================================
+# 6. REACTIONS & EFFECTS (🆕 Public Update)
+# ==========================================
 REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗 😍 👍 🎅 😐 🥰 🤩 😱 🤣 😘 👏 😛 😈 🎉 ⚡️ 🫡 🤓 😎 🏆 🔥 🤭 🌚 🆒 👻 😁').split()]
+# 🆕 Telegram Premium Message Effects Added
+EFFECT_IDS = [effect for effect in environ.get('EFFECT_IDS', '5104841245755180586 5104858069142078462 5159385139981059251 5046509860389126442 5046589136895476101 5107584321108051014').split()]
 
 # ==========================================
-# PREMIUM SETTINGS (UPI & 🆕 STARS)
+# 7. PREMIUM SETTINGS (UPI & 🆕 STARS/CRYPTO)
 # ==========================================
 IS_PREMIUM = is_enabled('IS_PREMIUM', True)
 OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
 PREMIUM_NOTIFY_CHANNEL = environ.get('PREMIUM_NOTIFY_CHANNEL', '')
 
-# Your custom UPI Integration
+# Your Custom UPI Integration (Retained)
 PRE_DAY_AMOUNT = int(environ.get('PRE_DAY_AMOUNT', '1')) 
 UPI_ID = environ.get("UPI_ID", "")
 UPI_NAME = environ.get("UPI_NAME", "")
 RECEIPT_SEND_USERNAME = environ.get("RECEIPT_SEND_USERNAME", "@talk_mrs_bot")
 
-# for TMDb
-TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
+# 🆕 Global/Advanced Payment Configs (From Public Repo)
+PAYMENT_QR_CODE = environ.get("PAYMENT_QR_CODE", "https://i.postimg.cc/4xmm21x5/qr-code.jpg")
+PAYMENT_ID = environ.get("PAYMENT_ID", "mypayment@id")
+PAYMENT_TYPE = environ.get("PAYMENT_TYPE", "UPI")
+PREMIUM_PLANS = {
+    7: ['INR', 10], 
+    30: ['INR', 40],
+    90: ['INR', 109],
+    180: ['INR', 199]
+}
 
 
-# -------------------- VALIDATIONS (AT END) -------------------- #
+# ==========================================
+# 8. VALIDATIONS (Execution Stops if Missing)
+# ==========================================
 
 if len(API_ID) == 0:
     logger.error('API_ID is missing, exiting now')
@@ -148,7 +168,6 @@ if len(SUPPORT_GROUP) == 0:
 else:
     SUPPORT_GROUP = int(SUPPORT_GROUP)
 
-# 🆕 Added Public Repo's Validation here cleanly
 if len(UPDATES_SEND_CHANNEL) == 0:
     logger.info('UPDATES_SEND_CHANNEL is missing')
     UPDATES_SEND_CHANNEL = None

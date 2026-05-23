@@ -86,17 +86,17 @@ class script(object):
 
 📢 ʀᴇᴘᴏʀᴛ ᴛᴏ ᴀᴅᴍɪɴ: <a href='https://t.me/talk_mrs_bot'>@ᴛᴀʟᴋ_ᴍʀs_ʙᴏᴛ</a></b>"""
     
-    IMDB_TEMPLATE = """✅ I Found: <code>{query}</code>
+    IMDB_TEMPLATE = """<b>✅ ɪ ꜰᴏᴜɴᴅ: <code>{query}</code>
 
-🏷 Title: <a href={url}>{title}</a>
-🎭 Genres: {genres}
-📆 Year: {year}
-🌟 Rating: {rating} / 10
-☀️ Languages: {languages}
-📀 RunTime: {runtime} Minutes
+🏷 ᴛɪᴛʟᴇ: <a href={url}>{title}</a>
+🎭 ɢᴇɴʀᴇs: {genres}
+📆 ʏᴇᴀʀ: {year}
+🌟 ʀᴀᴛɪɴɢ: {rating} / 10
+☀️ ʟᴀɴɢᴜᴀɢᴇs: {languages}
+📀 ʀᴜɴᴛɪᴍᴇ: {runtime} ᴍɪɴᴜᴛᴇs
 
-🗣 Requested by: {message.from_user.mention}
-©️ Powered by: <b>{message.chat.title}</b>"""
+🗣 ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ: {message.from_user.mention}
+©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: <b>{message.chat.title}</b></b>"""
 
     FILE_CAPTION = """<i>{file_name}</i>
 
@@ -169,7 +169,8 @@ class script(object):
 ├ /invite_link - ɢᴇɴᴇʀᴀᴛᴇ ʙᴏᴛ ɪɴᴠɪᴛᴇ
 ├ /leave - ᴇxɪᴛ ᴀ sᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
 ├ /restart - ʜᴏᴛ-ʀᴇʙᴏᴏᴛ ᴛʜᴇ sʏsᴛᴇᴍ
-╰───────────━━━━━━━</b>"""
+├ /repairmode - ᴇɴᴀʙʟᴇ / ᴅɪsᴀʙʟᴇ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ᴍᴏᴅᴇ
+╰───────────━━━━━━━
     
     USER_COMMAND_TXT = """<b>⚡ ᴀᴠᴀɪʟᴀʙʟᴇ ᴜsᴇʀ ᴄᴏᴍᴍᴀɴᴅs 👇
 
@@ -222,7 +223,7 @@ class script(object):
 ○ ɴᴏ ɴᴇᴇᴅ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ
 ○ ᴅɪʀᴇᴄᴛ ғɪʟᴇs   
 ○ ᴀᴅ-ғʀᴇᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ 
-○ ʜɪɢʜ-sᴘᴇᴇᴅ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋ                                                   
+○ ʜɪɢʜ-sᴘᴇᴇᴅ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋ                                   
 ○ ꜰᴜʟʟ ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ                              
 
 <blockquote>✨ ᴜᴘɪ ɪᴅ - <code>{upi}</code></blockquote>

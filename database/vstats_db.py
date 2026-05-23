@@ -3,9 +3,10 @@ from database.users_chats_db import data_db
 
 class VStatsDatabase:
     def __init__(self):
+        # Using a dedicated collection for verification statistics
         self.vcol = data_db.VerificationStats 
 
-    async def record_verification(self, user_id):
+    async def record_verification(self, user_id: int):
         """ᴜsᴇʀ ᴋɪ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴅᴇᴛᴀɪʟ ᴛɪᴍᴇsᴛᴀᴍᴘ ᴋᴇ sᴀᴀᴛʜ sᴀᴠᴇ ᴋᴀʀᴇɪɴ."""
         await self.vcol.insert_one({
             "user_id": user_id,
@@ -15,6 +16,8 @@ class VStatsDatabase:
     async def get_advanced_vstats(self):
         """ᴍᴏɴɢᴏᴅʙ ᴀɢɢʀᴇɢᴀᴛɪᴏɴ ᴘɪᴘᴇʟɪɴᴇ: ᴇᴋ ʙᴀᴀʀ ᴍᴇɪɴ sᴀᴀʀᴀ ᴅᴀᴛᴀ ꜰᴇᴛᴄʜ ᴋᴀʀɴᴇ ᴋᴇ ʟɪʏᴇ."""
         now = datetime.now()
+        
+        # Time boundary calculations
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_start = today_start - timedelta(days=1)
         seven_days_ago = today_start - timedelta(days=7)
@@ -22,6 +25,7 @@ class VStatsDatabase:
         year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         prev_year_start = year_start.replace(year=year_start.year - 1)
 
+        # Advanced single-trip aggregation pipeline
         pipeline = [
             {
                 "$facet": {
@@ -39,9 +43,11 @@ class VStatsDatabase:
         result = await cursor.to_list(length=1)
         data = result[0] if result else {}
 
+        # Helper function to safely extract counts
         def extract_count(key):
             return data.get(key, [{}])[0].get("count", 0) if data.get(key) else 0
 
+        # Returning clean dictionary for UI/Bot messages
         return {
             "today": extract_count("today"),
             "yesterday": extract_count("yesterday"),

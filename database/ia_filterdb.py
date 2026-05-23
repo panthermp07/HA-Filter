@@ -9,7 +9,7 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 import PTN
 import asyncio
 
-from info import USE_CAPTION_FILTER, FILES_DATABASE_URL, SECOND_FILES_DATABASE_URL, DATABASE_NAME, COLLECTION_NAME, MAX_BTN, LANGUAGES, QUALITY
+from info import USE_CAPTION_FILTER, FILES_DATABASE_URL, SECOND_FILES_DATABASE_URL, DATABASE_NAME, COLLECTION_NAME, MAX_BTN, LANGUAGES, QUALITY, DATA_DATABASE_URL
 from database.users_chats_db import data_db
 from utils import send_update
 
@@ -37,17 +37,17 @@ async def setup_database():
             unique=True,
             name="title_year_unique"
         )
-        logger.info("Updates collection indexes created/verified.")
+        logger.info("ᴅᴀᴛᴀ_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ᴜᴘᴅᴀᴛᴇ ɪɴᴅᴇxᴇs ᴄʀᴇᴀᴛᴇᴅ/ᴠᴇʀɪꜰɪᴇᴅ ✅")
     except OperationFailure as e:
         if e.code == 85:  # IndexOptionsConflict
-            logger.warning("Updates collection index conflict. Recreating...")
+            logger.warning("ᴅᴀᴛᴀ_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ɪɴᴅᴇx ᴄᴏɴꜰʟɪᴄᴛ. ʀᴇᴄʀᴇᴀᴛɪɴɢ...")
             await updates_collection.drop_indexes() 
             await updates_collection.create_index(
                 [("title", ASCENDING), ("year", ASCENDING)],
                 unique=True,
                 name="title_year_unique"
             )
-            logger.info("Updates collection indexes recreated successfully.")
+            logger.info("ᴅᴀᴛᴀ_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ɪɴᴅᴇxᴇs ʀᴇᴄʀᴇᴀᴛᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ✅")
         else:
             logger.exception(e)
             exit()
@@ -55,28 +55,34 @@ async def setup_database():
     try:
         # Creating index for both file_name and caption
         await collection.create_index([("file_name", TEXT), ("caption", TEXT)], name="file_name_caption_text")
-        logger.info("Primary Files DB indexes created/verified.")
+        logger.info("ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ɪɴᴅᴇxᴇs ᴄʀᴇᴀᴛᴇᴅ/ᴠᴇʀɪꜰɪᴇᴅ ✅")
     except OperationFailure as e:
         if e.code == 85:
-            logger.warning("Primary DB index conflict. Recreating...")
+            logger.warning("ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ ɪɴᴅᴇx ᴄᴏɴꜰʟɪᴄᴛ. ʀᴇᴄʀᴇᴀᴛɪɴɢ...")
             await collection.drop_indexes() 
             await collection.create_index([("file_name", TEXT), ("caption", TEXT)], name="file_name_caption_text")
+            logger.info("ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ɪɴᴅᴇxᴇs ʀᴇᴄʀᴇᴀᴛᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ✅")
         elif 'quota' in str(e).lower():
             if not SECOND_FILES_DATABASE_URL:
-                logger.error('Your FILES_DATABASE_URL quota is full, add SECOND_FILES_DATABASE_URL.')
+                logger.error('❌ ʏᴏᴜʀ ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ǫᴜᴏᴛᴀ ɪs ꜰᴜʟʟ! ᴀᴅᴅ sᴇᴄᴏɴᴅ_ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ (sᴇᴀʀᴄʜ ᴡɪʟʟ sᴛɪʟʟ ᴡᴏʀᴋ)')
             else:
-                logger.info('FILES_DATABASE_URL quota is full, relying on SECOND_FILES_DATABASE_URL')
+                logger.info('⚠️ ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ_ᴜʀʟ ǫᴜᴏᴛᴀ ꜰᴜʟʟ, ʀᴇʟʏɪɴɢ ᴏɴ sᴇᴄᴏɴᴅ_ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ')
         else:
             logger.exception(e)
 
     if SECOND_FILES_DATABASE_URL and second_collection is not None:
         try:
             await second_collection.create_index([("file_name", TEXT), ("caption", TEXT)], name="file_name_caption_text")
-            logger.info("Secondary Files DB indexes created/verified.")
+            logger.info("sᴇᴄᴏɴᴅ_ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ ɪɴᴅᴇxᴇs ᴄʀᴇᴀᴛᴇᴅ/ᴠᴇʀɪꜰɪᴇᴅ ✅")
         except OperationFailure as e:
             if e.code == 85:
+                logger.warning("sᴇᴄᴏɴᴅ_ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ ɪɴᴅᴇx ᴄᴏɴꜰʟɪᴄᴛ. ʀᴇᴄʀᴇᴀᴛɪɴɢ...")
                 await second_collection.drop_indexes()
                 await second_collection.create_index([("file_name", TEXT), ("caption", TEXT)], name="file_name_caption_text")
+                logger.info("sᴇᴄᴏɴᴅ_ꜰɪʟᴇs_ᴅᴀᴛᴀʙᴀsᴇ ɪɴᴅᴇxᴇs ʀᴇᴄʀᴇᴀᴛᴇᴅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ✅")
+            else:
+                logger.exception(e)
+                exit()
 
 
 async def second_db_count_documents():
@@ -146,36 +152,41 @@ async def save_file(media):
         if SECOND_FILES_DATABASE_URL and second_collection is not None:
             try:
                 await second_collection.insert_one(document)
-                logger.info(f'Saved to 2nd db - {file_name}')
+                logger.info(f'Saved to 2nd DB - {file_name}')
                 await trigger_update_if_new(title, ptn_year)
                 return 'suc'
             except DuplicateKeyError:
-                logger.warning(f'Already Saved in 2nd db - {file_name}')
+                logger.warning(f'Already Saved in 2nd DB - {file_name}')
                 return 'dup'
         else:
             logger.error(f'Your FILES_DATABASE_URL is already full, add SECOND_FILES_DATABASE_URL')
             return 'err'
 
-# 🚀 Your Advanced Tag-Based Search Function (Upgraded to Motor Async)
+# 🚀 Your Advanced Tag-Based Search Function (Upgraded with Public Fallback)
 async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None, req_qual=None, req_year=None, req_season=None):
     query = str(query).strip()
     filter_obj = {}
 
-    if query:
-        if ' ' not in query:
-            raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
-        else:
-            raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
-        
-        try:
-            regex = re.compile(raw_pattern, flags=re.IGNORECASE)
-        except:
-            regex = query
+    # Public Update Integration: Fetch Recent if query is empty
+    if not query and not (req_lang or req_qual or req_year or req_season):
+        # Empty search logic: Match everything, sort by latest
+        filter_obj = {}
+    else:
+        if query:
+            if ' ' not in query:
+                raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
+            else:
+                raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
+            
+            try:
+                regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+            except:
+                regex = query
 
-        if USE_CAPTION_FILTER:
-            filter_obj = {'$or': [{'file_name': regex}, {'caption': regex}]}
-        else:
-            filter_obj = {'file_name': regex}
+            if USE_CAPTION_FILTER:
+                filter_obj = {'$or': [{'file_name': regex}, {'caption': regex}]}
+            else:
+                filter_obj = {'file_name': regex}
 
     and_filters = []
     

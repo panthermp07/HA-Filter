@@ -120,6 +120,7 @@ class Database:
     async def delete_chat(self, grp_id):
         await self.grp.delete_many({'id': int(grp_id)})
 
+    # ================= SUDO SYSTEM =================
     async def add_sudo(self, user_id):
         if not await self.sudo.find_one({'id': int(user_id)}):
             await self.sudo.insert_one({'id': int(user_id), 'added_at': datetime.now()})
@@ -140,6 +141,7 @@ class Database:
         user = await self.sudo.find_one({'id': int(user_id)})
         return bool(user)
 
+    # ================= JOIN REQUESTS =================
     async def find_join_req(self, id):
         user = await self.req.find_one({'id': id})
         return bool(user)
@@ -150,6 +152,7 @@ class Database:
     async def del_join_req(self):
         await self.req.drop()
 
+    # ================= BAN & GROUPS =================
     async def get_banned(self):
         users = await self.col.find({'ban_status.is_banned': True}).to_list(length=None)
         chats = await self.grp.find({'chat_status.is_disabled': True}).to_list(length=None)
@@ -166,7 +169,7 @@ class Database:
         return False if not chat_data else chat_data.get('chat_status')
     
     async def re_enable_chat(self, id):
-        chat_status=dict(is_disabled=False, reason="")
+        chat_status = dict(is_disabled=False, reason="")
         await self.grp.update_one({'id': int(id)}, {'$set': {'chat_status': chat_status}})
         
     async def update_settings(self, id, settings):
@@ -179,14 +182,13 @@ class Database:
         return self.default_setgs
     
     async def disable_chat(self, chat, reason="No Reason"):
-        chat_status=dict(is_disabled=True, reason=reason)
+        chat_status = dict(is_disabled=True, reason=reason)
         await self.grp.update_one({'id': int(chat)}, {'$set': {'chat_status': chat_status}})
     
     async def get_verify_status(self, user_id):
         user = await self.col.find_one({'id':int(user_id)})
         if user:
             info = user.get('verify_status', self.default_verify)
-            # Smart Auto-Expiry Logic retained
             if 'expire_time' not in info:
                 verified_time = info.get('verified_time', 0)
                 expire_time = verified_time + VERIFY_EXPIRE
@@ -203,6 +205,7 @@ class Database:
     async def get_all_chats(self):
         return await self.grp.find({}).to_list(length=None)
     
+    # ================= DATABASE STATS =================
     async def get_files_db_size(self):
         res = await files_db.command("dbstats")
         return res['dataSize']
@@ -229,6 +232,7 @@ class Database:
                 titles.append(title)
         return list(set(titles))
 
+    # ================= PREMIUM SYSTEM =================
     async def get_plan(self, id):
         st = await self.prm.find_one({'id': id})
         if st:
@@ -283,6 +287,7 @@ class Database:
     async def get_premium_users(self):
         return await self.prm.find({}).to_list(length=None)
     
+    # ================= PM CONNECTIONS =================
     async def add_connect(self, group_id, user_id):
         user = await self.con.find_one({'_id': user_id})
         if user:
@@ -297,13 +302,16 @@ class Database:
             return user["group_ids"]
         return []
         
+    # ================= BOT SETTINGS & SHORTENERS =================
     async def update_bot_sttgs(self, var, val):
         if not await self.stg.find_one({'id': BOT_ID}):
             await self.stg.insert_one({'id': BOT_ID, var: val})
-        await self.stg.update_one({'id': BOT_ID}, {'$set': {var: val}})
+        else:
+            await self.stg.update_one({'id': BOT_ID}, {'$set': {var: val}})
 
     async def get_bot_sttgs(self):
-        return await self.stg.find_one({'id': BOT_ID})
+        stg = await self.stg.find_one({'id': BOT_ID})
+        return stg if stg else {}
     
     async def reset_all_groups_settings(self):
         result = await self.grp.update_many({}, {'$set': {'settings': self.default_setgs}})
@@ -344,6 +352,7 @@ class Database:
             }
         )
 
+    # ================= REFERRAL SYSTEM =================
     async def add_referral(self, inviter_id):
         """Increments referral count and returns updated document."""
         return await self.col.find_one_and_update(
@@ -357,5 +366,13 @@ class Database:
         user = await self.col.find_one({'id': int(user_id)})
         return user.get('referral_count', 0) if user else 0
 
+    async def get_repair_mode(self):
+        stg = await self.stg.find_one({'id': BOT_ID})
+        if not stg:
+            return False
+        return stg.get('REPAIR_MODE', False)
 
+    async def set_repair_mode(self, value: bool):
+        await self.update_bot_sttgs('REPAIR_MODE', value)
+        
 db = Database()

@@ -5,18 +5,38 @@ import asyncio
 from datetime import datetime, timedelta
 from time import monotonic
 from time import time as time_now
+import PTN
+
 from Script import script
 from database.users_chats_db import db
 from database.vstats_db import vdb
 from pyrogram import Client, filters, enums
-from utils import is_premium, upload_image, get_settings, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_verify_status, update_verify_status, save_group_settings, temp, get_readable_time, get_seconds
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, WebAppInfo
-from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong
-from info import OWNER_USERNAME, IS_PREMIUM, PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME, URL, BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, PM_FILE_DELETE_TIME, PREMIUM_NOTIFY_CHANNEL, VERIFICATION_NOTIFY_CHANNEL
+
+from utils import (
+    is_premium, upload_image, get_settings, get_size, is_subscribed, 
+    is_check_admin, get_wish, get_shortlink, get_verify_status, 
+    update_verify_status, save_group_settings, temp, get_readable_time, 
+    get_seconds, get_plan_name, get_poster
+)
+from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
+from info import (
+    OWNER_USERNAME, IS_PREMIUM, PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME, URL, 
+    BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, 
+    VERIFY_TUTORIAL, VERIFY_EXPIRE, SHORTLINK_API, SHORTLINK_URL, DELETE_TIME, 
+    SUPPORT_LINK, UPDATES_LINK, LOG_CHANNEL, PICS, IS_STREAM, REACTIONS, 
+    PM_FILE_DELETE_TIME, PREMIUM_NOTIFY_CHANNEL, VERIFICATION_NOTIFY_CHANNEL,
+    PREMIUM_PLANS, EFFECT_IDS
+)
+
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
+    # 🆕 MAINTENANCE MODE CHECK
+    if message.from_user.id not in ADMINS and await db.get_repair_mode():
+        return await message.reply_text("⚠️ <b>Sᴏʀʀʏ ꜰᴏʀ ᴛʜᴇ ɪɴᴄᴏɴᴠᴇɴɪᴇɴᴄᴇ, ᴡᴇ ᴀʀᴇ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ. ᴡᴇ'ʟʟ ʙᴇ ʙᴀᴄᴋ sᴏᴏɴ!</b>")
+
     # 🛡️ ANTI-SPAM LOCK: Prevent Double Clicks & Duplicate Requests
     user_id = message.from_user.id
     if not hasattr(temp, 'START_SPAM'):
@@ -31,6 +51,7 @@ async def start(client, message):
         await client.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     except:
         pass
+        
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         if not await db.get_chat(message.chat.id):
             total = await client.get_chat_members_count(message.chat.id)
@@ -98,20 +119,28 @@ async def start(client, message):
             InlineKeyboardButton('🛠️ sᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
             InlineKeyboardButton('👨‍🚒 ʜᴇʟᴘ ɢᴜɪᴅᴇ', callback_data='help'),
-            #InlineKeyboardButton('🔎 sᴇᴀʀᴄʜ ɪɴʟɪɴᴇ', switch_inline_query_current_chat=''),
             InlineKeyboardButton('📚 ᴀʙᴏᴜᴛ ʙᴏᴛ', callback_data='about')
         ],[
             InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
         ],[
             InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
+        ],[
+            InlineKeyboardButton('🎬 ᴘᴏᴘᴜʟᴀʀ ᴍᴏᴠɪᴇs 🎬', url="https://www.themoviedb.org/movie"),
+            InlineKeyboardButton('📺 ᴘᴏᴘᴜʟᴀʀ ᴛᴠ sʜᴏᴡs 📺', url="https://www.themoviedb.org/tv")
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
+        
+        try:
+            effect_id = int(random.choice(EFFECT_IDS))
+        except:
+            effect_id = 5104841245755180586
+            
         await message.reply_photo(
             photo=random.choice(PICS),
             caption=script.START_TXT.format(message.from_user.mention, get_wish()),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML,
-            effect_id=5104841245755180586
+            effect_id=effect_id
         )
         return
 
@@ -220,13 +249,15 @@ async def start(client, message):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-        return
+        return 
         
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
-        files = temp.FILES.get(key)
+        files = getattr(temp, 'GET_ALL_FILES', {}).get(key) or getattr(temp, 'FILES', {}).get(key)
+        
         if not files:
-            return await message.reply('❌ ɴᴏ sᴜᴄʜ ᴀʟʟ ꜰɪʟᴇs ᴇxɪsᴛ!')
+            return await message.reply('<b>❌ ɴᴏ sᴜᴄʜ ᴀʟʟ ꜰɪʟᴇs ᴇxɪsᴛ!</b>')
+            
         settings = await get_settings(int(grp_id))
         file_ids = []
         total_files = await message.reply(f"<b><i>🗂 ᴛᴏᴛᴀʟ ꜰɪʟᴇs - <code>{len(files)}</code></i></b>")
@@ -283,7 +314,7 @@ async def start(client, message):
     file_id = parts[-1]
     files_ = await get_file_details(file_id)
     if not files_:
-        return await message.reply('❌ ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!')
+        return await message.reply('<b>❌ ɴᴏ sᴜᴄʜ ꜰɪʟᴇ ᴇxɪsᴛs!</b>')
     files = files_
     settings = await get_settings(int(grp_id))
     
@@ -291,13 +322,13 @@ async def start(client, message):
         chk_msg = await message.reply("<b>⏳ ɢᴇɴᴇʀᴀᴛɪɴɢ sᴇᴄᴜʀᴇ ʟɪɴᴋ... ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</b>")
         link = await get_shortlink(f"https://t.me/{temp.U_NAME}?start=shortlink_{grp_id}_{file_id}", message.from_user.id, int(grp_id))
         btn = [[
-            InlineKeyboardButton("💎 ɢᴇᴛ ꜰɪʟᴇ(s)", url=link, style=enums.ButtonStyle.SUCCESS)
+            InlineKeyboardButton("💎 ɢᴇᴛ ꜰɪʟᴇ", url=link, style=enums.ButtonStyle.SUCCESS)
         ],[
             InlineKeyboardButton("🚀 ʜᴏᴡ ᴛᴏ ᴏᴘᴇɴ ʟɪɴᴋ 🚀", url=settings['tutorial'], style=enums.ButtonStyle.PRIMARY)
         ]]
         await chk_msg.delete()
         await message.reply(
-            text=f"[{get_size(files['file_size'])}] {files['file_name']}\n\nʏᴏᴜʀ ꜰɪʟᴇ ɪs ʀᴇᴀᴅʏ, ᴘʟᴇᴀsᴇ ɢᴇᴛ ᴜsɪɴɢ ᴛʜɪs ʟɪɴᴋ. 👍", 
+            text=f"<b>[{get_size(files['file_size'])}] {files['file_name']}</b>\n\nʏᴏᴜʀ ꜰɪʟᴇ ɪs ʀᴇᴀᴅʏ, ᴘʟᴇᴀsᴇ ɢᴇᴛ ɪᴛ ᴜsɪɴɢ ᴛʜɪs ʟɪɴᴋ. 👍", 
             reply_markup=InlineKeyboardMarkup(btn),
             protect_content=True
         )
@@ -346,38 +377,71 @@ async def start(client, message):
     await vp.delete()
     await vp.reply("<b>❌ ᴛʜᴇ ꜰɪʟᴇ ʜᴀs ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ!</b>\nᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ɢᴇᴛ ɪᴛ ᴀɢᴀɪɴ.", reply_markup=InlineKeyboardMarkup(btns))
 
+
 @Client.on_message(filters.command('link'))
 async def link(bot, message):
     msg = message.reply_to_message
     if not msg:
         return await message.reply('<b>⚠️ ᴀʟᴇʀᴛ: ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀɴʏ ᴍᴇᴅɪᴀ ꜰɪʟᴇ.</b>')
-    
+        
+    m = await message.reply('<b>⏳ ᴘʀᴏᴄᴇssɪɴɢ...</b>')
     try:
         media = getattr(msg, msg.media.value)
         file_name = getattr(media, 'file_name', 'Streaming File')
+        
+        vidking_url = None
+        if file_name and file_name != 'Streaming File':
+            parsed = PTN.parse(file_name)
+            title = parsed.get('title')
+            year = parsed.get('year')
+            season = parsed.get('season')
+            episode = parsed.get('episode')
+            
+            if title:
+                query = str(title)
+                if year:
+                    query += f" {year}"
+                poster_data = await get_poster(query)
+                if poster_data:
+                    tmdb_id = poster_data['tmdb_id']
+                    if season is not None:
+                        if episode is not None:
+                            vidking_url = f"https://www.vidking.net/embed/tv/{tmdb_id}/{season}/{episode}?episodeSelector=true"
+                        else:
+                            vidking_url = f"https://www.vidking.net/embed/tv/{tmdb_id}/{season}/1?episodeSelector=true"
+                    else:
+                        vidking_url = f"https://www.vidking.net/embed/movie/{tmdb_id}"
+
         bin_msg = await bot.send_cached_media(chat_id=BIN_CHANNEL, file_id=media.file_id)
         watch = f"{URL}watch/{bin_msg.id}"
         download = f"{URL}download/{bin_msg.id}"
 
-        btn = [[
-                InlineKeyboardButton("🎬 ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ", url=watch, style=enums.ButtonStyle.PRIMARY),
-                InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=download, style=enums.ButtonStyle.PRIMARY)
-            ],[
-                InlineKeyboardButton('🚫 ᴄʟᴏsᴇ ᴍᴇɴᴜ 🚫', callback_data='close_data', style=enums.ButtonStyle.DANGER)
-            ]]
+        btn = []
+        if vidking_url:
+            btn.append([
+                InlineKeyboardButton("🌐 sᴍᴀʀᴛ ᴘʟᴀʏᴇʀ 🌐", url=vidking_url, style=enums.ButtonStyle.SUCCESS)
+            ])
+            
+        btn.append([
+            InlineKeyboardButton("🎬 ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ", url=watch, style=enums.ButtonStyle.PRIMARY),
+            InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=download, style=enums.ButtonStyle.PRIMARY)
+        ])
+        btn.append([
+            InlineKeyboardButton('🚫 ᴄʟᴏsᴇ ᴍᴇɴᴜ 🚫', callback_data='close_data', style=enums.ButtonStyle.DANGER)
+        ])
         
         caption_text = (
             f"✅ <b>ʏᴏᴜʀ ʟɪɴᴋs ᴀʀᴇ ɢᴇɴᴇʀᴀᴛᴇᴅ!</b>\n\n"
             f"📦 <b>ꜰɪʟᴇ:</b> <code>{file_name}</code>\n\n"
             f"🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>"
         )
-        await message.reply_text(
+        await m.edit(
             text=caption_text,
             reply_markup=InlineKeyboardMarkup(btn),
             disable_web_page_preview=True
         )
     except Exception as e:
-        await message.reply(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
+        await m.edit(f'<b>❌ ᴇʀʀᴏʀ: {e}</b>')
 
 @Client.on_message(filters.command('index_channels'))
 async def channels_info(bot, message):
@@ -387,7 +451,7 @@ async def channels_info(bot, message):
         return
     ids = INDEX_CHANNELS
     if not ids:
-        return await message.reply("❌ ɴᴏᴛ sᴇᴛ ɪɴᴅᴇx_ᴄʜᴀɴɴᴇʟs")
+        return await message.reply("<b>❌ ɴᴏᴛ sᴇᴛ ɪɴᴅᴇx_ᴄʜᴀɴɴᴇʟs</b>")
     text = '<b>🔍 ɪɴᴅᴇxᴇᴅ ᴄʜᴀɴɴᴇʟs:</b>\n\n'
     for id in ids:
         chat = await bot.get_chat(id)
@@ -419,15 +483,8 @@ async def stats(bot, message):
     uptime = get_readable_time(time_now() - temp.START_TIME)
     await message.reply_text(
         script.STATUS_TXT.format(
-            users, 
-            prm, 
-            chats, 
-            used_data_db_size, 
-            files, 
-            used_files_db_size, 
-            secnd_files, 
-            secnd_files_db_used_size, 
-            uptime
+            users, prm, chats, used_data_db_size, files, 
+            used_files_db_size, secnd_files, secnd_files_db_used_size, uptime
         )
     )
 
@@ -467,19 +524,19 @@ async def settings(client, message):
     group_id = message.chat.id
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         if not await is_check_admin(client, group_id, message.from_user.id):
-            return await message.reply_text('⚠️ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.')
+            return await message.reply_text('<b>⚠️ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.</b>')
         
         btn = [[
             InlineKeyboardButton("ᴏᴘᴇɴ ʜᴇʀᴇ 🔽", callback_data='open_group_settings')
         ],[
             InlineKeyboardButton("ᴏᴘᴇɴ ɪɴ ᴘᴍ 👤", callback_data='open_pm_settings')
         ]]
-        await message.reply_text('⚙️ ᴡʜᴇʀᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴏᴘᴇɴ ᴛʜᴇ sᴇᴛᴛɪɴɢs ᴍᴇɴᴜ?', reply_markup=InlineKeyboardMarkup(btn))
+        await message.reply_text('<b>⚙️ ᴡʜᴇʀᴇ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴏᴘᴇɴ ᴛʜᴇ sᴇᴛᴛɪɴɢs ᴍᴇɴᴜ?</b>', reply_markup=InlineKeyboardMarkup(btn))
         
     elif message.chat.type == enums.ChatType.PRIVATE:
         cons = await db.get_connections(message.from_user.id)
         if not cons:
-            return await message.reply_text("❌ ɴᴏ ɢʀᴏᴜᴘs ꜰᴏᴜɴᴅ! ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ <b>'ᴏᴘᴇɴ ɪɴ ᴘᴍ'</b>.")
+            return await message.reply_text("<b>❌ ɴᴏ ɢʀᴏᴜᴘs ꜰᴏᴜɴᴅ! ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ 'ᴏᴘᴇɴ ɪɴ ᴘᴍ'.</b>")
             
         buttons = []
         for con in cons:
@@ -492,9 +549,9 @@ async def settings(client, message):
                 pass
                 
         await message.reply_text(
-            text="""⚙️ sᴇʟᴇᴄᴛ ᴛʜᴇ ɢʀᴏᴜᴘ ᴡʜᴏsᴇ sᴇᴛᴛɪɴɢs ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴄʜᴀɴɢᴇ.
+            text="""<b>⚙️ sᴇʟᴇᴄᴛ ᴛʜᴇ ɢʀᴏᴜᴘ ᴡʜᴏsᴇ sᴇᴛᴛɪɴɢs ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴄʜᴀɴɢᴇ.
         
-        💡 <i>ɪꜰ ʏᴏᴜʀ ɢʀᴏᴜᴘ ɪs ɴᴏᴛ sʜᴏᴡɪɴɢ ʜᴇʀᴇ:</i> ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ <b>'ᴏᴘᴇɴ ɪɴ ᴘᴍ'</b>, ᴏʀ sᴇɴᴅ <code>/connect</code> ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.""", 
+💡 <i>ɪꜰ ʏᴏᴜʀ ɢʀᴏᴜᴘ ɪs ɴᴏᴛ sʜᴏᴡɪɴɢ ʜᴇʀᴇ:</i> ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ sᴇʟᴇᴄᴛ 'ᴏᴘᴇɴ ɪɴ ᴘᴍ', ᴏʀ sᴇɴᴅ <code>/connect</code> ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.</b>""", 
             reply_markup=InlineKeyboardMarkup(buttons)
         )
 
@@ -503,17 +560,17 @@ async def connect(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         group_id = message.chat.id
         await db.add_connect(group_id, message.from_user.id)
-        await message.reply_text('✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ ᴛʜɪs ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ!')
+        await message.reply_text('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ ᴛʜɪs ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ!</b>')
     elif message.chat.type == enums.ChatType.PRIVATE:
         if len(message.command) > 1:
             group_id = message.command[1]
             if not await is_check_admin(client, int(group_id), message.from_user.id):
-                return await message.reply_text('❌ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.')
+                return await message.reply_text('<b>❌ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴅᴍɪɴ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.</b>')
             chat = await client.get_chat(int(group_id))
             await db.add_connect(int(group_id), message.from_user.id)
-            await message.reply_text(f'✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ {chat.title} ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ')
+            await message.reply_text(f'<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴏɴɴᴇᴄᴛᴇᴅ {chat.title} ɢʀᴏᴜᴘ ᴛᴏ ᴘᴍ</b>')
         else:
-            await message.reply_text('💡 ᴜsᴀɢᴇ: /connect ɢʀᴏᴜᴘ_ɪᴅ\nᴏʀ ᴜsᴇ /connect ɪɴ ɢʀᴏᴜᴘ')
+            await message.reply_text('<b>💡 ᴜsᴀɢᴇ: <code>/connect group_id</code>\nᴏʀ ᴜsᴇ <code>/connect</code> ɪɴ ɢʀᴏᴜᴘ</b>')
 
 
 @Client.on_message(filters.command('delete'))
@@ -542,7 +599,7 @@ async def delete_file(bot, message):
     )
 
 
-@Client.on_message(filters.command('img2link'))
+@Client.on_message(filters.command(['img_2_link', 'img2link']))
 async def img_2_link(bot, message):
     reply_to_message = message.reply_to_message
     if not reply_to_message or not reply_to_message.photo:
@@ -595,13 +652,13 @@ async def myplan(client, message):
             reply_markup=InlineKeyboardMarkup(btn)
         )
     
-    expire_str = mp['expire'].strftime('%d %b %Y, %I:%M %p')
+    ex = mp.get('expire').strftime('%d %b %Y, %I:%M %p') if mp.get('expire') else 'Unknow'
     
     await message.reply(
         f"<b>💎 ɪɴꜰɪɴɪᴛʏ ᴘʀᴇᴍɪᴜᴍ sᴛᴀᴛᴜs\n\n"
         f"🚀 sᴛᴀᴛᴜs: ᴀᴄᴛɪᴠᴇ\n"
-        f"⏳ ᴘʟᴀɴ: {mp['plan']}\n"
-        f"📅 ᴇxᴘɪʀʏ: <code>{expire_str}</code>\n\n"
+        f"⏳ ᴘʟᴀɴ: {mp.get('plan') or 'Unknown Plan'}\n"
+        f"📅 ᴇxᴘɪʀʏ: <code>{ex}</code>\n\n"
         f"✨ ᴇɴᴊᴏʏ ᴀʟʟ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs!\n"
         f"🌍 <a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
         disable_web_page_preview=True
@@ -622,15 +679,24 @@ async def plan(client, message):
             InlineKeyboardButton('🧑‍💻 ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ', url='https://t.me/talk_mrs_bot', style=enums.ButtonStyle.PRIMARY)
         ]]
 
+    # Dynamic Plans from Public Repo integrated into Premium UI
+    plans_list = []
+    for days, details in PREMIUM_PLANS.items():
+        name = get_plan_name(days)
+        currency = details[0]
+        price = details[1]
+        plans_list.append(f"▫️ <b>{name}</b> — {currency} {price}")
+    PLANS_BLOCK = "\n".join(plans_list)
+
     await message.reply(
-        script.PLAN_TXT.format(PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME),
+        script.PLAN_TXT.format(PLANS_BLOCK, RECEIPT_SEND_USERNAME),
         reply_markup=InlineKeyboardMarkup(btn),
         disable_web_page_preview=True,
         parse_mode=enums.ParseMode.HTML
     )
 
 
-@Client.on_message(filters.command('add_prm'))
+@Client.on_message(filters.command('add_prm') & filters.user(ADMINS))
 async def add_prm(bot, message):
     if not await db.is_sudo(message.from_user.id):
         return
@@ -716,11 +782,11 @@ async def add_prm(bot, message):
                         except:
                             pass
             else:
-                await message.reply_text("❌ <b>ɪɴᴠᴀʟɪᴅ ᴛɪᴍᴇ ꜰᴏʀᴍᴀᴛ.</b>")
+                await message.reply_text("❌ <b>ɪɴᴠᴀʟɪᴅ ᴛɪᴍᴇ ꜰᴏʀᴍᴀᴛ. (e.g. 1d, 7d, 1month)</b>")
         except Exception as e:
             await message.reply_text(f"❌ <b>ᴇʀʀᴏʀ:</b> <code>{e}</code>")
     else:
-        await message.reply_text("📋 <b>ᴜsᴀɢᴇ:</b> <code>/add_prm user_id 7day</code>")
+        await message.reply_text("📋 <b>ᴜsᴀɢᴇ:</b> <code>/add_prm user_id 7d</code>")
 
 
 @Client.on_message(filters.command('rm_prm'))
@@ -820,7 +886,6 @@ async def hyper_fsub(bot, message):
     except ValueError:
         return await message.reply('💡 <b>ᴜsᴀɢᴇ:</b> <code>/hyper_fsub -100xxxx</code>')
         
-    # Deduplicate input IDs
     input_ids = list(dict.fromkeys([i for i in ids_str.split() if i.strip()]))
     clean_ids = " ".join(input_ids)
 
@@ -1059,6 +1124,19 @@ async def off_pm_search(bot, message):
 async def on_pm_search(bot, message):
     await db.update_bot_sttgs('PM_SEARCH', True)
     await message.reply('<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴛᴜʀɴᴇᴅ ᴏɴ ᴘᴍ sᴇᴀʀᴄʜ ꜰᴏʀ ᴀʟʟ ᴜsᴇʀs</b>')
+
+@Client.on_message(filters.command('repairmode') & filters.user(ADMINS))
+async def repairmode(bot, message):
+    args = message.text.split()
+    if len(args) < 2 or args[1].lower() not in ['on', 'off']:
+        return await message.reply("<b>Repair Mode Usage:</b>\n<code>/repairmode on</code>  — Enable maintenance mode\n<code>/repairmode off</code> — Disable maintenance mode")
+    mode = args[1].lower()
+    if mode == 'on':
+        await db.set_repair_mode(True)
+        await message.reply("<b>Repair Mode Enabled!</b>\n\nUsers will see:\n<i>Sorry for the inconvenience, we are under Maintenance. We'll be back soon!</i>\n\nUse <code>/repairmode off</code> to disable.")
+    else:
+        await db.set_repair_mode(False)
+        await message.reply("<b>Repair Mode Disabled!</b>\n\nBot is back online. Users can search and get files normally.")
 
 @Client.on_message(filters.command("addsudo") & filters.user(ADMINS))
 async def add_sudo_cmd(bot, message):
