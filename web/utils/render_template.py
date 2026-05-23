@@ -5,7 +5,7 @@ import urllib.parse
 import html
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. NETFLIX/PRIME STYLE WEBAPP TEMPLATE
+# 1. INFINITY WATCH WEBAPP TEMPLATE (RESTORED ORIGINAL THEME + POPUP & CLEAR TEXT)
 # ─────────────────────────────────────────────────────────────────────────────
 webapp_template = """
 <!DOCTYPE html>
@@ -13,293 +13,488 @@ webapp_template = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infinity Stream</title>
+    <title>Infinity Watch</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505; --surface: #121212; --primary: #e50914; 
-            --text: #ffffff; --text-muted: #a3a3a3;
+            --bg-dark: #08090d;
+            --accent: #8b5cf6;
+            --accent-cyan: #00ffff;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --card-bg: #11131a;
+            --card-border: #1f222c;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --input-focus: #1a1d27;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent;}
-        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
-        
-        /* Navbar */
-        .navbar {
-            position: fixed; top: 0; width: 100%; padding: 15px 20px; z-index: 1000;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
-            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
-        }
-        .navbar.scrolled { background: rgba(5,5,5,0.95); backdrop-filter: blur(10px); }
-        .logo { font-size: 22px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;}
-        .search-icon { font-size: 20px; cursor: pointer; }
 
-        /* Search Bar (Hidden by default) */
-        .search-bar {
-            position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: var(--surface);
-            z-index: 1001; transform: translateY(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
-        .search-bar.active { transform: translateY(0); }
-        .search-bar input {
-            flex: 1; padding: 12px 20px; border-radius: 30px; border: none; outline: none;
-            background: #222; color: #fff; font-size: 16px;
-        }
-        .close-search { color: var(--text-muted); font-weight: 600; cursor: pointer; padding: 10px; }
 
-        /* Hero Section */
-        .hero {
-            position: relative; height: 75vh; display: flex; align-items: flex-end; padding: 40px 20px;
-            background-size: cover; background-position: center top;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 16px 100px 16px;
+            -webkit-font-smoothing: antialiased;
         }
-        .hero::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to top, var(--bg) 0%, rgba(5,5,5,0.4) 50%, rgba(5,5,5,0.1) 100%);
-        }
-        .hero-content { position: relative; z-index: 10; width: 100%; max-width: 600px; }
-        .hero-title { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);}
-        .hero-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 15px; font-weight: 600; }
-        .hero-meta span { border: 1px solid var(--text-muted); padding: 1px 6px; border-radius: 4px; margin-right: 8px; font-size: 11px;}
-        .hero-desc { font-size: 14px; line-height: 1.5; color: #ccc; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .btn-play {
-            background: var(--text); color: #000; border: none; padding: 12px 30px; border-radius: 8px;
-            font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
-            transition: 0.2s; text-transform: uppercase;
-        }
-        .btn-play:active { transform: scale(0.95); }
 
-        /* Rows */
-        .row-container { padding: 20px 0 20px 20px; }
-        .row-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-        .row { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 15px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;}
-        .row::-webkit-scrollbar { display: none; }
-        .card { flex: 0 0 130px; scroll-snap-align: start; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.2s;}
-        .card:active { transform: scale(0.95); }
-        .card img { width: 100%; height: 195px; object-fit: cover; background: #222; }
-        
-        /* Modal for Download/Watch */
+        .header {
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .greeting {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+
+        .greeting-name { 
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .subtitle { 
+            font-size: 14px; 
+            color: var(--text-dim); 
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+        }
+
+        .info-btn {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+            transition: 0.3s;
+        }
+
+        .info-btn:active { transform: scale(0.9); }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 24px;
+            background: var(--bg-dark);
+            padding: 12px 0;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 60px 14px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="text"]:focus { 
+            background: var(--input-focus);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .clear-text {
+            position: absolute;
+            right: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            cursor: pointer;
+            display: none;
+            letter-spacing: 1px;
+        }
+
+        .search-btn {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 0 20px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            transition: 0.2s;
+        }
+
+        .search-btn:active { transform: scale(0.95); opacity: 0.8; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            color: var(--text-dim);
+        }
+
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .file-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .file-info {
+            flex: 1;
+            padding-right: 12px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .file-size { 
+            font-size: 11px; 
+            font-weight: 800; 
+            color: var(--accent-cyan); 
+            text-transform: uppercase;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+
+        .get-icon {
+            font-size: 18px;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
+        .pagination {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 400px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(17, 19, 26, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+        }
+
+        .page-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .page-btn:disabled { background: #334155; opacity: 0.5; }
+        .page-indicator { font-weight: 600; font-size: 13px; color: var(--text-main); }
+
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent-cyan);
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 0.1em;
+            display: none;
+            text-transform: uppercase;
+        }
+
+        /* Modal / Popup Styles */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
-            display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(5px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999;
         }
-        .modal {
-            background: var(--surface); width: 100%; max-height: 85vh; border-radius: 24px 24px 0 0;
-            padding: 24px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 25px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 0 30px var(--accent-glow);
+            animation: popIn 0.3s ease-out;
         }
-        .modal.open { transform: translateY(0); }
-        .modal-drag { width: 40px; height: 5px; background: #333; border-radius: 10px; margin: 0 auto 20px; }
-        .m-title { font-size: 22px; font-weight: 800; margin-bottom: 5px;}
-        .m-meta { font-size: 13px; color: var(--primary); margin-bottom: 15px; font-weight: 600;}
-        .m-files { display: flex; flex-direction: column; gap: 10px; margin-top: 20px;}
-        .m-file-card {
-            background: #222; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
-        .m-file-name { font-size: 14px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .m-file-size { font-size: 12px; color: var(--text-muted); margin-top: 4px;}
-        .m-btn { background: var(--primary); color: #fff; border:none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px;}
-        
-        .loader-full { position: fixed; inset:0; background: var(--bg); z-index: 3000; display: flex; justify-content: center; align-items: center; color: var(--primary); font-weight: 800; font-size: 24px; letter-spacing: 2px; animation: pulse 1s infinite;}
-        @keyframes pulse { 50% { opacity: 0.5; transform: scale(0.95);} }
+        .modal-content h3 { color: var(--accent-cyan); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;}
+        .modal-content p { font-size: 14px; color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; }
+        .close-btn {
+            background: linear-gradient(135deg, var(--accent), #ff00ff);
+            color: #fff; padding: 10px 20px; border-radius: 10px; border: none;
+            font-weight: 800; width: 100%; cursor: pointer; text-transform: uppercase;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="mainLoader" class="loader-full">INFINITY</div>
-
-    <nav class="navbar" id="navbar">
-        <div class="logo">Infinity</div>
-        <div class="search-icon" onclick="toggleSearch(true)">🔍</div>
-    </nav>
-
-    <div class="search-bar" id="searchBar">
-        <input type="text" id="searchInput" placeholder="Search Movies, Series..." onkeyup="handleSearch(event)">
-        <div class="close-search" onclick="toggleSearch(false)">Cancel</div>
+    <div class="header">
+        <div>
+            <h1 class="greeting">ʜᴇʏ, <span id="userName" class="greeting-name">Loading...</span></h1>
+            <p class="subtitle">ɪɴꜰɪɴɪᴛʏ ᴡᴀᴛᴄʜ ɴᴇᴛᴡᴏʀᴋ</p>
+        </div>
+        <button class="info-btn" onclick="showPopup()">i</button>
     </div>
 
-    <div class="hero" id="hero" style="background-image: url('');">
-        <div class="hero-content">
-            <h1 class="hero-title" id="hTitle">Loading...</h1>
-            <div class="hero-meta"><span id="hYear">----</span> <span id="hRating">⭐ --</span></div>
-            <p class="hero-desc" id="hDesc">Fetching the best content for you...</p>
-            <button class="btn-play" id="hPlay" onclick="">▶ Get Files</button>
+    <div id="infoPopup" class="modal-overlay" onclick="closePopup(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>📝 Instructions</h3>
+            <p>1. Type the exact movie or series name.<br>2. For Series, you can add season (e.g., Loki S01).<br>3. Avoid using symbols or emojis.</p>
+            <button class="close-btn" onclick="closePopup('force')">Understood</button>
         </div>
     </div>
 
-    <div id="contentRows"></div>
-
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-        <div class="modal" id="modalContent" onclick="event.stopPropagation()">
-            <div class="modal-drag"></div>
-            <h2 class="m-title" id="mTitle">Movie Title</h2>
-            <div class="m-meta" id="mMeta">Checking Database...</div>
-            <div class="m-files" id="mFilesList">
-                </div>
+    <div class="search-container">
+        <div class="input-wrapper">
+            <input type="text" id="searchInput" placeholder="Search movies, series..." onkeypress="handleEnter(event)" oninput="toggleClearIcon()">
+            <span id="clearText" class="clear-text" onclick="clearSearch()">Clear</span>
         </div>
+        <button class="search-btn" onclick="performSearch(0)">🔍</button>
+    </div>
+
+    <h2 id="sectionTitle" class="section-title">ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ</h2>
+    <div id="loader" class="loader">Fetching files...</div>
+    <div id="results" class="results-container"></div>
+
+    <div id="pagination" class="pagination">
+        <button id="backBtn" class="page-btn" onclick="changePage('back')">ᴘʀᴇᴠ</button>
+        <div id="pageIndicator" class="page-indicator">1 / 1</div>
+        <button id="nextBtn" class="page-btn" onclick="changePage('next')">ɴᴇxᴛ</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.setBackgroundColor('#050505');
-        tg.setHeaderColor('#050505');
+        tg.setBackgroundColor('#08090d');
+        tg.setHeaderColor('#08090d');
 
+        const user = tg.initDataUnsafe?.user;
+        const userNameElement = document.getElementById('userName');
+        
+        if (user && user.first_name) {
+            userNameElement.innerText = user.first_name;
+        } else {
+            userNameElement.innerText = "Guest";
+        }
+
+        const userId = user?.id || 'unknown';
+
+        let currentQuery = '';
+        let currentOffset = 0;
+        let nextOffset = null;
         let botUsername = '';
+        let maxResultsPerPage = 10; 
 
-        window.addEventListener('scroll', () => {
-            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
-        });
-
-        function toggleSearch(show) {
-            const bar = document.getElementById('searchBar');
-            bar.classList.toggle('active', show);
-            if(show) document.getElementById('searchInput').focus();
-            if(!show) {
-                document.getElementById('searchInput').value = '';
-                loadHomeData(); // Reset to home
+        // Popup Handlers
+        function showPopup() { document.getElementById('infoPopup').style.display = 'flex'; }
+        function closePopup(e) {
+            if (e === 'force' || e.target.id === 'infoPopup') {
+                document.getElementById('infoPopup').style.display = 'none';
             }
         }
 
-        async function loadHomeData() {
-            document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('contentRows').innerHTML = '';
+        function handleEnter(e) {
+            if (e.key === 'Enter') performSearch(0);
+        }
+
+        function toggleClearIcon() {
+            const input = document.getElementById('searchInput');
+            const clearText = document.getElementById('clearText');
+            if (input.value.length > 0) {
+                clearText.style.display = 'block';
+            } else {
+                clearText.style.display = 'none';
+                performSearch(0); 
+            }
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            toggleClearIcon(); 
+            input.focus();
+            performSearch(0);
+        }
+
+        async function performSearch(offset = 0) {
+            const query = document.getElementById('searchInput').value.trim();
+            const sectionTitle = document.getElementById('sectionTitle');
+            
+            sectionTitle.innerText = query.length > 0 ? "sᴇᴀʀᴄʜ ʀᴇsᴜʟᴛs" : "ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ";
+
+            currentQuery = query;
+            currentOffset = offset;
+
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('pagination').style.display = 'none';
+
             try {
-                const res = await fetch('/api/tmdb-trending');
-                const data = await res.json();
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&offset=${offset}`);
+                const data = await response.json();
+                
                 botUsername = data.bot_username;
-
-                // Setup Hero
-                if(data.hero) {
-                    document.getElementById('hero').style.backgroundImage = `url('${data.hero.backdrop}')`;
-                    document.getElementById('hTitle').innerText = data.hero.title;
-                    document.getElementById('hYear').innerText = data.hero.type === 'movie' ? 'MOVIE' : 'SERIES';
-                    document.getElementById('hRating').innerText = `⭐ ${data.hero.rating}`;
-                    document.getElementById('hDesc').innerText = data.hero.overview;
-                    document.getElementById('hPlay').onclick = () => openModal(data.hero.title);
-                }
-
-                // Render Rows
-                renderRow('Trending Now', data.trending);
-                renderRow('Popular Movies', data.popular_movies);
-                renderRow('Top Rated', data.top_rated);
-                renderRow('Popular TV Shows', data.popular_tv);
+                maxResultsPerPage = data.max_btn; 
                 
-                document.getElementById('mainLoader').style.display = 'none';
-            } catch (e) {
-                document.getElementById('mainLoader').innerText = 'ERROR LOADING';
+                document.getElementById('loader').style.display = 'none';
+                renderResults(data);
+                renderPagination(data);
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                document.getElementById('loader').innerText = 'Connection Error';
             }
         }
 
-        function renderRow(title, items) {
-            if(!items || items.length === 0) return;
-            let cards = items.map(i => `
-                <div class="card" onclick="openModal('${i.title.replace(/'/g, "\\'")}')">
-                    <img src="${i.poster || 'https://via.placeholder.com/130x195?text=No+Poster'}" alt="${i.title}" loading="lazy">
-                </div>
-            `).join('');
-
-            const rowHtml = `
-                <div class="row-container">
-                    <div class="row-title">${title}</div>
-                    <div class="row">${cards}</div>
-                </div>
-            `;
-            document.getElementById('contentRows').insertAdjacentHTML('beforeend', rowHtml);
-        }
-
-        let searchTimeout;
-        function handleSearch(e) {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
-            if(query.length < 3) return;
-            searchTimeout = setTimeout(async () => {
-                document.getElementById('contentRows').innerHTML = '<div style="text-align:center; margin-top: 50px;">Searching TMDB...</div>';
-                const res = await fetch(`/api/tmdb-search?q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                document.getElementById('contentRows').innerHTML = '';
-                renderRow('Search Results', data.results);
-            }, 600);
-        }
-
-        async function openModal(title) {
-            const overlay = document.getElementById('modalOverlay');
-            const modal = document.getElementById('modalContent');
-            const filesList = document.getElementById('mFilesList');
+        function renderResults(data) {
+            const resultsDiv = document.getElementById('results');
             
-            document.getElementById('mTitle').innerText = title;
-            document.getElementById('mMeta').innerText = "Searching in Bot Database...";
-            filesList.innerHTML = '';
-            
-            overlay.style.display = 'flex';
-            setTimeout(() => modal.classList.add('open'), 10);
+            if (!data.files || data.files.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div style="text-align:center; padding:60px 20px;">
+                        <h3 style="color: var(--accent-cyan); margin-bottom: 8px;">No Results Found</h3>
+                        <p style="color: var(--text-dim); font-size: 14px;">Try a different keyword.</p>
+                    </div>`;
+                return;
+            }
 
-            try {
-                // Search in Bot Database
-                const res = await fetch(`/api/search?q=${encodeURIComponent(title)}`);
-                const data = await res.json();
-                
-                if(!data.files || data.files.length === 0) {
-                    document.getElementById('mMeta').innerText = "⚠️ Not available in bot database yet.";
-                    filesList.innerHTML = `
-                        <button class="btn-play" style="width:100%; justify-content:center;" onclick="requestMovie('${title}')">
-                            Request to Admin
-                        </button>`;
-                    return;
-                }
+            data.files.forEach((file, index) => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.innerHTML = `
+                    <div class="file-info">
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${file.size}</span>
+                    </div>
+                    <div class="get-icon">▶</div>
+                `;
 
-                document.getElementById('mMeta').innerText = `✅ Found ${data.total_results} files ready to stream/download!`;
-                
-                let fileHtml = '';
-                data.files.slice(0, 10).forEach(file => {
-                    fileHtml += `
-                        <div class="m-file-card">
-                            <div>
-                                <div class="m-file-name">${file.name}</div>
-                                <div class="m-file-size">${file.size}</div>
-                            </div>
-                            <button class="m-btn" onclick="getFile('${file.id}')">GET</button>
-                        </div>
-                    `;
-                });
-                
-                if(data.total_results > 10) {
-                    fileHtml += `<button class="btn-play" style="width:100%; justify-content:center; background:#333; color:#fff;" onclick="getFile('all_search_${title}')">View All Results in Bot</button>`;
-                }
-                
-                filesList.innerHTML = fileHtml;
+                card.onclick = () => {
+                    const payload = `file_${file.id}`;
+                    const link = `https://t.me/${botUsername}?start=${payload}`;
+                    if (userId === 'unknown') {
+                        window.open(link, '_blank');
+                    } else {
+                        tg.openTelegramLink(link);
+                        setTimeout(() => { tg.close(); }, 100);
+                    }
+                };
+                resultsDiv.appendChild(card);
+            });
+        }
 
-            } catch (e) {
-                document.getElementById('mMeta').innerText = "Error connecting to bot.";
+        function renderPagination(data) {
+            const pagDiv = document.getElementById('pagination');
+            nextOffset = data.next_offset;
+
+            if (data.total_results <= data.max_btn) {
+                pagDiv.style.display = 'none';
+                return;
+            }
+
+            pagDiv.style.display = 'flex';
+            const totalPages = Math.ceil(data.total_results / data.max_btn);
+            const currentPage = Math.ceil(data.current_offset / data.max_btn) + 1;
+            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
+
+            const backBtn = document.getElementById('backBtn');
+            backBtn.style.visibility = data.current_offset > 0 ? 'visible' : 'hidden';
+            backBtn.disabled = data.current_offset === 0;
+
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.style.visibility = nextOffset !== null ? 'visible' : 'hidden';
+            nextBtn.disabled = nextOffset === null;
+        }
+
+        function changePage(direction) {
+            if (direction === 'next' && nextOffset !== null) {
+                performSearch(nextOffset);
+            } else if (direction === 'back') {
+                let prevOffset = currentOffset - maxResultsPerPage;
+                if (prevOffset < 0) prevOffset = 0;
+                performSearch(prevOffset);
             }
         }
 
-        function closeModal(e) {
-            if(e.target === document.getElementById('modalOverlay') || e === 'force') {
-                document.getElementById('modalContent').classList.remove('open');
-                setTimeout(() => document.getElementById('modalOverlay').style.display = 'none', 300);
-            }
-        }
-
-        function getFile(fileId) {
-            const payload = fileId.startsWith('all_') ? '' : `file_${fileId}`; // You can handle bulk search logic in bot.
-            const link = `https://t.me/${botUsername}?start=${payload}`;
-            tg.openTelegramLink(link);
-            setTimeout(() => tg.close(), 100);
-        }
-
-        function requestMovie(title) {
-            tg.sendData(JSON.stringify({action: "request", title: title}));
-            tg.close();
-        }
-
-        window.onload = loadHomeData;
+        window.onload = () => {
+            performSearch(0);
+        };
     </script>
 </body>
 </html>
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2. PAYMENT & PREMIUM PLAN WEBAPP TEMPLATE
+# 2. PAYMENT & PREMIUM PLAN WEBAPP TEMPLATE (MATCHING CYBERPUNK THEME)
 # ─────────────────────────────────────────────────────────────────────────────
 payment_tmplt = """
 <!DOCTYPE html>
@@ -309,22 +504,29 @@ payment_tmplt = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Upgrade to Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a; --surface: #1e293b; --primary: #8b5cf6;
-            --primary-glow: rgba(139, 92, 246, 0.4); --text: #f8fafc; --text-muted: #94a3b8;
+            --bg: #08090d; --surface: #11131a; 
+            --primary: #00ffff; --secondary: #8b5cf6; --magenta: #ff00ff;
+            --primary-glow: rgba(0, 255, 255, 0.4); 
+            --text: #f8fafc; --text-muted: #94a3b8;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent;}
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
         body { background: var(--bg); color: var(--text); padding: 20px; overflow-x: hidden; }
         
         .header { text-align: center; margin-bottom: 30px; margin-top: 10px; }
-        .title { font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 5px; }
+        .title { 
+            font-size: 26px; font-weight: 800; 
+            background: linear-gradient(90deg, #fff, var(--primary)); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+        .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;}
 
         .plans-grid { display: grid; gap: 15px; margin-bottom: 30px; }
         .plan-card {
-            background: var(--surface); border: 2px solid #334155; border-radius: 16px; padding: 20px;
+            background: var(--surface); border: 1px solid var(--secondary); border-radius: 16px; padding: 20px;
             display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s;
         }
         .plan-card.active { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); transform: scale(1.02); }
@@ -334,21 +536,22 @@ payment_tmplt = """
 
         .payment-box {
             background: var(--surface); border-radius: 20px; padding: 25px 20px; text-align: center;
-            border: 1px solid #334155; display: none; animation: slideUp 0.4s ease;
+            border: 1px solid var(--secondary); display: none; animation: slideUp 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
         
-        .qr-img { width: 180px; height: 180px; border-radius: 12px; border: 4px solid var(--primary); padding: 5px; background: #fff; margin-bottom: 15px; }
+        .qr-img { width: 180px; height: 180px; border-radius: 12px; border: 2px solid var(--primary); padding: 5px; background: #fff; margin-bottom: 15px; box-shadow: 0 0 15px var(--primary-glow);}
         .upi-box {
-            background: #0f172a; padding: 12px; border-radius: 10px; border: 1px dashed var(--primary);
+            background: #050508; padding: 12px; border-radius: 10px; border: 1px dashed var(--magenta);
             font-size: 15px; font-family: monospace; color: #fff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
         }
-        .copy-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .copy-btn { background: var(--secondary); color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase;}
         
         .action-btn {
-            background: linear-gradient(135deg, var(--primary), #6366f1); color: #fff; border: none; width: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #000; border: none; width: 100%;
             padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 10px 20px var(--primary-glow);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
         }
         .action-btn:active { transform: scale(0.98); }
     </style>
@@ -357,14 +560,14 @@ payment_tmplt = """
 
     <div class="header">
         <h1 class="title">Unlock Premium</h1>
-        <p class="subtitle">Ad-free streaming, direct downloads & more.</p>
+        <p class="subtitle">Join the Elite Network</p>
     </div>
 
     <div class="plans-grid" id="plansContainer">
         </div>
 
     <div class="payment-box" id="paymentBox">
-        <h3 style="margin-bottom: 15px; font-weight: 800;">Scan to Pay <span id="payAmount" style="color: var(--primary);"></span></h3>
+        <h3 style="margin-bottom: 15px; font-weight: 800; color: #fff;">Scan to Pay <span id="payAmount" style="color: var(--primary);"></span></h3>
         <img src="{qr_code}" alt="QR Code" class="qr-img">
         
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Or pay using UPI ID:</p>
@@ -383,11 +586,10 @@ payment_tmplt = """
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.setBackgroundColor('#0f172a');
-        tg.setHeaderColor('#0f172a');
+        tg.setBackgroundColor('#08090d');
+        tg.setHeaderColor('#08090d');
 
         const botUsername = "{bot_username}";
-        // Using python JSON dump
         const plans = {plans}; 
         
         let selectedPlan = null;
@@ -426,7 +628,6 @@ payment_tmplt = """
             document.getElementById('payAmount').innerText = `${currency} ${price}`;
             document.getElementById('paymentBox').style.display = 'block';
             
-            // Scroll to bottom
             setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
         }
 
@@ -438,7 +639,6 @@ payment_tmplt = """
 
         function sendScreenshot() {
             if(!selectedPlan) return;
-            // Send Data back to bot to trigger admin chat
             tg.sendData(JSON.stringify({
                 action: "payment_screenshot",
                 plan: selectedPlan,
@@ -801,6 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 </html>
 """
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. ERROR PAGE TEMPLATE
