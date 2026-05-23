@@ -5,7 +5,7 @@ import urllib.parse
 import html
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. INFINITY WATCH WEBAPP TEMPLATE (RESTORED ORIGINAL THEME + POPUP & CLEAR TEXT)
+# 1. INFINITY WATCH WEBAPP TEMPLATE (TMDB POSTER LAYOUT + CYBERPUNK THEME)
 # ─────────────────────────────────────────────────────────────────────────────
 webapp_template = """
 <!DOCTYPE html>
@@ -15,320 +15,166 @@ webapp_template = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Infinity Watch</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #08090d;
+            --surface: #11131a;
             --accent: #8b5cf6;
             --accent-cyan: #00ffff;
             --accent-glow: rgba(139, 92, 246, 0.4);
-            --card-bg: #11131a;
-            --card-border: #1f222c;
+            --cyan-glow: rgba(0, 255, 255, 0.3);
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
-            --input-focus: #1a1d27;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background: var(--bg-dark); color: var(--text-main); overflow-x: hidden; }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed; top: 0; width: 100%; padding: 15px 20px; z-index: 1000;
+            background: linear-gradient(to bottom, rgba(8,9,13,0.95) 0%, transparent 100%);
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
         }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding: 24px 16px 100px 16px;
-            -webkit-font-smoothing: antialiased;
+        .navbar.scrolled { background: rgba(8,9,13,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(139, 92, 246, 0.2); }
+        .logo { 
+            font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px var(--cyan-glow);
         }
+        .nav-icons { display: flex; gap: 15px; align-items: center; }
+        .icon-btn { font-size: 20px; cursor: pointer; color: var(--accent-cyan); font-weight: 800; background: none; border: none; }
+        .info-btn { border: 1px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px var(--accent-glow); color: var(--accent-cyan);}
 
-        .header {
-            margin-bottom: 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* Search Bar */
+        .search-bar {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: var(--surface);
+            z-index: 1001; transform: translateY(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-
-        .greeting {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            margin-bottom: 4px;
+        .search-bar.active { transform: translateY(0); }
+        .input-wrapper { position: relative; flex: 1; }
+        .search-bar input {
+            width: 100%; padding: 12px 60px 12px 20px; border-radius: 30px; border: 1px solid rgba(139, 92, 246, 0.3); outline: none;
+            background: #1a1d27; color: #fff; font-size: 16px; transition: 0.3s;
         }
+        .search-bar input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px var(--cyan-glow); }
+        .clear-text { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--accent-cyan); font-weight: 700; cursor: pointer; display: none; text-transform: uppercase;}
+        .close-search { color: var(--text-dim); font-weight: 600; cursor: pointer; padding: 10px; }
 
-        .greeting-name { 
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent-glow);
+        /* Hero Section */
+        .hero {
+            position: relative; height: 75vh; display: flex; align-items: flex-end; padding: 40px 20px;
+            background-size: cover; background-position: center top; transition: background-image 0.5s ease-in-out;
         }
-
-        .subtitle { 
-            font-size: 14px; 
-            color: var(--text-dim); 
-            font-weight: 500;
-            letter-spacing: 0.01em;
-            text-transform: uppercase;
+        .hero::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, var(--bg-dark) 0%, rgba(8,9,13,0.4) 50%, rgba(8,9,13,0.1) 100%);
         }
-
-        .info-btn {
-            background: rgba(139, 92, 246, 0.1);
-            color: var(--accent-cyan);
-            border: 1px solid var(--accent);
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--accent-glow);
-            transition: 0.3s;
+        .hero-content { position: relative; z-index: 10; width: 100%; max-width: 600px; }
+        .hero-title { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); color: #fff;}
+        .hero-meta { font-size: 14px; color: var(--accent-cyan); margin-bottom: 15px; font-weight: 700; }
+        .hero-meta span { border: 1px solid rgba(0,255,255,0.3); background: rgba(0,255,255,0.1); padding: 2px 8px; border-radius: 6px; margin-right: 8px; font-size: 11px;}
+        .hero-desc { font-size: 14px; line-height: 1.5; color: #cbd5e1; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .btn-play {
+            background: linear-gradient(135deg, var(--accent), var(--accent-cyan)); color: #000; border: none; padding: 12px 30px; border-radius: 12px;
+            font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s; text-transform: uppercase; box-shadow: 0 5px 15px var(--accent-glow);
         }
+        .btn-play:active { transform: scale(0.95); }
 
-        .info-btn:active { transform: scale(0.9); }
-
-        .search-container {
-            display: flex;
-            gap: 12px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            margin-bottom: 24px;
-            background: var(--bg-dark);
-            padding: 12px 0;
-        }
-
-        .input-wrapper {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 60px 14px 20px;
-            border-radius: 14px;
-            border: 1px solid var(--card-border);
-            background: var(--card-bg);
-            color: var(--text-main);
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        input[type="text"]:focus { 
-            background: var(--input-focus);
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-        }
-
-        .clear-text {
-            position: absolute;
-            right: 16px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            text-transform: uppercase;
-            cursor: pointer;
-            display: none;
-            letter-spacing: 1px;
-        }
-
-        .search-btn {
-            background: var(--accent);
-            color: #ffffff;
-            border: none;
-            border-radius: 14px;
-            padding: 0 20px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px var(--accent-glow);
-            transition: 0.2s;
-        }
-
-        .search-btn:active { transform: scale(0.95); opacity: 0.8; }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 16px;
-            color: var(--text-dim);
-        }
-
-        .results-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .file-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 16px 20px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .file-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-
-        .file-info {
-            flex: 1;
-            padding-right: 12px;
-        }
-
-        .file-name {
-            font-weight: 600;
-            font-size: 15px;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 6px;
-            color: #ffffff;
-        }
-
-        .file-size { 
-            font-size: 11px; 
-            font-weight: 800; 
-            color: var(--accent-cyan); 
-            text-transform: uppercase;
-            background: rgba(0, 255, 255, 0.1);
-            padding: 3px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            letter-spacing: 0.5px;
-        }
-
-        .get-icon {
-            font-size: 18px;
-            color: var(--accent);
-            opacity: 0.8;
-        }
-
-        .pagination {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 400px;
-            display: none;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(17, 19, 26, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 12px 16px;
-            border-radius: 18px;
-            border: 1px solid var(--accent);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            z-index: 200;
-        }
-
-        .page-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 13px;
-        }
-
-        .page-btn:disabled { background: #334155; opacity: 0.5; }
-        .page-indicator { font-weight: 600; font-size: 13px; color: var(--text-main); }
-
-        .loader {
-            text-align: center;
-            padding: 40px;
-            color: var(--accent-cyan);
-            font-weight: 800;
-            font-size: 14px;
-            letter-spacing: 0.1em;
-            display: none;
-            text-transform: uppercase;
-        }
-
-        /* Modal / Popup Styles */
+        /* Rows */
+        .row-container { padding: 20px 0 20px 20px; }
+        .row-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;}
+        .row { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 15px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;}
+        .row::-webkit-scrollbar { display: none; }
+        .card { flex: 0 0 130px; scroll-snap-align: start; position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid rgba(139, 92, 246, 0.1);}
+        .card:active { transform: scale(0.95); border-color: var(--accent-cyan); box-shadow: 0 0 15px var(--cyan-glow);}
+        .card img { width: 100%; height: 195px; object-fit: cover; background: #222; }
+        
+        /* Modals */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center;
-            z-index: 9999;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(5px);
         }
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--accent);
-            border-radius: 20px;
-            padding: 25px;
-            width: 85%;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 0 30px var(--accent-glow);
-            animation: popIn 0.3s ease-out;
+        .modal {
+            background: var(--surface); width: 100%; max-height: 85vh; border-radius: 24px 24px 0 0;
+            padding: 24px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; border-top: 1px solid var(--accent); box-shadow: 0 -10px 30px var(--accent-glow);
         }
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        .modal.open { transform: translateY(0); }
+        .modal-drag { width: 40px; height: 5px; background: rgba(139, 92, 246, 0.5); border-radius: 10px; margin: 0 auto 20px; }
+        .m-title { font-size: 22px; font-weight: 800; margin-bottom: 5px; color: #fff;}
+        .m-meta { font-size: 13px; color: var(--accent-cyan); margin-bottom: 15px; font-weight: 600;}
+        .m-files { display: flex; flex-direction: column; gap: 10px; margin-top: 20px;}
+        .m-file-card {
+            background: #1a1d27; border: 1px solid rgba(139, 92, 246, 0.2); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
         }
-        .modal-content h3 { color: var(--accent-cyan); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;}
-        .modal-content p { font-size: 14px; color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; }
-        .close-btn {
-            background: linear-gradient(135deg, var(--accent), #ff00ff);
-            color: #fff; padding: 10px 20px; border-radius: 10px; border: none;
-            font-weight: 800; width: 100%; cursor: pointer; text-transform: uppercase;
-        }
+        .m-file-card:active { border-color: var(--accent-cyan); }
+        .m-file-name { font-size: 14px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #fff;}
+        .m-file-size { font-size: 11px; color: var(--accent-cyan); margin-top: 6px; font-weight: 800; background: rgba(0,255,255,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block;}
+        .m-btn { background: var(--accent); color: #fff; border:none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px;}
+        
+        /* Info Popup */
+        .info-modal { display: none; justify-content: center; align-items: center; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; backdrop-filter: blur(5px);}
+        .info-content { background: var(--surface); border: 1px solid var(--accent-cyan); padding: 25px; border-radius: 20px; text-align: center; max-width: 300px; animation: pop 0.3s;}
+        @keyframes pop { from { transform: scale(0.8); opacity:0;} to { transform: scale(1); opacity:1;}}
+        .info-content h3 { color: var(--accent-cyan); margin-bottom: 15px; font-weight: 800;}
+        .info-content p { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin-bottom: 20px;}
 
+        .loader-full { position: fixed; inset:0; background: var(--bg-dark); z-index: 5000; display: flex; justify-content: center; align-items: center; color: var(--accent-cyan); font-weight: 800; font-size: 24px; letter-spacing: 2px; text-transform: uppercase; animation: pulse 1s infinite;}
+        @keyframes pulse { 50% { opacity: 0.5; transform: scale(0.95);} }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            <h1 class="greeting">ʜᴇʏ, <span id="userName" class="greeting-name">Loading...</span></h1>
-            <p class="subtitle">ɪɴꜰɪɴɪᴛʏ ᴡᴀᴛᴄʜ ɴᴇᴛᴡᴏʀᴋ</p>
-        </div>
-        <button class="info-btn" onclick="showPopup()">i</button>
-    </div>
+    <div id="mainLoader" class="loader-full">INFINITY SYSTEM</div>
 
-    <div id="infoPopup" class="modal-overlay" onclick="closePopup(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <nav class="navbar" id="navbar">
+        <div class="logo">Infinity</div>
+        <div class="nav-icons">
+            <button class="icon-btn info-btn" onclick="document.getElementById('infoPopup').style.display='flex'">i</button>
+            <div class="icon-btn" onclick="toggleSearch(true)">🔍</div>
+        </div>
+    </nav>
+
+    <div id="infoPopup" class="info-modal" onclick="this.style.display='none'">
+        <div class="info-content" onclick="event.stopPropagation()">
             <h3>📝 Instructions</h3>
-            <p>1. Type the exact movie or series name.<br>2. For Series, you can add season (e.g., Loki S01).<br>3. Avoid using symbols or emojis.</p>
-            <button class="close-btn" onclick="closePopup('force')">Understood</button>
+            <p>1. Browse trending collections directly.<br>2. Use Search to find specific content.<br>3. Tap a poster to check database availability.</p>
+            <button class="btn-play" style="width:100%; justify-content:center; padding: 10px;" onclick="document.getElementById('infoPopup').style.display='none'">Understood</button>
         </div>
     </div>
 
-    <div class="search-container">
+    <div class="search-bar" id="searchBar">
         <div class="input-wrapper">
-            <input type="text" id="searchInput" placeholder="Search movies, series..." onkeypress="handleEnter(event)" oninput="toggleClearIcon()">
-            <span id="clearText" class="clear-text" onclick="clearSearch()">Clear</span>
+            <input type="text" id="searchInput" placeholder="Search Movies, Series..." onkeyup="handleSearch(event)">
+            <div id="clearText" class="clear-text" onclick="clearSearch()">Clear</div>
         </div>
-        <button class="search-btn" onclick="performSearch(0)">🔍</button>
+        <div class="close-search" onclick="toggleSearch(false)">Cancel</div>
     </div>
 
-    <h2 id="sectionTitle" class="section-title">ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ</h2>
-    <div id="loader" class="loader">Fetching files...</div>
-    <div id="results" class="results-container"></div>
+    <div class="hero" id="hero" style="background-image: url('');">
+        <div class="hero-content">
+            <h1 class="hero-title" id="hTitle">Loading...</h1>
+            <div class="hero-meta"><span id="hYear">----</span> <span id="hRating">⭐ --</span></div>
+            <p class="hero-desc" id="hDesc">Syncing with Elite Network...</p>
+            <button class="btn-play" id="hPlay" onclick="">▶ Check Files</button>
+        </div>
+    </div>
 
-    <div id="pagination" class="pagination">
-        <button id="backBtn" class="page-btn" onclick="changePage('back')">ᴘʀᴇᴠ</button>
-        <div id="pageIndicator" class="page-indicator">1 / 1</div>
-        <button id="nextBtn" class="page-btn" onclick="changePage('next')">ɴᴇxᴛ</button>
+    <div id="contentRows"></div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+            <div class="modal-drag"></div>
+            <h2 class="m-title" id="mTitle">Movie Title</h2>
+            <div class="m-meta" id="mMeta">Scanning Database...</div>
+            <div class="m-files" id="mFilesList">
+                </div>
+        </div>
     </div>
 
     <script>
@@ -337,157 +183,165 @@ webapp_template = """
         tg.setBackgroundColor('#08090d');
         tg.setHeaderColor('#08090d');
 
-        const user = tg.initDataUnsafe?.user;
-        const userNameElement = document.getElementById('userName');
-        
-        if (user && user.first_name) {
-            userNameElement.innerText = user.first_name;
-        } else {
-            userNameElement.innerText = "Guest";
-        }
-
-        const userId = user?.id || 'unknown';
-
-        let currentQuery = '';
-        let currentOffset = 0;
-        let nextOffset = null;
         let botUsername = '';
-        let maxResultsPerPage = 10; 
 
-        // Popup Handlers
-        function showPopup() { document.getElementById('infoPopup').style.display = 'flex'; }
-        function closePopup(e) {
-            if (e === 'force' || e.target.id === 'infoPopup') {
-                document.getElementById('infoPopup').style.display = 'none';
-            }
-        }
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') performSearch(0);
-        }
-
-        function toggleClearIcon() {
-            const input = document.getElementById('searchInput');
-            const clearText = document.getElementById('clearText');
-            if (input.value.length > 0) {
-                clearText.style.display = 'block';
+        function toggleSearch(show) {
+            const bar = document.getElementById('searchBar');
+            bar.classList.toggle('active', show);
+            if(show) {
+                document.getElementById('searchInput').focus();
             } else {
-                clearText.style.display = 'none';
-                performSearch(0); 
+                clearSearch();
             }
         }
 
         function clearSearch() {
-            const input = document.getElementById('searchInput');
-            input.value = '';
-            toggleClearIcon(); 
-            input.focus();
-            performSearch(0);
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearText').style.display = 'none';
+            loadHomeData(); // Reset to home
         }
 
-        async function performSearch(offset = 0) {
-            const query = document.getElementById('searchInput').value.trim();
-            const sectionTitle = document.getElementById('sectionTitle');
+        async function loadHomeData() {
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('contentRows').innerHTML = '';
+            try {
+                const res = await fetch('/api/tmdb-trending');
+                const data = await res.json();
+                botUsername = data.bot_username;
+
+                // Setup Hero
+                if(data.hero) {
+                    document.getElementById('hero').style.backgroundImage = `url('${data.hero.backdrop}')`;
+                    document.getElementById('hTitle').innerText = data.hero.title;
+                    document.getElementById('hYear').innerText = data.hero.type === 'movie' ? 'MOVIE' : 'SERIES';
+                    document.getElementById('hRating').innerText = `⭐ ${data.hero.rating}`;
+                    document.getElementById('hDesc').innerText = data.hero.overview;
+                    document.getElementById('hPlay').onclick = () => openModal(data.hero.title);
+                }
+
+                // Render Rows (TMDB generates these dynamically)
+                renderRow('🔥 Trending Now', data.trending);
+                renderRow('🍿 Popular Movies', data.popular_movies);
+                renderRow('📺 Top Rated TV Shows', data.popular_tv);
+                
+                document.getElementById('mainLoader').style.display = 'none';
+            } catch (e) {
+                document.getElementById('mainLoader').innerText = 'NETWORK ERROR';
+            }
+        }
+
+        function renderRow(title, items) {
+            if(!items || items.length === 0) return;
+            let cards = items.map(i => `
+                <div class="card" onclick="openModal('${i.title.replace(/'/g, "\\'")}')">
+                    <img src="${i.poster || 'https://via.placeholder.com/130x195?text=No+Poster'}" alt="${i.title}" loading="lazy">
+                </div>
+            `).join('');
+
+            const rowHtml = `
+                <div class="row-container">
+                    <div class="row-title">${title}</div>
+                    <div class="row">${cards}</div>
+                </div>
+            `;
+            document.getElementById('contentRows').insertAdjacentHTML('beforeend', rowHtml);
+        }
+
+        let searchTimeout;
+        function handleSearch(e) {
+            const query = e.target.value.trim();
+            document.getElementById('clearText').style.display = query.length > 0 ? 'block' : 'none';
             
-            sectionTitle.innerText = query.length > 0 ? "sᴇᴀʀᴄʜ ʀᴇsᴜʟᴛs" : "ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ";
+            clearTimeout(searchTimeout);
+            if(query.length < 3) {
+                if(query.length === 0) loadHomeData();
+                return;
+            }
+            searchTimeout = setTimeout(async () => {
+                document.getElementById('contentRows').innerHTML = '<div style="text-align:center; margin-top: 50px; color: var(--accent-cyan); font-weight:bold;">SCANNING NETWORK...</div>';
+                const res = await fetch(`/api/tmdb-search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                document.getElementById('contentRows').innerHTML = '';
+                renderRow('Search Results', data.results);
+            }, 600);
+        }
 
-            currentQuery = query;
-            currentOffset = offset;
-
-            document.getElementById('results').innerHTML = '';
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('pagination').style.display = 'none';
+        async function openModal(title) {
+            const overlay = document.getElementById('modalOverlay');
+            const modal = document.getElementById('modalContent');
+            const filesList = document.getElementById('mFilesList');
+            
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mMeta').innerText = "Scanning Bot Database...";
+            filesList.innerHTML = '';
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => modal.classList.add('open'), 10);
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&offset=${offset}`);
-                const data = await response.json();
+                // Search in Bot Database directly
+                const res = await fetch(`/api/search?q=${encodeURIComponent(title)}`);
+                const data = await res.json();
                 
-                botUsername = data.bot_username;
-                maxResultsPerPage = data.max_btn; 
+                if(!data.files || data.files.length === 0) {
+                    document.getElementById('mMeta').innerText = "⚠️ Content not available in database yet.";
+                    filesList.innerHTML = `
+                        <button class="btn-play" style="width:100%; justify-content:center; font-size:14px;" onclick="requestMovie('${title}')">
+                            Request to Admin
+                        </button>`;
+                    return;
+                }
+
+                document.getElementById('mMeta').innerText = `✅ Found ${data.total_results} files ready for extraction!`;
                 
-                document.getElementById('loader').style.display = 'none';
-                renderResults(data);
-                renderPagination(data);
+                let fileHtml = '';
+                data.files.slice(0, 10).forEach(file => {
+                    fileHtml += `
+                        <div class="m-file-card">
+                            <div style="flex:1; padding-right:10px;">
+                                <div class="m-file-name">${file.name}</div>
+                                <div class="m-file-size">${file.size}</div>
+                            </div>
+                            <button class="m-btn" onclick="getFile('${file.id}')">GET</button>
+                        </div>
+                    `;
+                });
                 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } catch (error) {
-                document.getElementById('loader').innerText = 'Connection Error';
+                if(data.total_results > 10) {
+                    fileHtml += `<button class="btn-play" style="width:100%; justify-content:center; background:#1a1d27; color:#00ffff; border: 1px solid #00ffff; margin-top:10px;" onclick="getFile('all_search_${title}')">View All Results in Bot</button>`;
+                }
+                
+                filesList.innerHTML = fileHtml;
+
+            } catch (e) {
+                document.getElementById('mMeta').innerText = "Error connecting to bot system.";
             }
         }
 
-        function renderResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
-            if (!data.files || data.files.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div style="text-align:center; padding:60px 20px;">
-                        <h3 style="color: var(--accent-cyan); margin-bottom: 8px;">No Results Found</h3>
-                        <p style="color: var(--text-dim); font-size: 14px;">Try a different keyword.</p>
-                    </div>`;
-                return;
-            }
-
-            data.files.forEach((file, index) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="file-info">
-                        <span class="file-name">${file.name}</span>
-                        <span class="file-size">${file.size}</span>
-                    </div>
-                    <div class="get-icon">▶</div>
-                `;
-
-                card.onclick = () => {
-                    const payload = `file_${file.id}`;
-                    const link = `https://t.me/${botUsername}?start=${payload}`;
-                    if (userId === 'unknown') {
-                        window.open(link, '_blank');
-                    } else {
-                        tg.openTelegramLink(link);
-                        setTimeout(() => { tg.close(); }, 100);
-                    }
-                };
-                resultsDiv.appendChild(card);
-            });
-        }
-
-        function renderPagination(data) {
-            const pagDiv = document.getElementById('pagination');
-            nextOffset = data.next_offset;
-
-            if (data.total_results <= data.max_btn) {
-                pagDiv.style.display = 'none';
-                return;
-            }
-
-            pagDiv.style.display = 'flex';
-            const totalPages = Math.ceil(data.total_results / data.max_btn);
-            const currentPage = Math.ceil(data.current_offset / data.max_btn) + 1;
-            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
-
-            const backBtn = document.getElementById('backBtn');
-            backBtn.style.visibility = data.current_offset > 0 ? 'visible' : 'hidden';
-            backBtn.disabled = data.current_offset === 0;
-
-            const nextBtn = document.getElementById('nextBtn');
-            nextBtn.style.visibility = nextOffset !== null ? 'visible' : 'hidden';
-            nextBtn.disabled = nextOffset === null;
-        }
-
-        function changePage(direction) {
-            if (direction === 'next' && nextOffset !== null) {
-                performSearch(nextOffset);
-            } else if (direction === 'back') {
-                let prevOffset = currentOffset - maxResultsPerPage;
-                if (prevOffset < 0) prevOffset = 0;
-                performSearch(prevOffset);
+        function closeModal(e) {
+            if(e.target === document.getElementById('modalOverlay') || e === 'force') {
+                document.getElementById('modalContent').classList.remove('open');
+                setTimeout(() => document.getElementById('modalOverlay').style.display = 'none', 300);
             }
         }
 
-        window.onload = () => {
-            performSearch(0);
-        };
+        function getFile(fileId) {
+            const payload = fileId.startsWith('all_') ? '' : `file_${fileId}`; 
+            const link = `https://t.me/${botUsername}?start=${payload}`;
+            tg.openTelegramLink(link);
+            setTimeout(() => tg.close(), 100);
+        }
+
+        function requestMovie(title) {
+            tg.sendData(JSON.stringify({action: "request", title: title}));
+            tg.close();
+        }
+
+        window.onload = loadHomeData;
     </script>
 </body>
 </html>
