@@ -978,3 +978,66 @@ async def media_watch(message_id):
     else:
         html_ = error_tmplt
     return html_
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NO TMDB KEY PAGE TEMPLATE
+# ─────────────────────────────────────────────────────────────────────────────
+no_tmdb_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebApp Unavailable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body {
+            font-family:'Outfit',sans-serif; background:#0a0a0f; color:#fff;
+            min-height:100vh; display:flex; align-items:center; justify-content:center;
+            padding:30px 24px; text-align:center;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(229,9,20,0.08) 0%, transparent 60%);
+        }
+        .wrap { max-width:380px; }
+        .icon {
+            width:90px; height:90px; border-radius:24px; margin:0 auto 28px;
+            background:linear-gradient(135deg,#1a1a2e,#16213e);
+            border:1px solid rgba(229,9,20,0.3);
+            display:flex; align-items:center; justify-content:center; font-size:40px;
+            box-shadow: 0 0 40px rgba(229,9,20,0.1);
+        }
+        h1 { font-size:26px; font-weight:800; margin-bottom:12px; letter-spacing:-0.5px; }
+        p { font-size:15px; color:#888; line-height:1.7; }
+        code {
+            display:inline-block; background:#1e1e2a; color:#e50914;
+            padding:3px 10px; border-radius:6px; font-size:14px;
+            border:1px solid rgba(229,9,20,0.25); margin:4px 0;
+            font-family:monospace;
+        }
+        .divider {
+            width:60px; height:2px; background:linear-gradient(90deg,transparent,#e50914,transparent);
+            margin:24px auto;
+        }
+        .note { font-size:12px; color:#444; margin-top:16px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="icon">🔑</div>
+    <h1>WebApp Unavailable</h1>
+    <div class="divider"></div>
+    <p>The WebApp requires a <b>TMDB API Key</b> to function.</p>
+    <p style="margin-top:12px">If you're an admin, set the environment variable:</p>
+    <p style="margin-top:10px"><code>TMDB_API_KEY</code></p>
+    <p style="margin-top:14px; color:#555">Get your free API key at<br><span style="color:#e50914">themoviedb.org/settings/api</span></p>
+    <div class="note">This message is only shown when the key is not configured.</div>
+</div>
+<script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.expand(); tg.setBackgroundColor('#0a0a0f'); }
+</script>
+</body>
+</html>
+"""
