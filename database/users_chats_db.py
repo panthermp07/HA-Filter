@@ -318,23 +318,92 @@ class Database:
         return result.modified_count
 
     async def add_shortener(self, site, api, weight=50):
-        """Adds a shortener with a custom traffic weight (default 50)"""
+        """Smart Auto-Scaling: Balances weights so total is always 100%"""
+        weight = max(0, min(100, int(weight))) # Ensure weight is between 0-100
+        data = await self.stg.find_one({'id': BOT_ID})
+        shortener_list = data.get('shortener_list', []) if data else []
+
+        existing_item = None
+        other_shorteners = []
+        for sh in shortener_list:
+            if sh['site'] == site:
+                existing_item = sh
+            else:
+                other_shorteners.append(sh)
+
+        if existing_item:
+            existing_item['api'] = api
+            new_item = existing_item
+        else:
+            new_item = {'site': site, 'api': api, 'total_clicks': 0}
+
+        new_item['weight'] = weight
+        remaining_weight = 100 - weight
+
+        if remaining_weight <= 0:
+            # Agar naye ko 100% diya, toh baaki sab 0% ho jayenge
+            for sh in other_shorteners:
+                sh['weight'] = 0
+        elif other_shorteners:
+            total_other = sum(sh.get('weight', 0) for sh in other_shorteners)
+            if total_other == 0:
+                # Agar purano ka weight 0 tha, toh bacha hua equally baant do
+                per_sh = remaining_weight // len(other_shorteners)
+                for sh in other_shorteners:
+                    sh['weight'] = per_sh
+                other_shorteners[0]['weight'] += remaining_weight % len(other_shorteners)
+            else:
+                # Proportional Auto-Scaling
+                temp_total = 0
+                for sh in other_shorteners:
+                    sh['weight'] = int(round(sh.get('weight', 0) * (remaining_weight / total_other)))
+                    temp_total += sh['weight']
+                
+                # Fix rounding missing precision
+                diff = remaining_weight - temp_total
+                if diff != 0:
+                    highest_sh = max(other_shorteners, key=lambda x: x.get('weight', 0))
+                    highest_sh['weight'] += diff
+
+        final_list = other_shorteners + [new_item]
+        
         return await self.stg.update_one(
             {'id': BOT_ID},
-            {'$push': {'shortener_list': {
-                'site': site, 
-                'api': api, 
-                'weight': int(weight), 
-                'total_clicks': 0
-            }}},
+            {'$set': {'shortener_list': final_list}},
             upsert=True
         )
 
     async def remove_shortener(self, site):
-        return await self.stg.update_one(
-            {'id': BOT_ID},
-            {'$pull': {'shortener_list': {'site': site}}}
-        )
+        """Auto-balances remaining shorteners to 100% when one is deleted"""
+        data = await self.stg.find_one({'id': BOT_ID})
+        if not data or 'shortener_list' not in data:
+            return False
+
+        shortener_list = data['shortener_list']
+        new_list = [sh for sh in shortener_list if sh['site'] != site]
+
+        if not new_list:
+            return await self.stg.update_one({'id': BOT_ID}, {'$set': {'shortener_list': []}})
+
+        total_remaining = sum(sh.get('weight', 0) for sh in new_list)
+        if total_remaining == 0:
+            per_sh = 100 // len(new_list)
+            for sh in new_list:
+                sh['weight'] = per_sh
+            new_list[0]['weight'] += 100 % len(new_list)
+        else:
+            temp_total = 0
+            for sh in new_list:
+                sh['weight'] = int(round(sh.get('weight', 0) * (100 / total_remaining)))
+                temp_total += sh['weight']
+
+            diff = 100 - temp_total
+            if diff != 0:
+                highest_sh = max(new_list, key=lambda x: x.get('weight', 0))
+                highest_sh['weight'] += diff
+
+        await self.stg.update_one({'id': BOT_ID}, {'$set': {'shortener_list': new_list}})
+        return True
 
     async def get_all_shorteners(self):
         data = await self.stg.find_one({'id': BOT_ID})

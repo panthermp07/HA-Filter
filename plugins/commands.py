@@ -1316,19 +1316,47 @@ async def add_sh_pro(c, m):
     
     site = m.command[1]
     api = m.command[2]
-    weight = m.command[3] if len(m.command) > 3 else 50
+    try:
+        weight = int(m.command[3]) if len(m.command) > 3 else 50
+    except ValueError:
+        return await m.reply("<b>❌ Weight must be a valid number! (e.g., 80)</b>")
+        
+    if weight < 0 or weight > 100:
+        return await m.reply("<b>❌ Weight must be exactly between 0 and 100!</b>")
     
     await db.add_shortener(site, api, weight)
-    await m.reply(f"<b>✅ ᴀᴅᴅᴇᴅ <code>{site}</code> ᴡɪᴛʜ ᴡᴇɪɢʜᴛ <code>{weight}%</code></b>")
+    all_sh = await db.get_all_shorteners()
+    
+    msg = f"<b>✅ ᴀᴅᴅᴇᴅ <code>{site}</code> (🎯 ᴛᴀʀɢᴇᴛ: {weight}%)</b>\n\n<b>📊 ɴᴇᴡ ᴀᴜᴛᴏ-sᴄᴀʟᴇᴅ ᴡᴇɪɢʜᴛs:</b>\n"
+    for sh in sorted(all_sh, key=lambda x: x.get('weight', 0), reverse=True):
+        msg += f"⠂ <code>{sh['site']}</code> : <b>{sh.get('weight', 0)}%</b>\n"
+        
+    msg += "\n<i>✨ sᴍᴀʀᴛ ʙᴀʟᴀɴᴄɪɴɢ ᴀᴘᴘʟɪᴇᴅ!</i>"
+    await m.reply(msg)
 
 @Client.on_message(filters.command("rm_sh") & filters.user(ADMINS))
 async def rm_sh_pro(c, m):
     if len(m.command) < 2: 
         return await m.reply("<b>❌ ᴜsᴀɢᴇ: <code>/rm_sh site.com</code></b>")
     
-    await db.remove_shortener(m.command[1])
-    await m.reply(f"<b>🗑️ ʀᴇᴍᴏᴠᴇᴅ <code>{m.command[1]}</code> ꜰʀᴏᴍ ʀᴏᴛᴀᴛɪᴏɴ.</b>")
-
+    site_to_remove = m.command[1]
+    success = await db.remove_shortener(site_to_remove)
+    
+    if not success:
+        return await m.reply(f"<b>❌ <code>{site_to_remove}</code> ɴᴏᴛ ꜰᴏᴜɴᴅ!</b>")
+        
+    all_sh = await db.get_all_shorteners()
+    
+    msg = f"<b>🗑️ ʀᴇᴍᴏᴠᴇᴅ <code>{site_to_remove}</code> ꜰʀᴏᴍ ʀᴏᴛᴀᴛɪᴏɴ.</b>\n\n"
+    if all_sh:
+        msg += "<b>📊 ʀᴇ-ʙᴀʟᴀɴᴄᴇᴅ ᴡᴇɪɢʜᴛs:</b>\n"
+        for sh in sorted(all_sh, key=lambda x: x.get('weight', 0), reverse=True):
+            msg += f"⠂ <code>{sh['site']}</code> : <b>{sh.get('weight', 0)}%</b>\n"
+    else:
+        msg += "<b>⚠️ ɴᴏ sʜᴏʀᴛᴇɴᴇʀs ʟᴇꜰᴛ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ!</b>"
+        
+    await m.reply(msg)
+    
 @Client.on_message(filters.command("sh_stats") & filters.user(ADMINS))
 async def sh_stats_pro(c, m):
     all_sh = await db.get_all_shorteners()
