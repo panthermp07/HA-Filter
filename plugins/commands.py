@@ -1379,17 +1379,40 @@ async def refer_system(client, message):
 
 @Client.on_message(filters.command("missing") & filters.user(ADMINS))
 async def show_missing(bot, message):
-    missing_list = await missing_db.get_all_missing()
+
+    missing_list = await get_all_missing()
+
     if not missing_list:
-        return await message.reply("<b>✅ No missing movies found in database.</b>")
-    
-    text = "<b>🔍 Missing Movies List:\n\n</b>"
-    for i, q in enumerate(missing_list, 1):
-        text += f"<b>{i}.</b> <code>{q}</code>\n"
-    
-    await message.reply(text)
+        return await message.reply_text(
+            "<b>ᴄʟᴇᴀɴ ᴅᴀᴛᴀʙᴀsᴇ ✅</b>\n\n"
+            "ɴᴏ ᴍɪssɪɴɢ ᴍᴏᴠɪᴇs ғᴏᴜɴᴅ.",
+            quote=True
+        )
+
+    text = (
+        "<b>ᴍɪssɪɴɢ ᴍᴏᴠɪᴇs ʟɪsᴛ 📂</b>\n\n"
+        f"<b>ᴛᴏᴛᴀʟ :</b> <code>{len(missing_list)}</code>\n\n"
+    )
+
+    for i, movie in enumerate(missing_list, start=1):
+        text += f"<b>{i}.</b> <code>{movie}</code>\n"
+
+    text += "\n<b>ᴜsᴇ /clearm ᴛᴏ ᴄʟᴇᴀʀ ᴛʜᴇ ʟɪsᴛ.</b>"
+
+    await message.reply_text(
+        text,
+        quote=True,
+        disable_web_page_preview=True
+    )
+
 
 @Client.on_message(filters.command("clearm") & filters.user(ADMINS))
 async def clear_missing_list(bot, message):
-    await missing_db.clear_missing()
-    await message.reply("<b>🗑️ Missing list has been cleared successfully.</b>")
+
+    await clear_missing()
+
+    await message.reply_text(
+        "<b>ᴍɪssɪɴɢ ʟɪsᴛ ᴄʟᴇᴀʀᴇᴅ 🗑</b>\n\n"
+        "ᴀʟʟ ᴍɪssɪɴɢ ᴍᴏᴠɪᴇ ʀᴇᴄᴏʀᴅs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ.",
+        quote=True
+    )
