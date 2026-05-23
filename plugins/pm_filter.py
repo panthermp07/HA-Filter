@@ -752,14 +752,18 @@ async def cb_handler(client: Client, query: CallbackQuery):
         except ListenerTimeout:
             await q.delete()
             return await query.message.reply(f'<b>⏱ ʏᴏᴜʀ ᴛɪᴍᴇ ɪs ᴏᴠᴇʀ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>')
-        if msg.photo:
+        if msg and msg.photo:
             await q.delete()
             await query.message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs sᴇɴᴛ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!\n💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>')
             await client.send_photo(RECEIPT_SEND_USERNAME, msg.photo.file_id, transaction_note)
-        else:
+        elif msg: # Agar msg aaya hai par photo nahi hai
             await q.delete()
-            await query.message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>")
-
+            await query.message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴀs ᴀ ᴘʜᴏᴛᴏ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>")
+        else:
+            # Agar msg None hai
+            await q.delete()
+            await query.message.reply("<b>❌ ᴇʀʀᴏʀ: ᴄᴏᴜʟᴅ ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇ ʏᴏᴜʀ ᴍᴇssᴀɢᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>")
+            
     # ✨ NEW PUBLIC UPDATE INTEGRATION: WebApp Payment Validation
     elif query.data.startswith("accept_payment"):
         _, id, days = query.data.split("-")
