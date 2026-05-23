@@ -8,7 +8,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from info import BIN_CHANNEL, MAX_BTN, TMDB_API_KEY, URL
 from utils import temp, get_size
 from web.utils.custom_dl import TGCustomYield, chunk_size, offset_fix
-from web.utils.render_template import media_watch, error_tmplt, webapp_template, no_tmdb_template
+from web.utils.render_template import media_watch, error_tmplt, webapp_template, no_tmdb_template, payment_tmplt
 from database.ia_filterdb import get_search_results
 from database.users_chats_db import db
 
@@ -160,3 +160,20 @@ async def media_download(request, message_id: int):
             "Accept-Ranges": "bytes",
         }
     )
+
+@routes.get("/activate-plan")
+async def payment_handler(request):
+    import json
+    from info import PREMIUM_PLANS, PAYMENT_QR_CODE, PAYMENT_ID
+    
+    # Plans dictionary ko JSON me convert karte hain taki JavaScript easily padh sake
+    plans_json = json.dumps(PREMIUM_PLANS)
+    
+    # Template me variables inject karte hain
+    html = (payment_tmplt
+            .replace('{plans}', plans_json)
+            .replace('{qr_code}', PAYMENT_QR_CODE)
+            .replace('{upi_id}', PAYMENT_ID)
+            .replace('{bot_username}', temp.U_NAME))
+            
+    return web.Response(text=html, content_type='text/html')

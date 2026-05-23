@@ -2,425 +2,459 @@ from info import BIN_CHANNEL, URL
 from utils import temp
 from web.utils.custom_dl import TGCustomYield
 import urllib.parse
-import aiofiles, html
+import html
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. NETFLIX/PRIME STYLE WEBAPP TEMPLATE
+# ─────────────────────────────────────────────────────────────────────────────
 webapp_template = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infinity Search</title>
+    <title>Infinity Stream</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #08090d;
-            --accent: #8b5cf6;
-            --accent-glow: rgba(139, 92, 246, 0.4);
-            --card-bg: #11131a;
-            --card-border: #1f222c;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --input-focus: #1a1d27;
+            --bg: #050505; --surface: #121212; --primary: #e50914; 
+            --text: #ffffff; --text-muted: #a3a3a3;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed; top: 0; width: 100%; padding: 15px 20px; z-index: 1000;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
         }
+        .navbar.scrolled { background: rgba(5,5,5,0.95); backdrop-filter: blur(10px); }
+        .logo { font-size: 22px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;}
+        .search-icon { font-size: 20px; cursor: pointer; }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding: 24px 16px 100px 16px;
-            -webkit-font-smoothing: antialiased;
+        /* Search Bar (Hidden by default) */
+        .search-bar {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: var(--surface);
+            z-index: 1001; transform: translateY(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-
-        .header {
-            margin-bottom: 28px;
-            text-align: left;
+        .search-bar.active { transform: translateY(0); }
+        .search-bar input {
+            flex: 1; padding: 12px 20px; border-radius: 30px; border: none; outline: none;
+            background: #222; color: #fff; font-size: 16px;
         }
+        .close-search { color: var(--text-muted); font-weight: 600; cursor: pointer; padding: 10px; }
 
-        .greeting {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            margin-bottom: 4px;
+        /* Hero Section */
+        .hero {
+            position: relative; height: 75vh; display: flex; align-items: flex-end; padding: 40px 20px;
+            background-size: cover; background-position: center top;
         }
-
-        .greeting-name { 
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent-glow);
+        .hero::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, var(--bg) 0%, rgba(5,5,5,0.4) 50%, rgba(5,5,5,0.1) 100%);
         }
-
-        .subtitle { 
-            font-size: 14px; 
-            color: var(--text-dim); 
-            font-weight: 500;
-            letter-spacing: 0.01em;
+        .hero-content { position: relative; z-index: 10; width: 100%; max-width: 600px; }
+        .hero-title { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);}
+        .hero-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 15px; font-weight: 600; }
+        .hero-meta span { border: 1px solid var(--text-muted); padding: 1px 6px; border-radius: 4px; margin-right: 8px; font-size: 11px;}
+        .hero-desc { font-size: 14px; line-height: 1.5; color: #ccc; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .btn-play {
+            background: var(--text); color: #000; border: none; padding: 12px 30px; border-radius: 8px;
+            font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s; text-transform: uppercase;
         }
+        .btn-play:active { transform: scale(0.95); }
 
-        .search-container {
-            display: flex;
-            gap: 12px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            margin-bottom: 24px;
-            background: var(--bg-dark);
-            padding: 12px 0;
+        /* Rows */
+        .row-container { padding: 20px 0 20px 20px; }
+        .row-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .row { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 15px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;}
+        .row::-webkit-scrollbar { display: none; }
+        .card { flex: 0 0 130px; scroll-snap-align: start; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.2s;}
+        .card:active { transform: scale(0.95); }
+        .card img { width: 100%; height: 195px; object-fit: cover; background: #222; }
+        
+        /* Modal for Download/Watch */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
+            display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(5px);
         }
-
-        .input-wrapper {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
+        .modal {
+            background: var(--surface); width: 100%; max-height: 85vh; border-radius: 24px 24px 0 0;
+            padding: 24px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
         }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 45px 14px 20px;
-            border-radius: 14px;
-            border: 1px solid var(--card-border);
-            background: var(--card-bg);
-            color: var(--text-main);
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .modal.open { transform: translateY(0); }
+        .modal-drag { width: 40px; height: 5px; background: #333; border-radius: 10px; margin: 0 auto 20px; }
+        .m-title { font-size: 22px; font-weight: 800; margin-bottom: 5px;}
+        .m-meta { font-size: 13px; color: var(--primary); margin-bottom: 15px; font-weight: 600;}
+        .m-files { display: flex; flex-direction: column; gap: 10px; margin-top: 20px;}
+        .m-file-card {
+            background: #222; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
         }
-
-        input[type="text"]:focus { 
-            background: var(--input-focus);
-            border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .clear-icon {
-            position: absolute;
-            right: 16px;
-            width: 18px;
-            height: 18px;
-            color: var(--text-dim);
-            cursor: pointer;
-            display: none;
-        }
-
-        .search-btn {
-            background: var(--accent);
-            color: #ffffff;
-            border: none;
-            border-radius: 14px;
-            padding: 0 20px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px var(--accent-glow);
-            transition: 0.2s;
-        }
-
-        .search-btn:active { transform: scale(0.95); opacity: 0.8; }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 16px;
-            color: var(--text-dim);
-        }
-
-        .results-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .file-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 16px 20px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .file-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .file-info {
-            flex: 1;
-            padding-right: 12px;
-        }
-
-        .file-name {
-            font-weight: 600;
-            font-size: 15px;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 4px;
-            color: #ffffff;
-        }
-
-        .file-size { 
-            font-size: 12px; 
-            font-weight: 700; 
-            color: var(--accent); 
-            text-transform: uppercase;
-            background: rgba(139, 92, 246, 0.1);
-            padding: 2px 8px;
-            border-radius: 6px;
-            display: inline-block;
-        }
-
-        .get-icon {
-            font-size: 18px;
-            color: var(--accent);
-            opacity: 0.8;
-        }
-
-        .pagination {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 400px;
-            display: none;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(17, 19, 26, 0.8);
-            backdrop-filter: blur(12px);
-            padding: 12px 16px;
-            border-radius: 18px;
-            border: 1px solid var(--card-border);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            z-index: 200;
-        }
-
-        .page-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 13px;
-        }
-
-        .page-btn:disabled { background: #334155; opacity: 0.5; }
-        .page-indicator { font-weight: 600; font-size: 13px; color: var(--text-dim); }
-
-        .loader {
-            text-align: center;
-            padding: 40px;
-            color: var(--accent);
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.1em;
-            display: none;
-            text-transform: uppercase;
-        }
-
+        .m-file-name { font-size: 14px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .m-file-size { font-size: 12px; color: var(--text-muted); margin-top: 4px;}
+        .m-btn { background: var(--primary); color: #fff; border:none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px;}
+        
+        .loader-full { position: fixed; inset:0; background: var(--bg); z-index: 3000; display: flex; justify-content: center; align-items: center; color: var(--primary); font-weight: 800; font-size: 24px; letter-spacing: 2px; animation: pulse 1s infinite;}
+        @keyframes pulse { 50% { opacity: 0.5; transform: scale(0.95);} }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 class="greeting">ʜᴇʏ, <span id="userName" class="greeting-name">Loading...</span></h1>
-        <p class="subtitle">ɪɴꜰɪɴɪᴛʏ ᴡᴀᴛᴄʜ ɴᴇᴛᴡᴏʀᴋ</p>
+    <div id="mainLoader" class="loader-full">INFINITY</div>
+
+    <nav class="navbar" id="navbar">
+        <div class="logo">Infinity</div>
+        <div class="search-icon" onclick="toggleSearch(true)">🔍</div>
+    </nav>
+
+    <div class="search-bar" id="searchBar">
+        <input type="text" id="searchInput" placeholder="Search Movies, Series..." onkeyup="handleSearch(event)">
+        <div class="close-search" onclick="toggleSearch(false)">Cancel</div>
     </div>
 
-    <div class="search-container">
-        <div class="input-wrapper">
-            <input type="text" id="searchInput" placeholder="Search movies, series..." onkeypress="handleEnter(event)" oninput="toggleClearIcon()">
-            <svg id="clearIcon" class="clear-icon" onclick="clearSearch()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+    <div class="hero" id="hero" style="background-image: url('');">
+        <div class="hero-content">
+            <h1 class="hero-title" id="hTitle">Loading...</h1>
+            <div class="hero-meta"><span id="hYear">----</span> <span id="hRating">⭐ --</span></div>
+            <p class="hero-desc" id="hDesc">Fetching the best content for you...</p>
+            <button class="btn-play" id="hPlay" onclick="">▶ Get Files</button>
         </div>
-        <button class="search-btn" onclick="performSearch(0)">🔍</button>
     </div>
 
-    <h2 id="sectionTitle" class="section-title">ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ</h2>
-    <div id="loader" class="loader">Fetching files...</div>
-    <div id="results" class="results-container"></div>
+    <div id="contentRows"></div>
 
-    <div id="pagination" class="pagination">
-        <button id="backBtn" class="page-btn" onclick="changePage('back')">ᴘʀᴇᴠ</button>
-        <div id="pageIndicator" class="page-indicator">1 / 1</div>
-        <button id="nextBtn" class="page-btn" onclick="changePage('next')">ɴᴇxᴛ</button>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+            <div class="modal-drag"></div>
+            <h2 class="m-title" id="mTitle">Movie Title</h2>
+            <div class="m-meta" id="mMeta">Checking Database...</div>
+            <div class="m-files" id="mFilesList">
+                </div>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.setBackgroundColor('#08090d');
-        tg.setHeaderColor('#08090d');
+        tg.setBackgroundColor('#050505');
+        tg.setHeaderColor('#050505');
 
-        const user = tg.initDataUnsafe?.user;
-        const userNameElement = document.getElementById('userName');
-        
-        if (user && user.first_name) {
-            userNameElement.innerText = user.first_name;
-        } else {
-            userNameElement.innerText = "Guest";
-        }
-
-        const userId = user?.id || 'unknown';
-
-        let currentQuery = '';
-        let currentOffset = 0;
-        let nextOffset = null;
         let botUsername = '';
-        let maxResultsPerPage = 10; 
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') performSearch(0);
-        }
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
 
-        function toggleClearIcon() {
-            const input = document.getElementById('searchInput');
-            const clearIcon = document.getElementById('clearIcon');
-            if (input.value.length > 0) {
-                clearIcon.style.display = 'block';
-            } else {
-                clearIcon.style.display = 'none';
-                performSearch(0); 
+        function toggleSearch(show) {
+            const bar = document.getElementById('searchBar');
+            bar.classList.toggle('active', show);
+            if(show) document.getElementById('searchInput').focus();
+            if(!show) {
+                document.getElementById('searchInput').value = '';
+                loadHomeData(); // Reset to home
             }
         }
 
-        function clearSearch() {
-            const input = document.getElementById('searchInput');
-            input.value = '';
-            toggleClearIcon(); 
-            input.focus();
-            performSearch(0);
+        async function loadHomeData() {
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('contentRows').innerHTML = '';
+            try {
+                const res = await fetch('/api/tmdb-trending');
+                const data = await res.json();
+                botUsername = data.bot_username;
+
+                // Setup Hero
+                if(data.hero) {
+                    document.getElementById('hero').style.backgroundImage = `url('${data.hero.backdrop}')`;
+                    document.getElementById('hTitle').innerText = data.hero.title;
+                    document.getElementById('hYear').innerText = data.hero.type === 'movie' ? 'MOVIE' : 'SERIES';
+                    document.getElementById('hRating').innerText = `⭐ ${data.hero.rating}`;
+                    document.getElementById('hDesc').innerText = data.hero.overview;
+                    document.getElementById('hPlay').onclick = () => openModal(data.hero.title);
+                }
+
+                // Render Rows
+                renderRow('Trending Now', data.trending);
+                renderRow('Popular Movies', data.popular_movies);
+                renderRow('Top Rated', data.top_rated);
+                renderRow('Popular TV Shows', data.popular_tv);
+                
+                document.getElementById('mainLoader').style.display = 'none';
+            } catch (e) {
+                document.getElementById('mainLoader').innerText = 'ERROR LOADING';
+            }
         }
 
-        async function performSearch(offset = 0) {
-            const query = document.getElementById('searchInput').value.trim();
-            const sectionTitle = document.getElementById('sectionTitle');
+        function renderRow(title, items) {
+            if(!items || items.length === 0) return;
+            let cards = items.map(i => `
+                <div class="card" onclick="openModal('${i.title.replace(/'/g, "\\'")}')">
+                    <img src="${i.poster || 'https://via.placeholder.com/130x195?text=No+Poster'}" alt="${i.title}" loading="lazy">
+                </div>
+            `).join('');
+
+            const rowHtml = `
+                <div class="row-container">
+                    <div class="row-title">${title}</div>
+                    <div class="row">${cards}</div>
+                </div>
+            `;
+            document.getElementById('contentRows').insertAdjacentHTML('beforeend', rowHtml);
+        }
+
+        let searchTimeout;
+        function handleSearch(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            if(query.length < 3) return;
+            searchTimeout = setTimeout(async () => {
+                document.getElementById('contentRows').innerHTML = '<div style="text-align:center; margin-top: 50px;">Searching TMDB...</div>';
+                const res = await fetch(`/api/tmdb-search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                document.getElementById('contentRows').innerHTML = '';
+                renderRow('Search Results', data.results);
+            }, 600);
+        }
+
+        async function openModal(title) {
+            const overlay = document.getElementById('modalOverlay');
+            const modal = document.getElementById('modalContent');
+            const filesList = document.getElementById('mFilesList');
             
-            sectionTitle.innerText = query.length > 0 ? "sᴇᴀʀᴄʜ ʀᴇsᴜʟᴛs" : "ʀᴇᴄᴇɴᴛʟʏ ᴀᴅᴅᴇᴅ";
-
-            currentQuery = query;
-            currentOffset = offset;
-
-            document.getElementById('results').innerHTML = '';
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('pagination').style.display = 'none';
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mMeta').innerText = "Searching in Bot Database...";
+            filesList.innerHTML = '';
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => modal.classList.add('open'), 10);
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&offset=${offset}`);
-                const data = await response.json();
+                // Search in Bot Database
+                const res = await fetch(`/api/search?q=${encodeURIComponent(title)}`);
+                const data = await res.json();
                 
-                botUsername = data.bot_username;
-                maxResultsPerPage = data.max_btn; 
+                if(!data.files || data.files.length === 0) {
+                    document.getElementById('mMeta').innerText = "⚠️ Not available in bot database yet.";
+                    filesList.innerHTML = `
+                        <button class="btn-play" style="width:100%; justify-content:center;" onclick="requestMovie('${title}')">
+                            Request to Admin
+                        </button>`;
+                    return;
+                }
+
+                document.getElementById('mMeta').innerText = `✅ Found ${data.total_results} files ready to stream/download!`;
                 
-                document.getElementById('loader').style.display = 'none';
-                renderResults(data);
-                renderPagination(data);
+                let fileHtml = '';
+                data.files.slice(0, 10).forEach(file => {
+                    fileHtml += `
+                        <div class="m-file-card">
+                            <div>
+                                <div class="m-file-name">${file.name}</div>
+                                <div class="m-file-size">${file.size}</div>
+                            </div>
+                            <button class="m-btn" onclick="getFile('${file.id}')">GET</button>
+                        </div>
+                    `;
+                });
                 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } catch (error) {
-                document.getElementById('loader').innerText = 'Connection Error';
+                if(data.total_results > 10) {
+                    fileHtml += `<button class="btn-play" style="width:100%; justify-content:center; background:#333; color:#fff;" onclick="getFile('all_search_${title}')">View All Results in Bot</button>`;
+                }
+                
+                filesList.innerHTML = fileHtml;
+
+            } catch (e) {
+                document.getElementById('mMeta').innerText = "Error connecting to bot.";
             }
         }
 
-        function renderResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
-            if (!data.files || data.files.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div style="text-align:center; padding:60px 20px;">
-                        <h3 style="color: white; margin-bottom: 8px;">No Results Found</h3>
-                        <p style="color: var(--text-dim); font-size: 14px;">Try a different keyword.</p>
-                    </div>`;
-                return;
-            }
-
-            data.files.forEach((file, index) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="file-info">
-                        <span class="file-name">${file.name}</span>
-                        <span class="file-size">${file.size}</span>
-                    </div>
-                    <div class="get-icon">▶</div>
-                `;
-
-                card.onclick = () => {
-                    const payload = `file_${file.id}`;
-                    const link = `https://t.me/${botUsername}?start=${payload}`;
-                    if (userId === 'unknown') {
-                        window.open(link, '_blank');
-                    } else {
-                        tg.openTelegramLink(link);
-                        setTimeout(() => { tg.close(); }, 100);
-                    }
-                };
-                resultsDiv.appendChild(card);
-            });
-        }
-
-        function renderPagination(data) {
-            const pagDiv = document.getElementById('pagination');
-            nextOffset = data.next_offset;
-
-            if (data.total_results <= data.max_btn) {
-                pagDiv.style.display = 'none';
-                return;
-            }
-
-            pagDiv.style.display = 'flex';
-            const totalPages = Math.ceil(data.total_results / data.max_btn);
-            const currentPage = Math.ceil(data.current_offset / data.max_btn) + 1;
-            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
-
-            const backBtn = document.getElementById('backBtn');
-            backBtn.style.visibility = data.current_offset > 0 ? 'visible' : 'hidden';
-            backBtn.disabled = data.current_offset === 0;
-
-            const nextBtn = document.getElementById('nextBtn');
-            nextBtn.style.visibility = nextOffset !== null ? 'visible' : 'hidden';
-            nextBtn.disabled = nextOffset === null;
-        }
-
-        function changePage(direction) {
-            if (direction === 'next' && nextOffset !== null) {
-                performSearch(nextOffset);
-            } else if (direction === 'back') {
-                let prevOffset = currentOffset - maxResultsPerPage;
-                if (prevOffset < 0) prevOffset = 0;
-                performSearch(prevOffset);
+        function closeModal(e) {
+            if(e.target === document.getElementById('modalOverlay') || e === 'force') {
+                document.getElementById('modalContent').classList.remove('open');
+                setTimeout(() => document.getElementById('modalOverlay').style.display = 'none', 300);
             }
         }
 
-        window.onload = () => {
-            performSearch(0);
-        };
+        function getFile(fileId) {
+            const payload = fileId.startsWith('all_') ? '' : `file_${fileId}`; // You can handle bulk search logic in bot.
+            const link = `https://t.me/${botUsername}?start=${payload}`;
+            tg.openTelegramLink(link);
+            setTimeout(() => tg.close(), 100);
+        }
+
+        function requestMovie(title) {
+            tg.sendData(JSON.stringify({action: "request", title: title}));
+            tg.close();
+        }
+
+        window.onload = loadHomeData;
     </script>
 </body>
 </html>
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
-# WATCH PAGE TEMPLATE  (route: /watch/{id})
+# 2. PAYMENT & PREMIUM PLAN WEBAPP TEMPLATE
+# ─────────────────────────────────────────────────────────────────────────────
+payment_tmplt = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Upgrade to Premium</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4); --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background: var(--bg); color: var(--text); padding: 20px; overflow-x: hidden; }
+        
+        .header { text-align: center; margin-bottom: 30px; margin-top: 10px; }
+        .title { font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 5px; }
+
+        .plans-grid { display: grid; gap: 15px; margin-bottom: 30px; }
+        .plan-card {
+            background: var(--surface); border: 2px solid #334155; border-radius: 16px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s;
+        }
+        .plan-card.active { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); transform: scale(1.02); }
+        .plan-days { font-size: 18px; font-weight: 800; color: #fff; }
+        .plan-price { font-size: 22px; font-weight: 800; color: var(--primary); }
+        .plan-currency { font-size: 12px; color: var(--text-muted); }
+
+        .payment-box {
+            background: var(--surface); border-radius: 20px; padding: 25px 20px; text-align: center;
+            border: 1px solid #334155; display: none; animation: slideUp 0.4s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
+        
+        .qr-img { width: 180px; height: 180px; border-radius: 12px; border: 4px solid var(--primary); padding: 5px; background: #fff; margin-bottom: 15px; }
+        .upi-box {
+            background: #0f172a; padding: 12px; border-radius: 10px; border: 1px dashed var(--primary);
+            font-size: 15px; font-family: monospace; color: #fff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .copy-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), #6366f1); color: #fff; border: none; width: 100%;
+            padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 10px 20px var(--primary-glow);
+        }
+        .action-btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title">Unlock Premium</h1>
+        <p class="subtitle">Ad-free streaming, direct downloads & more.</p>
+    </div>
+
+    <div class="plans-grid" id="plansContainer">
+        </div>
+
+    <div class="payment-box" id="paymentBox">
+        <h3 style="margin-bottom: 15px; font-weight: 800;">Scan to Pay <span id="payAmount" style="color: var(--primary);"></span></h3>
+        <img src="{qr_code}" alt="QR Code" class="qr-img">
+        
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Or pay using UPI ID:</p>
+        <div class="upi-box">
+            <span id="upiId">{upi_id}</span>
+            <button class="copy-btn" onclick="copyUpi()">Copy</button>
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;">
+            After successful payment, take a screenshot and send it to the Bot Admin to activate your plan.
+        </p>
+
+        <button class="action-btn" onclick="sendScreenshot()">Send Screenshot</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setBackgroundColor('#0f172a');
+        tg.setHeaderColor('#0f172a');
+
+        const botUsername = "{bot_username}";
+        // Using python JSON dump
+        const plans = {plans}; 
+        
+        let selectedPlan = null;
+        let selectedPrice = null;
+        let selectedCurrency = null;
+
+        function renderPlans() {
+            const container = document.getElementById('plansContainer');
+            Object.keys(plans).forEach(days => {
+                const currency = plans[days][0];
+                const price = plans[days][1];
+                let planName = days == 30 ? "1 Month" : days == 90 ? "3 Months" : days == 180 ? "6 Months" : days == 7 ? "1 Week" : `${days} Days`;
+
+                const card = document.createElement('div');
+                card.className = 'plan-card';
+                card.innerHTML = `
+                    <div class="plan-days">${planName}</div>
+                    <div style="text-align:right;">
+                        <span class="plan-currency">${currency}</span>
+                        <span class="plan-price">${price}</span>
+                    </div>
+                `;
+                card.onclick = () => selectPlan(card, days, price, currency);
+                container.appendChild(card);
+            });
+        }
+
+        function selectPlan(element, days, price, currency) {
+            document.querySelectorAll('.plan-card').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            selectedPlan = days;
+            selectedPrice = price;
+            selectedCurrency = currency;
+
+            document.getElementById('payAmount').innerText = `${currency} ${price}`;
+            document.getElementById('paymentBox').style.display = 'block';
+            
+            // Scroll to bottom
+            setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+        }
+
+        function copyUpi() {
+            const upi = document.getElementById('upiId').innerText;
+            navigator.clipboard.writeText(upi);
+            tg.showAlert("UPI ID Copied!");
+        }
+
+        function sendScreenshot() {
+            if(!selectedPlan) return;
+            // Send Data back to bot to trigger admin chat
+            tg.sendData(JSON.stringify({
+                action: "payment_screenshot",
+                plan: selectedPlan,
+                amount: selectedPrice
+            }));
+            tg.close();
+        }
+
+        window.onload = renderPlans;
+    </script>
+</body>
+</html>
+"""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. WATCH PAGE TEMPLATE
 # ─────────────────────────────────────────────────────────────────────────────
 watch_tmplt = """<!DOCTYPE html>
 <html lang="en">
@@ -429,7 +463,6 @@ watch_tmplt = """<!DOCTYPE html>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{heading}</title>
-    <!-- Plyr CSS -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -688,7 +721,6 @@ watch_tmplt = """<!DOCTYPE html>
     </div>
 
     <div class="btn-row">
-        <!-- Download -->
         <a href="{src}" class="xbtn btn-dl" download>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -698,7 +730,6 @@ watch_tmplt = """<!DOCTYPE html>
             Download
         </a>
 
-        <!-- VLC -->
         <a href="vlc://{src}" class="xbtn btn-vlc">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="5 3 19 12 5 21 5 3"/>
@@ -706,7 +737,6 @@ watch_tmplt = """<!DOCTYPE html>
             Play in VLC
         </a>
 
-        <!-- MX Player -->
         <a href="intent:{src}#Intent;package=com.mxtech.videoplayer.ad;end" class="xbtn btn-mx">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -772,9 +802,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </html>
 """
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-# ERROR PAGE TEMPLATE
+# 4. ERROR PAGE TEMPLATE
 # ─────────────────────────────────────────────────────────────────────────────
 error_tmplt = """<!DOCTYPE html>
 <html lang="en">
@@ -962,25 +991,7 @@ error_tmplt = """<!DOCTYPE html>
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Backend helpers
-# ─────────────────────────────────────────────────────────────────────────────
-async def media_watch(message_id):
-    media_msg = await temp.BOT.get_messages(BIN_CHANNEL, message_id)
-    media = getattr(media_msg, media_msg.media.value, None)
-    src = urllib.parse.urljoin(URL, f'download/{message_id}')
-    tag = media.mime_type.split('/')[0].strip()
-    if tag == 'video':
-        heading = html.escape(f'Watch — {media.file_name}')
-        html_ = (watch_tmplt
-                 .replace('{heading}',   heading)
-                 .replace('{file_name}', media.file_name)
-                 .replace('{src}',       src))
-    else:
-        html_ = error_tmplt
-    return html_
-
-# ─────────────────────────────────────────────────────────────────────────────
-# NO TMDB KEY PAGE TEMPLATE
+# 5. NO TMDB KEY PAGE TEMPLATE
 # ─────────────────────────────────────────────────────────────────────────────
 no_tmdb_template = """
 <!DOCTYPE html>
@@ -1041,3 +1052,18 @@ no_tmdb_template = """
 </body>
 </html>
 """
+
+async def media_watch(message_id):
+    media_msg = await temp.BOT.get_messages(BIN_CHANNEL, message_id)
+    media = getattr(media_msg, media_msg.media.value, None)
+    src = urllib.parse.urljoin(URL, f'download/{message_id}')
+    tag = media.mime_type.split('/')[0].strip()
+    if tag == 'video':
+        heading = html.escape(f'Watch — {media.file_name}')
+        html_ = (watch_tmplt
+                 .replace('{heading}',   heading)
+                 .replace('{file_name}', media.file_name)
+                 .replace('{src}',       src))
+    else:
+        html_ = error_tmplt
+    return html_
