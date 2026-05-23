@@ -124,9 +124,6 @@ async def start(client, message):
             InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss 💎', url=f"https://t.me/{temp.U_NAME}?start=premium")
         ],[
             InlineKeyboardButton('🌐 ᴍɪɴɪ ᴡᴇʙᴀᴘᴘ ɴᴇᴛᴡᴏʀᴋ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
-        ],[
-            InlineKeyboardButton('🎬 ᴘᴏᴘᴜʟᴀʀ ᴍᴏᴠɪᴇs 🎬', url="https://www.themoviedb.org/movie"),
-            InlineKeyboardButton('📺 ᴘᴏᴘᴜʟᴀʀ ᴛᴠ sʜᴏᴡs 📺', url="https://www.themoviedb.org/tv")
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         
