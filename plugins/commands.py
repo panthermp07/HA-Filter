@@ -10,6 +10,9 @@ import PTN
 from Script import script
 from database.users_chats_db import db
 from database.vstats_db import vdb
+from database.missing_db import add_missing, get_all_missing, clear_missing
+from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
+
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, WebAppInfo
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong
@@ -20,7 +23,6 @@ from utils import (
     update_verify_status, save_group_settings, temp, get_readable_time, 
     get_seconds, get_plan_name, get_poster
 )
-from database.ia_filterdb import db_count_documents, second_db_count_documents, get_file_details, delete_files
 from info import (
     OWNER_USERNAME, IS_PREMIUM, PRE_DAY_AMOUNT, RECEIPT_SEND_USERNAME, URL, 
     BIN_CHANNEL, SECOND_FILES_DATABASE_URL, INDEX_CHANNELS, ADMINS, IS_VERIFY, 
@@ -1374,3 +1376,20 @@ async def refer_system(client, message):
         caption=text,
         reply_markup=InlineKeyboardMarkup(btn)
     )
+
+@Client.on_message(filters.command("missing") & filters.user(ADMINS))
+async def show_missing(bot, message):
+    missing_list = await missing_db.get_all_missing()
+    if not missing_list:
+        return await message.reply("<b>✅ No missing movies found in database.</b>")
+    
+    text = "<b>🔍 Missing Movies List:\n\n</b>"
+    for i, q in enumerate(missing_list, 1):
+        text += f"<b>{i}.</b> <code>{q}</code>\n"
+    
+    await message.reply(text)
+
+@Client.on_message(filters.command("clearm") & filters.user(ADMINS))
+async def clear_missing_list(bot, message):
+    await missing_db.clear_missing()
+    await message.reply("<b>🗑️ Missing list has been cleared successfully.</b>")

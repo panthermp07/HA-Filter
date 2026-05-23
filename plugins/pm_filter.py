@@ -463,6 +463,7 @@ async def auto_filter(client, msg, s, spoll=False):
             QUERY_CACHE[cache_key] = (files, offset, total_results)
             
         if not files:
+            await missing_db.add_missing(search)
             if settings["spell_check"]:
                 return await advantage_spell_chok(client, message, s)
             else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
