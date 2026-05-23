@@ -27,6 +27,7 @@ from utils import (
     save_group_settings, get_plan_name
 )
 from database.users_chats_db import db
+from database.missing_db import add_missing
 from database.ia_filterdb import (
     get_search_results, delete_files, delete_all_files, 
     db_count_documents, second_db_count_documents, get_available_tags
@@ -463,7 +464,7 @@ async def auto_filter(client, msg, s, spoll=False):
             QUERY_CACHE[cache_key] = (files, offset, total_results)
             
         if not files:
-            await missing_db.add_missing(search)
+            await add_missing(clean_search)
             if settings["spell_check"]:
                 return await advantage_spell_chok(client, message, s)
             else: return await s.edit(f"<b>ɪ ᴄᴀɴ'ᴛ ꜰɪɴᴅ '{search}'</b>")
