@@ -405,7 +405,7 @@ payment_tmplt = """
         .action-btn {
             background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #000; border: none; width: 100%;
             padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); display: block;
         }
         .action-btn:active { transform: scale(0.98); }
     </style>
@@ -431,10 +431,20 @@ payment_tmplt = """
         </div>
 
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;">
-            After successful payment, take a screenshot and send it to the Bot Admin to activate your plan.
+            After successful payment, upload your screenshot here for instant verification.
         </p>
 
-        <button class="action-btn" onclick="sendScreenshot()">Send Screenshot</button>
+        <div class="upload-section" style="margin-top: 10px;">
+            <label for="slip_input" class="action-btn" style="text-align: center;">
+                📸 Choose File & Upload
+            </label>
+            <input type="file" id="slip_input" accept="image/*" style="display: none;" onchange="uploadSlip()">
+            
+            <div id="progress_container" style="display: none; margin-top: 15px; background: #050508; border-radius: 10px; border: 1px solid var(--magenta); overflow: hidden;">
+                <div id="progress_bar" style="width: 0%; height: 10px; background: linear-gradient(90deg, var(--primary), var(--magenta)); transition: width 0.3s;"></div>
+            </div>
+            <p id="status_text" style="color: var(--primary); font-size: 13px; font-weight: bold; text-align: center; margin-top: 8px;"></p>
+        </div>
     </div>
 
     <script>
@@ -491,14 +501,59 @@ payment_tmplt = """
             tg.showAlert("UPI ID Copied!");
         }
 
-        function sendScreenshot() {
-            if(!selectedPlan) return;
-            tg.sendData(JSON.stringify({
-                action: "payment_screenshot",
-                plan: selectedPlan,
-                amount: selectedPrice
-            }));
-            tg.close();
+        // New Upload API function 
+        function uploadSlip() {
+            const fileInput = document.getElementById('slip_input');
+            const file = fileInput.files[0];
+            if(!file) return;
+
+            document.getElementById('progress_container').style.display = 'block';
+            document.getElementById('status_text').innerText = "Uploading... 0%";
+            document.getElementById('status_text').style.color = "var(--primary)";
+
+            const formData = new FormData();
+            formData.append('slip', file);
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'Unknown');
+            formData.append('plan', selectedPlan); 
+            formData.append('amount', selectedPrice);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/upload_slip', true);
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    document.getElementById('progress_bar').style.width = percentComplete + '%';
+                    document.getElementById('status_text').innerText = "Uploading... " + percentComplete + "%";
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if(res.success) {
+                            document.getElementById('status_text').innerText = "✅ Verification Sent!";
+                            document.getElementById('status_text').style.color = "#00ff00";
+                            tg.showAlert("✅ Screenshot Sent! Owner will verify and approve shortly.", () => tg.close());
+                        } else {
+                            tg.showAlert("❌ Upload Failed: " + res.message);
+                            document.getElementById('status_text').innerText = "Upload Failed";
+                            document.getElementById('status_text').style.color = "#ff0000";
+                        }
+                    } catch(err) {
+                        tg.showAlert("❌ Error parsing response.");
+                    }
+                } else {
+                    tg.showAlert("🔌 Server Error!");
+                }
+            };
+            
+            xhr.onerror = function() {
+                tg.showAlert("🔌 Network Error!");
+            };
+            
+            xhr.send(formData);
         }
 
         window.onload = renderPlans;

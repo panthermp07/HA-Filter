@@ -13,6 +13,10 @@ from web.utils.render_template import media_watch, error_tmplt, webapp_template,
 from database.ia_filterdb import get_search_results
 from database.users_chats_db import db
 
+import os
+import time
+from info import RECEIPT_SEND_USERNAME, PREMIUM_NOTIFY_CHANNEL
+
 routes = web.RouteTableDef()
 TMDB_BASE = "https://api.themoviedb.org/3"
 
@@ -42,8 +46,11 @@ async def webapp_route_handler(request):
 async def api_search_handler(request):
     query = request.query.get('q', '').strip()
     offset = int(request.query.get('offset', 0))
-    clean_query = re.sub(r'[-:\"\';!]', ' ', raw_query)
+    
+    # 🐛 BUG FIX: Changed 'raw_query' to 'query' here
+    clean_query = re.sub(r'[-:\"\';!]', ' ', query)
     clean_query = re.sub(r'\s+', ' ', clean_query).strip()
+    
     files, next_offset, total_results = await get_search_results(clean_query, offset=offset, max_results=MAX_BTN)
     
     formatted_files = []
@@ -54,7 +61,7 @@ async def api_search_handler(request):
                 "name": file.get('file_name', 'Unknown'),
                 "size": get_size(file.get('file_size', 0))
             })
- 
+
     return web.json_response({
         "files": formatted_files,
         "next_offset": next_offset if next_offset != '' else None,
@@ -63,7 +70,7 @@ async def api_search_handler(request):
         "max_btn": MAX_BTN,
         "bot_username": temp.U_NAME
     })
-
+    
 @routes.get("/api/tmdb-search")
 async def tmdb_search_handler(request):
     if not TMDB_API_KEY:
@@ -179,3 +186,54 @@ async def payment_handler(request):
             .replace('{bot_username}', temp.U_NAME))
             
     return web.Response(text=html, content_type='text/html')
+
+@routes.post("/api/upload_slip")
+async def upload_slip_handler(request):
+    try:
+        data = await request.post()
+        slip = data.get('slip')
+        user_id = data.get('user_id', 'Unknown')
+        plan = data.get('plan', 'Unknown Plan')
+        amount = data.get('amount', 'Unknown Amount')
+        
+        if not slip or not hasattr(slip, 'file'):
+            return web.json_response({"success": False, "message": "No file uploaded!"})
+        
+        # Save image temporarily
+        file_content = slip.file.read()
+        temp_path = f"payment_slip_{user_id}_{time.time()}.jpg"
+        with open(temp_path, "wb") as f:
+            f.write(file_content)
+            
+        # Prepare Admin Message
+        caption = (
+            "<b>🌐 #WEB_PAYMENT_PROOF</b>\n\n"
+            f"👤 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
+            f"📦 <b>ᴘʟᴀɴ:</b> <code>{plan}</code>\n"
+            f"💰 <b>ᴀᴍᴏᴜɴᴛ:</b> <code>{amount}</code>"
+        )
+        
+        btn = [
+            [InlineKeyboardButton("✅ ᴀᴘᴘʀᴏᴠᴇ & ɴᴏᴛɪꜰʏ ᴜsᴇʀ", callback_data=f"approve_pay_{user_id}_{plan}")],
+            [InlineKeyboardButton("⚠️ ᴜsᴇ /add_prm ᴍᴀɴᴜᴀʟʟʏ", callback_data="ignore")]
+        ]
+        
+      
+        from utils import temp
+        await temp.BOT.send_photo(
+            chat_id=RECEIPT_SEND_USERNAME, 
+            photo=temp_path, 
+            caption=caption, 
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+        if PREMIUM_NOTIFY_CHANNEL:
+            try:
+                await temp.BOT.send_photo(PREMIUM_NOTIFY_CHANNEL, photo=temp_path, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
+            except Exception:
+                pass
+                
+        os.remove(temp_path)
+        return web.json_response({"success": True})
+        
+    except Exception as e:
+        return web.json_response({"success": False, "message": str(e)})
