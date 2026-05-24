@@ -162,14 +162,13 @@ async def save_file(media):
             logger.error(f'Your FILES_DATABASE_URL is already full, add SECOND_FILES_DATABASE_URL')
             return 'err'
 
-# 🚀 Your Advanced Tag-Based Search Function (Upgraded with Public Fallback)
+# 🚀 Your Advanced Tag-Based Search Function (Upgraded with 60 Files Hard Limit)
 async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None, req_qual=None, req_year=None, req_season=None):
     query = str(query).strip()
     filter_obj = {}
 
     # Public Update Integration: Fetch Recent if query is empty
     if not query and not (req_lang or req_qual or req_year or req_season):
-        # Empty search logic: Match everything, sort by latest
         filter_obj = {}
     else:
         if query:
@@ -213,7 +212,13 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None
         total2 = await second_collection.count_documents(filter_obj)
         total_results += total2
 
+    # 🔒 RAM SAVER & SPAM PROTECTOR: Restrict total results to exactly 60
+    if total_results > 60:
+        total_results = 60
+
     files = []
+    
+    # DB Pagination Logic
     if offset < total1:
         cursor = collection.find(filter_obj).sort('_id', -1).skip(offset).limit(max_results)
         files = await cursor.to_list(length=max_results)
@@ -228,6 +233,8 @@ async def get_search_results(query, max_results=MAX_BTN, offset=0, req_lang=None
             files = await cursor2.to_list(length=max_results)
 
     next_offset = offset + max_results
+    
+    # Jab 60 files (ya total files) complete ho jayenge, Next button gayab ho jayega
     if next_offset >= total_results:
         next_offset = '' 
           
