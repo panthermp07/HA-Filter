@@ -33,6 +33,7 @@ from database.ia_filterdb import (
     db_count_documents, second_db_count_documents, get_available_tags
 )
 from plugins.commands import get_grp_stg
+from pyrogram.errors import ListenerTimeout
 
 BUTTONS = {}
 CAP = {}
@@ -732,6 +733,19 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.message.edit(f"<b>🎉 ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! ʏᴏᴜ ᴀᴄᴛɪᴠᴀᴛᴇᴅ ᴛʀɪᴀʟ ꜰᴏʀ 1 ʜᴏᴜʀ.\n\n⏳ ᴇxᴘɪʀᴇs: <code>{ex.strftime('%Y.%m.%d %H:%M:%S')}</code></b>")
 
     elif query.data == 'activate_plan':
+        btn = [
+            [InlineKeyboardButton("💳 ᴘᴀʏ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ", callback_data="pay_tg")],
+            [InlineKeyboardButton("🌐 ᴘᴀʏ ᴏɴ ᴡᴇʙ", web_app=WebAppInfo(url=f"{URL}activate-plan"))],
+            [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data="start", style=enums.ButtonStyle.DANGER)]
+        ]
+        await query.message.edit(
+            "<b>💳 ᴄʜᴏᴏsᴇ ʏᴏᴜʀ ᴘʀᴇꜰᴇʀʀᴇᴅ ᴘᴀʏᴍᴇɴᴛ ᴍᴇᴛʜᴏᴅ:\n\n"
+            "🔹 ᴛᴇʟᴇɢʀᴀᴍ: sᴄᴀɴ ǫʀ ᴀɴᴅ ᴜᴘʟᴏᴀᴅ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴇʀᴇ.\n"
+            "🔹 ᴡᴇʙ: sᴍᴏᴏᴛʜ ᴜɪ ᴡɪᴛʜ ᴅɪʀᴇᴄᴛ ᴘʟᴀɴ sᴇʟᴇᴄᴛɪᴏɴ.</b>",
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+
+    elif query.data == 'pay_tg':
         q = await query.message.edit('<b>🔢 ʜᴏᴡ ᴍᴀɴʏ ᴅᴀʏs ʏᴏᴜ ɴᴇᴇᴅ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ?\n\n➲ sᴇɴᴅ ᴅᴀʏs ᴀs ɴᴜᴍʙᴇʀ:</b>')
         msg = await client.listen(chat_id=query.message.chat.id, user_id=query.from_user.id)
         try:
@@ -757,14 +771,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await q.delete()
             await query.message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs sᴇɴᴛ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!\n💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>')
             await client.send_photo(RECEIPT_SEND_USERNAME, msg.photo.file_id, transaction_note)
-        elif msg: # Agar msg aaya hai par photo nahi hai
+        elif msg: 
             await q.delete()
             await query.message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴀs ᴀ ᴘʜᴏᴛᴏ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>")
         else:
-            # Agar msg None hai
             await q.delete()
-            await query.message.reply("<b>❌ ᴇʀʀᴏʀ: ᴄᴏᴜʟᴅ ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇ ʏᴏᴜʀ ᴍᴇssᴀɢᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>")
-            
+            await query.message.reply("<b>❌ ᴇʀʀᴏʀ: ᴄᴏᴜʟᴅ ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇ ʏᴏᴜʀ ᴍᴇssᴀɢᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>")           
+   
     # ✨ NEW PUBLIC UPDATE INTEGRATION: WebApp Payment Validation
     elif query.data.startswith("accept_payment"):
         _, id, days = query.data.split("-")
@@ -1348,3 +1361,81 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.reply(f"<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴋɪᴄᴋᴇᴅ ᴅᴇʟᴇᴛᴇᴅ <code>{len(users_id)}</code> ᴀᴄᴄᴏᴜɴᴛs.</b>")
         else:
             await query.message.reply('<b>⚠️ ɴᴏ ᴅᴇʟᴇᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛs ᴛᴏ ᴋɪᴄᴋ.</b>')
+
+@Client.on_message(filters.private & filters.web_app_data)
+async def web_app_payment_handler(client, message):
+    try:
+        # WebApp se jo JSON data aaya usko parse karo
+        data = json.loads(message.web_app_data.data)
+    except Exception:
+        return
+        
+    # Check if the action is payment_screenshot
+    if data.get("action") == "payment_screenshot":
+        days = data.get("plan")
+        amount = data.get("amount")
+        user_info = f"{message.from_user.mention} (`{message.from_user.id}`)"
+        
+        # 1. 📢 LOGGING: SEND ALERT TO LOG CHANNEL
+        log_text = (
+            "<b>🌐 #WEB_PAYMENT_INITIATED</b>\n\n"
+            f"👤 <b>ᴜsᴇʀ:</b> {user_info}\n"
+            f"📦 <b>ᴘʟᴀɴ:</b> <code>{days} ᴅᴀʏs</code>\n"
+            f"💰 <b>ᴀᴍᴏᴜɴᴛ:</b> <code>{amount}</code>\n"
+            "⏳ <i>ᴡᴀɪᴛɪɴɢ ꜰᴏʀ ᴜsᴇʀ ᴛᴏ sᴇɴᴅ sᴄʀᴇᴇɴsʜᴏᴛ...</i>"
+        )
+        
+        try:
+            if LOG_CHANNEL:
+                await client.send_message(LOG_CHANNEL, log_text)
+        except Exception as e:
+            print(f"Log Channel Error: {e}")
+
+        # 2. 📢 LOGGING: SEND ALERT TO ALL ADMINS PM
+        for admin in ADMINS:
+            try:
+                await client.send_message(chat_id=admin, text=log_text)
+            except Exception:
+                continue # Ignore if admin blocked the bot
+
+        # 3. 💬 ASK USER FOR SCREENSHOT
+        q = await message.reply(
+            f"<b>✅ ʏᴏᴜ sᴇʟᴇᴄᴛᴇᴅ ᴛʜᴇ {days} ᴅᴀʏs ᴘʟᴀɴ ({amount}).\n\n"
+            f"📸 ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴇʀᴇ ɴᴏᴡ (ᴛɪᴍᴇᴏᴜᴛ ɪɴ 10 ᴍɪɴs).\n\n"
+            f"💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>"
+        )
+        
+        try:
+            # Listening for the photo
+            msg = await client.listen(chat_id=message.chat.id, user_id=message.from_user.id, timeout=600)
+        except ListenerTimeout:
+            await q.delete()
+            timeout_msg = f"❌ <b>ᴛɪᴍᴇᴏᴜᴛ:</b> {user_info} ꜰᴀɪʟᴇᴅ ᴛᴏ sᴇɴᴅ sᴄʀᴇᴇɴsʜᴏᴛ ɪɴ ᴛɪᴍᴇ."
+            if LOG_CHANNEL:
+                try:
+                    await client.send_message(LOG_CHANNEL, timeout_msg)
+                except: pass
+            return await message.reply('<b>⏱ ʏᴏᴜʀ ᴛɪᴍᴇ ɪs ᴏᴠᴇʀ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴛᴏ ᴀᴅᴍɪɴ ᴍᴀɴᴜᴀʟʟʏ.</b>')
+            
+        if msg and msg.photo:
+            await q.delete()
+            await message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴs, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ᴀᴘᴘʀᴏᴠᴀʟ!\n💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>')
+            
+            # 4. 🚀 FORWARD PROOF TO ADMIN & LOG CHANNEL
+            transaction_note = f'#WEB_PAYMENT_PROOF\n👤 User: {user_info}\n📦 Plan: {days} Days\n💰 Amount: {amount}'
+            
+            # Send to specific support username (tumhara normal flow)
+            try:
+                await client.send_photo(RECEIPT_SEND_USERNAME, msg.photo.file_id, caption=transaction_note)
+            except Exception:
+                pass
+                
+            # Send to Log Channel
+            if LOG_CHANNEL:
+                try:
+                    await client.send_photo(LOG_CHANNEL, msg.photo.file_id, caption=transaction_note)
+                except Exception:
+                    pass
+        else:
+            await q.delete()
+            await message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, ᴘʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ {RECEIPT_SEND_USERNAME} ᴍᴀɴᴜᴀʟʟʏ.</b>")
