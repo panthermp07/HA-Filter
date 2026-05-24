@@ -40,6 +40,11 @@ CAP = {}
 SPELL_CHECK = {}
 QUERY_CACHE = {}
 
+# 🛠️ 1. CREATE CUSTOM FILTER FOR KURIGRAM
+async def check_web_data(_, __, message):
+    return bool(message.web_app_data)
+
+web_app_data_filter = filters.create(check_web_data)
 
 async def get_spell_suggest(query):
     query = query.lower().strip()
@@ -1362,25 +1367,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
         else:
             await query.message.reply('<b>⚠️ ɴᴏ ᴅᴇʟᴇᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛs ᴛᴏ ᴋɪᴄᴋ.</b>')
 
-@Client.on_message(filters.private & filters.web_app_data)
+@Client.on_message(filters.private & web_app_data_filter)
 async def web_app_payment_handler(client, message):
     try:
-        # WebApp se jo JSON data aaya usko parse karo
         data = json.loads(message.web_app_data.data)
     except Exception:
         return
         
-    # Check if the action is payment_screenshot
     if data.get("action") == "payment_screenshot":
         days = data.get("plan")
         amount = data.get("amount")
         user_info = f"{message.from_user.mention} (`{message.from_user.id}`)"
         
-        # 1. 📢 LOGGING: SEND ALERT TO LOG CHANNEL
         log_text = (
             "<b>🌐 #WEB_PAYMENT_INITIATED</b>\n\n"
             f"👤 <b>ᴜsᴇʀ:</b> {user_info}\n"
-            f"📦 <b>ᴘʟᴀɴ:</b> <code>{days} ᴅᴀʏs</code>\n"
+            f"📦 <b>ᴘʟᴀɴ:</b> <code>{days}</code>\n"
             f"💰 <b>ᴀᴍᴏᴜɴᴛ:</b> <code>{amount}</code>\n"
             "⏳ <i>ᴡᴀɪᴛɪɴɢ ꜰᴏʀ ᴜsᴇʀ ᴛᴏ sᴇɴᴅ sᴄʀᴇᴇɴsʜᴏᴛ...</i>"
         )
@@ -1388,25 +1390,22 @@ async def web_app_payment_handler(client, message):
         try:
             if LOG_CHANNEL:
                 await client.send_message(LOG_CHANNEL, log_text)
-        except Exception as e:
-            print(f"Log Channel Error: {e}")
+        except Exception:
+            pass
 
-        # 2. 📢 LOGGING: SEND ALERT TO ALL ADMINS PM
         for admin in ADMINS:
             try:
                 await client.send_message(chat_id=admin, text=log_text)
             except Exception:
-                continue # Ignore if admin blocked the bot
+                continue
 
-        # 3. 💬 ASK USER FOR SCREENSHOT
         q = await message.reply(
-            f"<b>✅ ʏᴏᴜ sᴇʟᴇᴄᴛᴇᴅ ᴛʜᴇ {days} ᴅᴀʏs ᴘʟᴀɴ ({amount}).\n\n"
+            f"<b>✅ ʏᴏᴜ sᴇʟᴇᴄᴛᴇᴅ ᴛʜᴇ {days} ᴘʟᴀɴ ({amount}).\n\n"
             f"📸 ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴇʀᴇ ɴᴏᴡ (ᴛɪᴍᴇᴏᴜᴛ ɪɴ 10 ᴍɪɴs).\n\n"
             f"💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>"
         )
         
         try:
-            # Listening for the photo
             msg = await client.listen(chat_id=message.chat.id, user_id=message.from_user.id, timeout=600)
         except ListenerTimeout:
             await q.delete()
@@ -1421,16 +1420,13 @@ async def web_app_payment_handler(client, message):
             await q.delete()
             await message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴs, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ᴀᴘᴘʀᴏᴠᴀʟ!\n💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>')
             
-            # 4. 🚀 FORWARD PROOF TO ADMIN & LOG CHANNEL
-            transaction_note = f'#WEB_PAYMENT_PROOF\n👤 User: {user_info}\n📦 Plan: {days} Days\n💰 Amount: {amount}'
+            transaction_note = f'#WEB_PAYMENT_PROOF\n👤 User: {user_info}\n📦 Plan: {days}\n💰 Amount: {amount}'
             
-            # Send to specific support username (tumhara normal flow)
             try:
                 await client.send_photo(RECEIPT_SEND_USERNAME, msg.photo.file_id, caption=transaction_note)
             except Exception:
                 pass
                 
-            # Send to Log Channel
             if LOG_CHANNEL:
                 try:
                     await client.send_photo(LOG_CHANNEL, msg.photo.file_id, caption=transaction_note)
