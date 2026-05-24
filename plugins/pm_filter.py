@@ -33,7 +33,7 @@ from database.ia_filterdb import (
     db_count_documents, second_db_count_documents, get_available_tags
 )
 from plugins.commands import get_grp_stg
-from pyrogram.errors import ListenerTimeout
+from asyncio import TimeoutError as ListenerTimeout
 
 BUTTONS = {}
 CAP = {}
