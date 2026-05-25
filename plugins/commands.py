@@ -288,27 +288,25 @@ async def start(client, message):
     # --- 🌐 WEBAPP: VIEW ALL RESULTS DIRECT TRIGGER ---
     if mc.startswith('sall_'):
         try:
-            # Hex query ko wapas text me convert karna
             hex_query = mc.replace('sall_', '')
             query = bytes.fromhex(hex_query).decode('utf-8')
         except:
             return await message.reply("❌ Invalid Search Query")
             
         try:
-            # Message text ko search query se replace karna
             message.text = query 
-            
-            # Local import taaki circular import ka error na aaye
-            from plugins.pm_filter import auto_filter 
-            
-            # Seedha auto-filter function ko call karna (No inline button!)
+            from plugins.pm_filter import auto_filter
             await auto_filter(client, message)
             return
             
+        except TypeError as e:
+            await auto_filter(client, message, query) 
+            return
+            
         except Exception as e:
-            print(f"Error in sall_ getfile handler: {e}")
-            return await message.reply("❌ Error fetching results. Please search manually.")
-
+            print(f"Error in sall_ handler: {e}")
+            return await message.reply("❌ Error fetching results.")
+    
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
         files = getattr(temp, 'GET_ALL_FILES', {}).get(key) or getattr(temp, 'FILES', {}).get(key)
