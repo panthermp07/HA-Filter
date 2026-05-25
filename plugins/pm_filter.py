@@ -785,8 +785,20 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return await query.message.reply(f'<b>⏱ ʏᴏᴜʀ ᴛɪᴍᴇ ɪs ᴏᴠᴇʀ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>')
         if msg and msg.photo:
             await q.delete()
-            await query.message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs sᴇɴᴛ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ!\n💬 sᴜᴘᴘᴏʀᴛ: {RECEIPT_SEND_USERNAME}</b>')
-            await client.send_photo(RECEIPT_SEND_USERNAME, msg.photo.file_id, transaction_note)
+            # User ko screen par text instruction dikhega
+            await query.message.reply(f'<b>✅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴡᴀs ʀᴇᴄᴇɪᴠᴇᴅ ɪɴ ᴏᴜʀ ᴅᴀᴛᴀʙᴀsᴇ!\n\n🚀 ꜰᴏʀ ɪɴsᴛᴀɴᴛ ᴀᴘᴘʀᴏᴠᴀʟ: ᴋɪɴᴅʟʏ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪs sᴄʀᴇᴇɴsʜᴏᴛ ᴅɪʀᴇᴄᴛʟʏ ᴛᴏ {RECEIPT_SEND_USERNAME}</b>')
+            
+            # Backend par photo Admins aur Notify Channel ko jayegi (Bot-to-Bot error fixed)
+            for admin in ADMINS:
+                try:
+                    await client.send_photo(admin, msg.photo.file_id, caption=transaction_note)
+                except Exception:
+                    pass
+            if PREMIUM_NOTIFY_CHANNEL:
+                try:
+                    await client.send_photo(PREMIUM_NOTIFY_CHANNEL, msg.photo.file_id, caption=transaction_note)
+                except Exception:
+                    pass
         elif msg: 
             await q.delete()
             await query.message.reply(f"<b>❌ ɴᴏᴛ ᴀ ᴠᴀʟɪᴅ ᴘʜᴏᴛᴏ, sᴇɴᴅ ʏᴏᴜʀ ʀᴇᴄᴇɪᴘᴛ ᴀs ᴀ ᴘʜᴏᴛᴏ ᴛᴏ: {RECEIPT_SEND_USERNAME}</b>")
