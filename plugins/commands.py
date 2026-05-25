@@ -286,6 +286,7 @@ async def start(client, message):
     #    )
     # ----------------------------------------------
     # --- 🌐 WEBAPP: VIEW ALL RESULTS DIRECT TRIGGER ---
+    # --- 🌐 WEBAPP: VIEW ALL RESULTS DIRECT TRIGGER ---
     if mc.startswith('sall_'):
         try:
             hex_query = mc.replace('sall_', '')
@@ -296,17 +297,14 @@ async def start(client, message):
         try:
             message.text = query 
             from plugins.pm_filter import auto_filter
-            await auto_filter(client, message)
+            s_msg = await message.reply(f"<b>🔍 ꜱᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ ʏᴏᴜʀ ʀᴇQᴜᴇꜱᴛ...</b>")
+            await auto_filter(client, message, s_msg)
             return
-            
-        except TypeError as e:
-            await auto_filter(client, message, query) 
-            return
-            
         except Exception as e:
             print(f"Error in sall_ handler: {e}")
-            return await message.reply("❌ Error fetching results.")
-    
+            return await message.reply("❌ Error fetching results.")  
+
+
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
         files = getattr(temp, 'GET_ALL_FILES', {}).get(key) or getattr(temp, 'FILES', {}).get(key)
