@@ -330,6 +330,17 @@ webapp_template = """
         }
 
         function getFile(fileId) {
+            // Web search redirect logic
+            if (fileId.startsWith('all_search_')) {
+                const query = fileId.replace('all_search_', '');
+                // Prefill user's message input inside DM to trigger PM Search filters
+                const link = `https://t.me/${botUsername}?text=${encodeURIComponent(query)}`;
+                tg.openTelegramLink(link);
+                setTimeout(() => tg.close(), 100);
+                return;
+            }
+            
+            // Standard single file/all file redirect logic
             const payload = fileId.startsWith('all_') ? '' : `file_${fileId}`; 
             const link = `https://t.me/${botUsername}?start=${payload}`;
             tg.openTelegramLink(link);
@@ -535,7 +546,7 @@ payment_tmplt = """
                         if(res.success) {
                             document.getElementById('status_text').innerText = "✅ Verification Sent!";
                             document.getElementById('status_text').style.color = "#00ff00";
-                            tg.showAlert("✅ Screenshot Sent! Owner will verify and approve shortly.", () => tg.close());
+                            tg.showAlert(`✅ Screenshot Sent! Please send this proof to ${RECEIPT_SEND_USERNAME} as well for instant activation.`, () => tg.close());
                         } else {
                             tg.showAlert("❌ Upload Failed: " + res.message);
                             document.getElementById('status_text').innerText = "Upload Failed";

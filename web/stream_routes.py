@@ -15,7 +15,8 @@ from database.users_chats_db import db
 
 import os
 import time
-from info import RECEIPT_SEND_USERNAME, PREMIUM_NOTIFY_CHANNEL
+from utils import temp
+from info import ADMINS, PREMIUM_NOTIFY_CHANNEL
 
 routes = web.RouteTableDef()
 TMDB_BASE = "https://api.themoviedb.org/3"
@@ -217,15 +218,19 @@ async def upload_slip_handler(request):
             [InlineKeyboardButton("✅ ᴀᴘᴘʀᴏᴠᴇ & ɴᴏᴛɪꜰʏ ᴜsᴇʀ", callback_data=f"approve_pay_{user_id}_{plan}")],
             [InlineKeyboardButton("⚠️ ᴜsᴇ /add_prm ᴍᴀɴᴜᴀʟʟʏ", callback_data="ignore")]
         ]
-        
-      
-        from utils import temp
-        await temp.BOT.send_photo(
-            chat_id=RECEIPT_SEND_USERNAME, 
-            photo=temp_path, 
-            caption=caption, 
-            reply_markup=InlineKeyboardMarkup(btn)
-        )
+        # Send to all Admins
+        for admin in ADMINS:
+            try:
+                await temp.BOT.send_photo(
+                    chat_id=admin, 
+                    photo=temp_path, 
+                    caption=caption, 
+                    reply_markup=InlineKeyboardMarkup(btn)
+                )
+            except Exception:
+                pass
+                
+        # Send to Notify Channel
         if PREMIUM_NOTIFY_CHANNEL:
             try:
                 await temp.BOT.send_photo(PREMIUM_NOTIFY_CHANNEL, photo=temp_path, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
