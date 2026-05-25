@@ -110,7 +110,7 @@ OWNER_USERNAME = environ.get("OWNER_USERNAME", "talk_mrs_bot")
 PREMIUM_NOTIFY_CHANNEL = environ.get('PREMIUM_NOTIFY_CHANNEL', '')
 
 # Your Custom UPI Integration (Retained)
-PRE_DAY_AMOUNT = int(environ.get('PRE_DAY_AMOUNT', '1.5')) 
+PRE_DAY_AMOUNT = int(environ.get('PRE_DAY_AMOUNT', '1')) 
 UPI_ID = environ.get("UPI_ID", "")
 UPI_NAME = environ.get("UPI_NAME", "")
 RECEIPT_SEND_USERNAME = environ.get("RECEIPT_SEND_USERNAME", "@talk_mrs_bot")
