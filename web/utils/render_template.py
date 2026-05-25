@@ -236,11 +236,17 @@ webapp_template = """
 
         function renderRow(title, items) {
             if(!items || items.length === 0) return;
-            let cards = items.map(i => `
-                <div class="card" onclick="openModal('${i.title.replace(/'/g, "\\'")}')">
-                    <img src="${i.poster || 'https://via.placeholder.com/130x195?text=No+Poster'}" alt="${i.title}" loading="lazy">
+            let cards = items.map(i => {
+                // 100% Foolproof Fix: Encode title to avoid ANY single/double quote or colon issues
+                let encodedTitle = encodeURIComponent(i.title).replace(/'/g, "%27");
+                let safeAltText = i.title.replace(/"/g, "&quot;");
+                
+                return `
+                <div class="card" onclick="openModal(decodeURIComponent('${encodedTitle}'))">
+                    <img src="${i.poster || 'https://via.placeholder.com/130x195?text=No+Poster'}" alt="${safeAltText}" loading="lazy">
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             const rowHtml = `
                 <div class="row-container">
