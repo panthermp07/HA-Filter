@@ -206,19 +206,25 @@ async def upload_slip_handler(request):
         with open(temp_path, "wb") as f:
             f.write(file_content)
             
+        from info import RECEIPT_SEND_USERNAME, ADMINS, PREMIUM_NOTIFY_CHANNEL
+        
         # Prepare Admin Message
         caption = (
             "<b>🌐 #WEB_PAYMENT_PROOF</b>\n\n"
             f"👤 <b>ᴜsᴇʀ ɪᴅ:</b> <code>{user_id}</code>\n"
             f"📦 <b>ᴘʟᴀɴ:</b> <code>{plan}</code>\n"
-            f"💰 <b>ᴀᴍᴏᴜɴᴛ:</b> <code>{amount}</code>"
+            f"💰 <b>ᴀᴍᴏᴜɴᴛ:</b> <code>{amount}</code>\n\n"
+            f"💬 <b>ᴜsᴇʀ ɪɴsᴛʀᴜᴄᴛᴇᴅ ᴛᴏ sᴇɴᴅ ᴏɴ:</b> {RECEIPT_SEND_USERNAME}"
         )
         
         btn = [
             [InlineKeyboardButton("✅ ᴀᴘᴘʀᴏᴠᴇ & ɴᴏᴛɪꜰʏ ᴜsᴇʀ", callback_data=f"approve_pay_{user_id}_{plan}")],
-            [InlineKeyboardButton("⚠️ ᴜsᴇ /add_prm ᴍᴀɴᴜᴀʟʟʏ", callback_data="ignore")]
+            [InlineKeyboardButton("⚠️ ᴜsᴇ /add_prm ᴍᴀɴᴜᴀʟʟʏ", callback_data=f"manual_pay_{user_id}_{plan}")]
         ]
-        # Send to all Admins
+        
+        from utils import temp
+        
+        # Backend par photo Admins aur Notify Channel ko jayegi
         for admin in ADMINS:
             try:
                 await temp.BOT.send_photo(
@@ -230,15 +236,21 @@ async def upload_slip_handler(request):
             except Exception:
                 pass
                 
-        # Send to Notify Channel
+        # Send to Premium Notify Channel
         if PREMIUM_NOTIFY_CHANNEL:
             try:
                 await temp.BOT.send_photo(PREMIUM_NOTIFY_CHANNEL, photo=temp_path, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
             except Exception:
                 pass
                 
-        os.remove(temp_path)
+        # Safely clean up the temp image
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
         return web.json_response({"success": True})
         
     except Exception as e:
-        return web.json_response({"success": False, "message": str(e)})
+        # Extra fallback cleanup if crash happens
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
+        return web.json_response({"success": False, "message": f"Server Error: {str(e)}"})
