@@ -250,6 +250,41 @@ async def start(client, message):
         )
         return 
         
+    # --- 🌐 WEBAPP REDIRECTS (REQUEST & SEARCH) ---
+    if mc.startswith('req_'):
+        try:
+            hex_query = mc.replace('req_', '')
+            title = bytes.fromhex(hex_query).decode('utf-8')
+        except:
+            title = "Unknown Movie"
+            
+        # User ki request state save kar rahe hain
+        if not hasattr(temp, 'AWAITING_REQUEST'):
+            temp.AWAITING_REQUEST = {}
+        temp.AWAITING_REQUEST[message.from_user.id] = title
+        
+        return await message.reply(
+            f"<b>⚠️ ᴍᴏᴠɪᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ:</b> <code>{title}</code>\n\n"
+            "<b>👇 ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪᴛʜ ᴛʜᴇ ᴇxᴀᴄᴛ ɴᴀᴍᴇ ᴀɴᴅ ʏᴇᴀʀ.</b>\n"
+            "<i>ᴇxᴀᴍᴘʟᴇ:</i> <code>Dhurandhar 2026</code>"
+        )
+
+    if mc.startswith('sall_'):
+        try:
+            hex_query = mc.replace('sall_', '')
+            query = bytes.fromhex(hex_query).decode('utf-8')
+        except:
+            return await message.reply("❌ Invalid Search Query")
+            
+        # Ek button de rahe hain jise dabate hi search trigger ho jayega
+        btn = [[InlineKeyboardButton("🔍 ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ sᴇᴀʀᴄʜ", switch_inline_query_current_chat=query)]]
+        return await message.reply(
+            f"<b>🔍 ʏᴏᴜ ᴀʀᴇ sᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:</b> <code>{query}</code>\n\n"
+            "<b>ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ʀᴇsᴜʟᴛs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴛʜᴇ ʙᴏᴛ!</b>",
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+    # ----------------------------------------------
+
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
         files = getattr(temp, 'GET_ALL_FILES', {}).get(key) or getattr(temp, 'FILES', {}).get(key)
@@ -1444,3 +1479,41 @@ async def clear_missing_list(bot, message):
         "ᴀʟʟ ᴍɪssɪɴɢ ᴍᴏᴠɪᴇ ʀᴇᴄᴏʀᴅs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ.",
         quote=True
     )
+
+# --- 📝 HANDLE MOVIE REQUESTS FROM WEBAPP ---
+@Client.on_message(filters.text & filters.private, group=-1)
+async def handle_movie_request(client, message):
+    user_id = message.from_user.id
+    
+    # Check agar user abhi movie request state me hai
+    if hasattr(temp, 'AWAITING_REQUEST') and user_id in temp.AWAITING_REQUEST:
+        original_title = temp.AWAITING_REQUEST[user_id]
+        user_input = message.text
+        
+        admin_msg = (
+            "<b>🎬 ɴᴇᴡ ᴍᴏᴠɪᴇ ʀᴇǫᴜᴇsᴛ ꜰʀᴏᴍ ᴡᴇʙᴀᴘᴘ</b>\n"
+            "<code>━━━━━━━━━━━━━━━━━━━━━━━━━━━</code>\n"
+            f"<b>👤 ᴜsᴇʀ:</b> {message.from_user.mention}\n"
+            f"<b>🆔 ᴜsᴇʀ ɪᴅ:</b> <code>{message.from_user.id}</code>\n"
+            f"<b>🍿 ᴏʀɪɢɪɴᴀʟ sᴇᴀʀᴄʜ:</b> <code>{original_title}</code>\n"
+            f"<b>📝 ᴜsᴇʀ ᴘʀᴏᴠɪᴅᴇᴅ (ɴᴀᴍᴇ & ʏᴇᴀʀ):</b> <code>{user_input}</code>\n"
+            "<code>━━━━━━━━━━━━━━━━━━━━━━━━━━━</code>"
+        )
+        
+        # Saare admins ko message bhej do
+        for admin in ADMINS:
+            try:
+                await client.send_message(chat_id=admin, text=admin_msg)
+            except:
+                pass
+                
+        # State clear kar do
+        del temp.AWAITING_REQUEST[user_id]
+        
+        await message.reply("<b>✅ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ʜᴀs ʙᴇᴇɴ ꜰᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴛʜᴇ ᴀᴅᴍɪɴs! ᴡᴇ ᴡɪʟʟ ᴜᴘʟᴏᴀᴅ ɪᴛ sᴏᴏɴ.</b>")
+        
+        # Pyrogram ko batao ki aage (auto-filter me) is text ko process na kare
+        message.stop_propagation()
+    else:
+        # Agar normal message hai, toh aage PM_Filter (Auto Filter) me bhejo
+        message.continue_propagation()

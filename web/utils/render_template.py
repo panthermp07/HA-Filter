@@ -335,18 +335,21 @@ webapp_template = """
             }
         }
 
+        function toHex(str) {
+            return Array.from(new TextEncoder().encode(str)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         function getFile(fileId) {
-            // Web search redirect logic
+            // Web search redirect logic (FIXED)
             if (fileId.startsWith('all_search_')) {
                 const query = fileId.replace('all_search_', '');
-                // Prefill user's message input inside DM to trigger PM Search filters
-                const link = `https://t.me/${botUsername}?text=${encodeURIComponent(query)}`;
+                const link = `https://t.me/${botUsername}?start=sall_${toHex(query)}`;
                 tg.openTelegramLink(link);
                 setTimeout(() => tg.close(), 100);
                 return;
             }
             
-            // Standard single file/all file redirect logic
+            // Standard file redirect logic
             const payload = fileId.startsWith('all_') ? '' : `file_${fileId}`; 
             const link = `https://t.me/${botUsername}?start=${payload}`;
             tg.openTelegramLink(link);
@@ -354,8 +357,10 @@ webapp_template = """
         }
 
         function requestMovie(title) {
-            tg.sendData(JSON.stringify({action: "request", title: title}));
-            tg.close();
+            // Request redirect logic (FIXED)
+            const link = `https://t.me/${botUsername}?start=req_${toHex(title)}`;
+            tg.openTelegramLink(link);
+            setTimeout(() => tg.close(), 100);
         }
 
         window.onload = loadHomeData;
