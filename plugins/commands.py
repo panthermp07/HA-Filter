@@ -250,7 +250,7 @@ async def start(client, message):
         )
         return 
         
-    # --- 🌐 WEBAPP REDIRECTS (REQUEST & SEARCH) ---
+    # --- 📝 WEBAPP: REQUEST TO ADMIN LOGIC ---
     if mc.startswith('req_'):
         try:
             hex_query = mc.replace('req_', '')
@@ -258,32 +258,56 @@ async def start(client, message):
         except:
             title = "Unknown Movie"
             
-        # User ki request state save kar rahe hain
+        # User ka wait state database/temp memory me save karna
         if not hasattr(temp, 'AWAITING_REQUEST'):
             temp.AWAITING_REQUEST = {}
         temp.AWAITING_REQUEST[message.from_user.id] = title
         
+        # User se Name aur Year poochna
         return await message.reply(
             f"<b>⚠️ ᴍᴏᴠɪᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ:</b> <code>{title}</code>\n\n"
             "<b>👇 ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴛʜɪs ᴍᴇssᴀɢᴇ ᴡɪᴛʜ ᴛʜᴇ ᴇxᴀᴄᴛ ɴᴀᴍᴇ ᴀɴᴅ ʏᴇᴀʀ.</b>\n"
             "<i>ᴇxᴀᴍᴘʟᴇ:</i> <code>Dhurandhar 2026</code>"
         )
 
+    #if mc.startswith('sall_'):
+    #    try:
+    #        hex_query = mc.replace('sall_', '')
+    #        query = bytes.fromhex(hex_query).decode('utf-8')
+    #    except:
+    #        return await message.reply("❌ Invalid Search Query")
+    #        
+    #    # Ek button de rahe hain jise dabate hi search trigger ho jayega
+    #    btn = [[InlineKeyboardButton("🔍 ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ sᴇᴀʀᴄʜ", switch_inline_query_current_chat=query)]]
+    #    return await message.reply(
+    #        f"<b>🔍 ʏᴏᴜ ᴀʀᴇ sᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:</b> <code>{query}</code>\n\n"
+    #        "<b>ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ʀᴇsᴜʟᴛs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴛʜᴇ ʙᴏᴛ!</b>",
+    #        reply_markup=InlineKeyboardMarkup(btn)
+    #    )
+    # ----------------------------------------------
+    # --- 🌐 WEBAPP: VIEW ALL RESULTS DIRECT TRIGGER ---
     if mc.startswith('sall_'):
         try:
+            # Hex query ko wapas text me convert karna
             hex_query = mc.replace('sall_', '')
             query = bytes.fromhex(hex_query).decode('utf-8')
         except:
             return await message.reply("❌ Invalid Search Query")
             
-        # Ek button de rahe hain jise dabate hi search trigger ho jayega
-        btn = [[InlineKeyboardButton("🔍 ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ sᴇᴀʀᴄʜ", switch_inline_query_current_chat=query)]]
-        return await message.reply(
-            f"<b>🔍 ʏᴏᴜ ᴀʀᴇ sᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:</b> <code>{query}</code>\n\n"
-            "<b>ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴠɪᴇᴡ ᴀʟʟ ʀᴇsᴜʟᴛs ᴅɪʀᴇᴄᴛʟʏ ɪɴ ᴛʜᴇ ʙᴏᴛ!</b>",
-            reply_markup=InlineKeyboardMarkup(btn)
-        )
-    # ----------------------------------------------
+        try:
+            # Message text ko search query se replace karna
+            message.text = query 
+            
+            # Local import taaki circular import ka error na aaye
+            from plugins.pm_filter import auto_filter 
+            
+            # Seedha auto-filter function ko call karna (No inline button!)
+            await auto_filter(client, message)
+            return
+            
+        except Exception as e:
+            print(f"Error in sall_ getfile handler: {e}")
+            return await message.reply("❌ Error fetching results. Please search manually.")
 
     if mc.startswith('all'):
         _, grp_id, key = mc.split("_", 2)
@@ -1479,41 +1503,40 @@ async def clear_missing_list(bot, message):
         "ᴀʟʟ ᴍɪssɪɴɢ ᴍᴏᴠɪᴇ ʀᴇᴄᴏʀᴅs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ.",
         quote=True
     )
-
-# --- 📝 HANDLE MOVIE REQUESTS FROM WEBAPP ---
+    
 @Client.on_message(filters.text & filters.private, group=-1)
 async def handle_movie_request(client, message):
     user_id = message.from_user.id
     
-    # Check agar user abhi movie request state me hai
+    # Check karega ki kya user se movie name poocha gaya tha
     if hasattr(temp, 'AWAITING_REQUEST') and user_id in temp.AWAITING_REQUEST:
         original_title = temp.AWAITING_REQUEST[user_id]
         user_input = message.text
         
+        # Admin ke liye format jisme pata chalega kisne request ki
         admin_msg = (
             "<b>🎬 ɴᴇᴡ ᴍᴏᴠɪᴇ ʀᴇǫᴜᴇsᴛ ꜰʀᴏᴍ ᴡᴇʙᴀᴘᴘ</b>\n"
             "<code>━━━━━━━━━━━━━━━━━━━━━━━━━━━</code>\n"
             f"<b>👤 ᴜsᴇʀ:</b> {message.from_user.mention}\n"
             f"<b>🆔 ᴜsᴇʀ ɪᴅ:</b> <code>{message.from_user.id}</code>\n"
             f"<b>🍿 ᴏʀɪɢɪɴᴀʟ sᴇᴀʀᴄʜ:</b> <code>{original_title}</code>\n"
-            f"<b>📝 ᴜsᴇʀ ᴘʀᴏᴠɪᴅᴇᴅ (ɴᴀᴍᴇ & ʏᴇᴀʀ):</b> <code>{user_input}</code>\n"
+            f"<b>📝 ᴜsᴇʀ ᴘʀᴏᴠɪᴅᴇᴅ:</b> <code>{user_input}</code>\n"
             "<code>━━━━━━━━━━━━━━━━━━━━━━━━━━━</code>"
         )
         
-        # Saare admins ko message bhej do
+        # Saare admins ko send karega
+        from info import ADMINS
         for admin in ADMINS:
             try:
                 await client.send_message(chat_id=admin, text=admin_msg)
             except:
                 pass
                 
-        # State clear kar do
+        # State clear kar dega
         del temp.AWAITING_REQUEST[user_id]
         
         await message.reply("<b>✅ ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ʜᴀs ʙᴇᴇɴ ꜰᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴛʜᴇ ᴀᴅᴍɪɴs! ᴡᴇ ᴡɪʟʟ ᴜᴘʟᴏᴀᴅ ɪᴛ sᴏᴏɴ.</b>")
-        
-        # Pyrogram ko batao ki aage (auto-filter me) is text ko process na kare
         message.stop_propagation()
     else:
-        # Agar normal message hai, toh aage PM_Filter (Auto Filter) me bhejo
+        # Agar user normal movie search kar raha hai, toh auto-filter me bhej dega
         message.continue_propagation()
