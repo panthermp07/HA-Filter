@@ -188,11 +188,11 @@ async def pm_search(client, message):
     stg = await db.get_bot_sttgs()
     if await is_premium(message.from_user.id, client):
         if not stg.get('AUTO_FILTER', True): return await message.reply_text('<b>❌ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ɪs ᴅɪsᴀʙʟᴇᴅ!</b>')
-        s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
+        s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_to_message_id=message.id))
         await auto_filter(client, message, s)
     else:
         if stg and stg.get('PM_SEARCH', True):
-            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
+            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_to_message_id=message.id))
             await auto_filter(client, message, s)
         else:
             clean_search, _, _, _, _ = parse_query(message.text)
@@ -257,7 +257,7 @@ async def group_search(client, message):
             await client.send_message(LOG_CHANNEL, f"<b>#Request</b>\n★ <b>User:</b> {message.from_user.mention}\n★ <b>Group:</b> {message.chat.title}\n\n★ <b>Message:</b> {re.sub(r'#request', '', message.text.lower())}")
             return await message.reply_text("<b>✅ ʀᴇǫᴜᴇsᴛ sᴇɴᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ!</b>")
         else:
-            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
+            s = await message.reply(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_to_message_id=message.id))
             await auto_filter(client, message, s)
     else:
         k = await message.reply_text('<b>❌ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ɪs ᴏꜰꜰ!</b>')
@@ -539,7 +539,7 @@ async def auto_filter(client, msg, s, spoll=False):
     if imdb and imdb.get('poster'):
         await s.delete()
         try:
-            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
+            k = await message.reply_photo(photo=imdb.get('poster'), caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_to_message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
@@ -547,14 +547,14 @@ async def auto_filter(client, msg, s, spoll=False):
                 except: pass
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             poster = imdb.get('poster').replace('.jpg', "._V1_UX360.jpg")
-            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
+            k = await message.reply_photo(photo=poster, caption=cap[:1024] + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, reply_to_message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
                 try: await message.delete()
                 except: pass
         except Exception as e:
-            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, reply_parameters=ReplyParameters(message_id=message.id))
+            k = await message.reply_text(cap + files_link + del_msg, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML, reply_to_message_id=message.id))
             if settings["auto_delete"]:
                 await asyncio.sleep(DELETE_TIME)
                 await k.delete()
