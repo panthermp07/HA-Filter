@@ -258,7 +258,7 @@ async def group_search(client, message):
             return await message.reply_text("<b>✅ ʀᴇǫᴜᴇsᴛ sᴇɴᴛ sᴜᴄᴄᴇssꜰᴜʟʟʏ!</b>")
         else:
             s = await message.reply_text(f"<b><i>🔎 `{message.text}` sᴇᴀʀᴄʜɪɴɢ...</i></b>", reply_parameters=ReplyParameters(message_id=message.id))
-    await auto_filter(client, message, s)
+        await auto_filter(client, message, s)
     else:
         k = await message.reply_text('<b>❌ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ɪs ᴏꜰꜰ!</b>')
         await asyncio.sleep(5)
