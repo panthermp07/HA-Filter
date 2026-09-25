@@ -199,8 +199,8 @@ async def download_video(client, message):
             video=downloaded_file,
             caption=f"🎬 <b>{title}</b>\n\n🌍 <b><a href='https://t.me/infinity_botzz'>@ɪɴꜰɪɴɪᴛʏ_ʙᴏᴛᴢᴢ</a></b>",
             duration=duration,
-            thumb=thumbnail_file,
-            reply_parameters=ReplyParameters(message_id=message.id))
+            thumb=thumbnail_file)
+            #reply_parameters=ReplyParameters(message_id=message.id))
 
         await status_msg.delete()
 
