@@ -148,6 +148,26 @@ async def start(client, message):
     if mc == 'premium':
         return await plan(client, message)
     
+    # ----------------------------------------------
+    # --- 🎬 ADDED GETFILE- DEEP LINK HANDLER ---
+    if mc.startswith('getfile-'):
+        try:
+            raw_payload = mc[8:] # Removes 'getfile-' safely
+            if not raw_payload:
+                return 
+            
+            movie_query = raw_payload.replace('-', ' ')
+            message.text = movie_query 
+            
+            from plugins.pm_filter import auto_filter
+            s_msg = await message.reply(f"**🔍 ꜱᴇᴀʀᴄʜɪɴɢ ꜰᴏʀ:** `{movie_query}`")
+            await auto_filter(client, message, s_msg)
+            return
+        except Exception as e:
+            print(f"Error in getfile start handler: {e}")
+            return await message.reply("❌ Error fetching results.")
+    # ----------------------------------------------
+
     if mc.startswith('settings'):
         _, group_id = message.command[1].split("_")
         if not await is_check_admin(client, (int(group_id)), message.from_user.id):
