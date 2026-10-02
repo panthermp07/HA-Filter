@@ -80,7 +80,7 @@ TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
 
 # Boolean settings
 USE_CAPTION_FILTER = is_enabled('USE_CAPTION_FILTER', False)
-IS_VERIFY = is_enabled('IS_VERIFY', True)
+IS_VERIFY = is_enabled('IS_VERIFY', False)
 AUTO_DELETE = is_enabled('AUTO_DELETE', True)
 WELCOME = is_enabled('WELCOME', True)
 PROTECT_CONTENT = is_enabled('PROTECT_CONTENT', False)
